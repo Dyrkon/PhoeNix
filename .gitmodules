@@ -1,3 +1,6 @@
 [submodule "nixos-anywhere-examples"]
 	path = nixos-anywhere-examples
 	url = git@github.com:nix-community/nixos-anywhere-examples.git
+[submodule "nixos-anywhere"]
+	path = nixos-anywhere
+	url = git@github.com:nix-community/nixos-anywhere.git
