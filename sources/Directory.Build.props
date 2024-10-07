@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <DirectoryBuildPropsFilePath>$(MSBuildThisFileFullPath)</DirectoryBuildPropsFilePath>
+    <SolutionRootDir>$(MSBuildThisFileDirectory)</SolutionRootDir>
+
+    <!--<UseArtifactsOutput>false</UseArtifactsOutput> -->
+      <!-- <ArtifactsPath>$(MSBuildThisFileDirectory)/artifacts</ArtifactsPath> -->
+
+    <V1ApiVersion>1</V1ApiVersion>
+    <V1ApiProjectDir>$(MSBuildThisFileDirectory)src\FACIS.WebAPI</V1ApiProjectDir>
+    <V1ApiSwaggerFile>$(MSBuildThisFileDirectory)src\FACIS.WebAPI\swagger.json</V1ApiSwaggerFile>
+  </PropertyGroup>
+</Project>
+
