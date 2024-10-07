@@ -40,5 +40,22 @@
           }
         ];
       };
+
+      nixosConfigurations.pxe = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ({ config, pkgs, lib, modulesPath, ... }: {
+            imports = [
+              "${nixpkgs}/nixos/modules/installer/netboot/netboot-minimal.nix"
+            ];
+            config = {
+              users.users.root.openssh.authorizedKeys.keys = [
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com"
+              ];
+              system.stateVersion = config.system.nixos.release;
+            };
+          })
+        ];
+      };
     };
 }

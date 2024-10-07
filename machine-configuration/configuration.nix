@@ -21,7 +21,11 @@
   environment.systemPackages = map lib.lowPrio [
     pkgs.curl
     pkgs.gitMinimal
+    pkgs.fastfetch
   ];
+
+  # set password for root user
+  users.users.root.initialHashedPassword = "rootroot";
 
   users.users.root.openssh.authorizedKeys.keys = [
     # change this to your ssh key
