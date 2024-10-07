@@ -1,6 +1,5 @@
 let
-  # NixOS 22.11 as of 2023-01-12
-  nixpkgs = builtins.getFlake "github:nixos/nixpkgs/54644f409ab471e87014bb305eac8c50190bcf48";
+  nixpkgs = builtins.getFlake "github:nixos/nixpkgs";
 
   sys = nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
@@ -13,8 +12,6 @@ let
           ## Some useful options for setting up a new system
           # services.getty.autologinUser = lib.mkForce "root";
           # users.users.root.openssh.authorizedKeys.keys = [ ... ];
-          # console.keyMap = "de";
-          # hardware.video.hidpi.enable = true;
 
           system.stateVersion = config.system.nixos.release;
         };

@@ -1,0 +1,6 @@
+@PhoeNix.WebAPI_HostAddress = http://localhost:5083
+
+GET {{PhoeNix.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
