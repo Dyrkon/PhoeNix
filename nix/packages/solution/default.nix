@@ -1,14 +1,25 @@
-{ self', pkgs, ... }:
-with pkgs;
+{  # Snowfall Lib provides a customized `lib` instance with access to your flake's library
+  # as well as the libraries available from your flake's inputs.
+  lib,
+  # You also have access to your flake's inputs.
+  inputs,
+  # The namespace used for your flake, defaulting to "internal" if not set.
+  namespace,
+  # All other arguments come from NixPkgs. You can use `pkgs` to pull packages or helpers
+  # programmatically or you may add the named attributes as arguments here.
+  pkgs,
+  stdenv,
+  mkShell,
+  ... 
+}:
 let
-  lib = pkgs.lib;
   fs = lib.fileset;
 
   root = ../..;
 
   sourceFiles = fs.unions [ (lib.path.append root "sources") ];
 
-  PhoeNix = buildDotnetModule rec {
+  PhoeNix = pkgs.buildDotnetModule rec {
     pname = "PhoeNix";
     version = lib.strings.fileContents (lib.path.append root "../version");
 
@@ -18,10 +29,10 @@ let
     };
 
     projectFile = "${pname}.sln"; # path to csproj or sln to build
-    nugetDeps = ../deps.nix;
+    nugetDeps = ../../deps.nix;
 
-    dotnet-sdk = dotnetCorePackages.sdk_8_0;
-    dotnet-runtime = dotnetCorePackages.aspnetcore_8_0;
+    dotnet-sdk = pkgs.dotnetCorePackages.sdk_8_0;
+    dotnet-runtime = pkgs.dotnetCorePackages.aspnetcore_8_0;
 
     runtimeDeps = [ ];
 
