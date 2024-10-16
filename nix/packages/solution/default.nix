@@ -9,13 +9,13 @@
 }: let
   fs = lib.fileset;
 
-  root = ../..;
+  root = inputs.self.snowfall.config.src;
 
-  sourceFiles = builtins.trace (builtins.toJSON builtins.mapAttrs (name: value: "${name}${value}") lib) fs.unions [(lib.path.append root "sources")];
+  sourceFiles = fs.unions [(lib.path.append root "sources")];
 
   PhoeNix = pkgs.buildDotnetModule rec {
     pname = "PhoeNix";
-    version = "0";
+    version = builtins.readFile (lib.path.append root "version");
 
     src = fs.toSource {
       root = lib.path.append root "sources";

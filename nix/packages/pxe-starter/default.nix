@@ -12,6 +12,7 @@
   stdenv,
   ...
 }: let
+  root = inputs.self.snowfall.config.src;
   pname = "pxe-starter";
   sshKeys = "";
   supportedSystems = ["x86_64-linux" "aarch64-linux"];
@@ -41,7 +42,7 @@
 in
   pkgs.stdenv.mkDerivation {
     name = pname;
-    version = "0.0";
+    version = builtins.readFile (lib.path.append root "version");
     src = ./.;
     installPhase = ''
       mkdir -p $out/bin

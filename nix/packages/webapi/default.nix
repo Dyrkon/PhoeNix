@@ -8,7 +8,8 @@
 }: let
   fs = lib.fileset;
 
-  root = ../../sources;
+  flake-root = inputs.self.snowfall.config.src;
+  root = lib.path.append flake-root "sources";
   pname = "PhoeNix.WebAPI";
   dotnet-sdk = dotnetCorePackages.sdk_8_0;
 
@@ -18,10 +19,10 @@
     project = pname;
   };
 
-  miscFiles = [
-    ../../sources/.config
-    ../../sources/PhoeNix.sln
-    ../../sources/Directory.Build.props
+  miscFiles = map (i: lib.path.append root i) [
+    ".config"
+    "PhoeNix.sln"
+    "Directory.Build.props"
   ];
 
   sourceFiles = fs.unions (csProjDepsHelper.projectPaths ++ miscFiles);
@@ -30,7 +31,7 @@
 in
   buildDotnetModule rec {
     inherit pname;
-    version = "0";
+    version = builtins.readFile (lib.path.append flake-root "version");
 
     src = fs.toSource {
       inherit root;

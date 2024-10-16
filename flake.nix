@@ -13,9 +13,10 @@
   };
 
   outputs = {self, ...} @ inputs: let
+    projectRoot = ./.;
     lib = inputs.snowfall-lib.mkLib {
       inherit inputs;
-      src = ./.;
+      src = projectRoot;
       snowfall.root = ./nix;
     };
   in
