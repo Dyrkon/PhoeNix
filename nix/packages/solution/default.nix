@@ -1,30 +1,24 @@
-{  # Snowfall Lib provides a customized `lib` instance with access to your flake's library
-  # as well as the libraries available from your flake's inputs.
+{
   lib,
-  # You also have access to your flake's inputs.
   inputs,
-  # The namespace used for your flake, defaulting to "internal" if not set.
   namespace,
-  # All other arguments come from NixPkgs. You can use `pkgs` to pull packages or helpers
-  # programmatically or you may add the named attributes as arguments here.
   pkgs,
   stdenv,
   mkShell,
-  ... 
-}:
-let
+  ...
+}: let
   fs = lib.fileset;
 
   root = ../..;
 
-  sourceFiles = fs.unions [ (lib.path.append root "sources") ];
+  sourceFiles = builtins.trace (builtins.toJSON builtins.mapAttrs (name: value: "${name}${value}") lib) fs.unions [(lib.path.append root "sources")];
 
   PhoeNix = pkgs.buildDotnetModule rec {
     pname = "PhoeNix";
-    version = lib.strings.fileContents (lib.path.append root "../version");
+    version = "0";
 
     src = fs.toSource {
-      root = (lib.path.append root "sources");
+      root = lib.path.append root "sources";
       fileset = sourceFiles;
     };
 
@@ -34,7 +28,7 @@ let
     dotnet-sdk = pkgs.dotnetCorePackages.sdk_8_0;
     dotnet-runtime = pkgs.dotnetCorePackages.aspnetcore_8_0;
 
-    runtimeDeps = [ ];
+    runtimeDeps = [];
 
     useAppHost = false;
 
@@ -51,7 +45,7 @@ let
 
     passthru = {
       devShell = mkShell {
-        inputsFrom = [ PhoeNix ];
+        inputsFrom = [PhoeNix];
         shellHook = ''
           export DOTNET_ROOT=${PhoeNix.dotnet-runtime}
           export LD_LIBRARY_PATH="${PhoeNix.dotnet-sdk.icu}/lib:${lib.makeLibraryPath PhoeNix.runtimeDeps}"
@@ -61,4 +55,4 @@ let
     };
   };
 in
-PhoeNix
+  PhoeNix

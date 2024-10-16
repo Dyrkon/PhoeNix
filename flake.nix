@@ -8,27 +8,27 @@
       url = "github:snowfallorg/lib";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
   };
 
-  outputs = inputs:
-    let
-      lib = inputs.snowfall-lib.mkLib {
-        # You must pass in both your flake's inputs and the root directory of
-        # your flake.
-        inherit inputs;
-        src = ./.;
-
-        # You can optionally place your Snowfall-related files in another
-        # directory.
-        snowfall.root = ./nix;
-      };
-    in
-    # We'll cover what to do here next.
+  outputs = {self, ...} @ inputs: let
+    lib = inputs.snowfall-lib.mkLib {
+      inherit inputs;
+      src = ./.;
+      snowfall.root = ./nix;
+    };
+  in
     lib.mkFlake {
-      alias = {
-          packages = {
-            default = "solution";
+      outputs-builder = channels: {
+        formatter = channels.nixpkgs.alejandra;
+
+        apps = rec {
+          updateDeps = import ./nix/apps/updateDeps.nix {
+            inputs = inputs;
+            pkgs = channels.nixpkgs;
           };
         };
+      };
     };
 }

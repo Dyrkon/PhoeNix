@@ -1,14 +1,12 @@
-{ self', pkgs, ... }:
-let
+{pkgs, ...}: let
   port = 5000;
-  command = pkgs.lib.getExe self'.packages.webapp;
+  command = pkgs.lib.getExe inputs.self.packages.${pkgs.system}.webapp;
   readinessProbe = pkgs.writeShellScript "app-ready.sh" ''
     ${pkgs.lib.getExe pkgs.curl} -sf localhost:${toString port}
   '';
-in
-{
+in {
   inherit command;
-  environment = [ ];
+  environment = [];
   depends_on = {
     webapi.condition = "process_healthy";
   };

@@ -1,5 +1,4 @@
-{ self', pkgs, ... }:
-let
+{pkgs, ...}: let
   # This will run on 80 in production
   facePort = 8000;
   apiPort = 5083;
@@ -50,8 +49,7 @@ let
   readinessProbe = pkgs.writeShellScript "api-ready.sh" ''
     ${pkgs.lib.getExe pkgs.curl} -sf localhost:${toString facePort}
   '';
-in
-{
+in {
   inherit command;
   readiness_probe = {
     exec.command = "${readinessProbe}";

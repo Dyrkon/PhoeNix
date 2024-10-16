@@ -1,4 +1,8 @@
-{ self', pkgs, ... }:
 {
-  program = "${pkgs.writeScript "updateDeps" "${self'.packages.default.fetch-deps} nix/deps.nix"}";
+  inputs,
+  pkgs,
+  ...
+}: {
+  type = "app";
+  program = "${pkgs.writeScript "updateDeps" "${inputs.self.packages.${pkgs.system}.solution.fetch-deps} deps.nix"}";
 }
