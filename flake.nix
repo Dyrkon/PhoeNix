@@ -14,13 +14,19 @@
 
   outputs = {self, ...} @ inputs: let
     projectRoot = ./.;
+    namespace = "phoenix";
     lib = inputs.snowfall-lib.mkLib {
       inherit inputs;
       src = projectRoot;
       snowfall.root = ./nix;
+      namespace = namespace;
     };
   in
     lib.mkFlake {
+      imports = [
+        inputs.process-compose-flake.flakeModule
+      ];
+
       outputs-builder = channels: {
         formatter = channels.nixpkgs.alejandra;
 

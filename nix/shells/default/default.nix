@@ -6,7 +6,7 @@
   mkShell,
   ...
 }: let
-  solution = inputs.self.packages.${pkgs.system}.solution;
+  solution = pkgs.${namespace}.solution;
   shell = mkShell {
     packages =
       solution.runtimeDeps
