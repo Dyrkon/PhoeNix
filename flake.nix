@@ -1,15 +1,41 @@
 {
-  description = "A very basic flake";
+  description = "PhoeNix flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+
+    snowfall-lib = {
+      url = "github:snowfallorg/lib";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
   };
 
-  outputs = { self, nixpkgs }: {
+  outputs = {self, ...} @ inputs: let
+    projectRoot = ./.;
+    namespace = "phoenix";
+    lib = inputs.snowfall-lib.mkLib {
+      inherit inputs;
+      src = projectRoot;
+      snowfall.root = ./nix;
+      namespace = namespace;
+    };
+  in
+    lib.mkFlake {
+      imports = [
+        inputs.process-compose-flake.flakeModule
+      ];
 
-    packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
+      outputs-builder = channels: {
+        formatter = channels.nixpkgs.alejandra;
 
-    packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
-
-  };
+        apps = rec {
+          updateDeps = import ./nix/apps/updateDeps.nix {
+            inputs = inputs;
+            pkgs = channels.nixpkgs;
+          };
+        };
+      };
+    };
 }
