@@ -33,7 +33,6 @@
     shellHook = ''
       export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs}/bin/node;
       export PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH=${chrome-path};
-      export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
       export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
       export DOTNET_ROOT=${solution.dotnet-runtime}
       export LD_LIBRARY_PATH="${solution.dotnet-sdk.icu}/lib:${pkgs.lib.makeLibraryPath solution.runtimeDeps}"
