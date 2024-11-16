@@ -1,0 +1,27 @@
+name: Nix Test
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CI: true
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Go to development environment
+      run: nix develop
+    - name: Test Nix WebAPI
+      run: dotnet test sources/tests/PhoeNix.WebAPI.Tests/PhoeNix.WebAPI.Tests.csproj
+    - name: Test Nix WebApp
+      shell: bash
+      run: |
+        cd sources/tests/PhoeNix.WebAPP.Tests
+        nix run .#playwright

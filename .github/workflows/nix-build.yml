@@ -17,5 +17,3 @@ jobs:
       run: nix build .#webapp
     - name: Build Nix API
       run: nix build .#webapi
-    - name: Build Nix Pxe runner
-      run: nix build .#pxe-starter
