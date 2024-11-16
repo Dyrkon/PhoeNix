@@ -35,6 +35,11 @@
             inputs = inputs;
             pkgs = channels.nixpkgs;
           };
+
+          playwright = import ./nix/apps/playwrightWithSettings.nix {
+            inputs = inputs;
+            pkgs = channels.nixpkgs;
+          };
         };
       };
     };

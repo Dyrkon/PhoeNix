@@ -17,14 +17,11 @@ jobs:
       with:
         github_access_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Go to development environment
-      shell: bash
-      run: |
-        nix develop
-        env
-        echo $PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH
-        echo "PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH=${PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH}" >> $GITHUB_ENV
-
+      run: nix develop
     - name: Test Nix WebAPI
       run: dotnet test sources/tests/PhoeNix.WebAPI.Tests/PhoeNix.WebAPI.Tests.csproj
     - name: Test Nix WebApp
-      run: dotnet test sources/tests/PhoeNix.WebAPP.Tests/PhoeNix.WebAPP.Tests.csproj -- Playwright.LaunchOptions.ExecutablePath=${{ env.PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH }}
+      shell: bash
+      run: |
+        cd sources/tests/PhoeNix.WebAPP.Tests
+        nix run .#playwright

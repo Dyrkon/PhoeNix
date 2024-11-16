@@ -25,4 +25,8 @@
         <Using Include="System.Threading.Tasks"/>
     </ItemGroup>
 
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent"> 
+        <Exec Command="sh ./postbuild.sh" /> 
+    </Target>
+
 </Project>
