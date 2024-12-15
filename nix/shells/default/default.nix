@@ -19,6 +19,7 @@
         pkgs.alejandra
         pkgs.nodejs
         pkgs.powershell
+        pkgs.pixiecore
       ];
     shellHook = ''
       export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
