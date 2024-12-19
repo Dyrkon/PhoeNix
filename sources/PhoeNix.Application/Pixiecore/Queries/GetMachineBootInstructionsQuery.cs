@@ -20,7 +20,7 @@ public class GetMachineBootInstructionsHandler(IApplicationDbContext application
             .Where(machine => machine.MacAddress == request.MacAddress)
             .Select(machine => machine.BootInstructions).FirstOrDefaultAsync(cancellationToken);
 
-        if (bootInstructions is null)
+        if (bootInstructions is null or [])
             return Result.Failure<PixiecoreResponse>(new Machine.MachineMacNotFound(request.MacAddress));
 
         var bootInstruction = bootInstructions.First();

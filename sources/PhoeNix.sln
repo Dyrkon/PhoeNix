@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoeNix.Persistence", "PhoeNix.Persistence\PhoeNix.Persistence.csproj", "{FC26C45F-E68C-46DA-A178-CC7F45437002}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoeNix.Infrastructure", "PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj", "{8E2257B4-7E91-45ED-85AA-8B8284F70F80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,7 @@ Global
 		{488EC19C-B065-45A1-A895-1317E20A91DE} = {D71BDEBE-857C-4DBA-A6A4-5F8BF9497B03}
 		{05F35BA4-9C63-4CCC-BDD8-D95F676B27E1} = {D71BDEBE-857C-4DBA-A6A4-5F8BF9497B03}
 		{FC26C45F-E68C-46DA-A178-CC7F45437002} = {24DD4477-693D-4EAF-B362-D35A552C14F3}
+		{8E2257B4-7E91-45ED-85AA-8B8284F70F80} = {24DD4477-693D-4EAF-B362-D35A552C14F3}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E4E487DE-CEB2-4AC7-BC6C-E3281CAFF77D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -97,5 +100,9 @@ Global
 		{FC26C45F-E68C-46DA-A178-CC7F45437002}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC26C45F-E68C-46DA-A178-CC7F45437002}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC26C45F-E68C-46DA-A178-CC7F45437002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E2257B4-7E91-45ED-85AA-8B8284F70F80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E2257B4-7E91-45ED-85AA-8B8284F70F80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E2257B4-7E91-45ED-85AA-8B8284F70F80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E2257B4-7E91-45ED-85AA-8B8284F70F80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

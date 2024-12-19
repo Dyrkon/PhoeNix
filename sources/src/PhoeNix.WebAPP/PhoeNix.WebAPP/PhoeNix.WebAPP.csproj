@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PhoeNix.WebAPP.Client\PhoeNix.WebAPP.Client.csproj"/>
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.*"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.11" />
     </ItemGroup>
 
 </Project>

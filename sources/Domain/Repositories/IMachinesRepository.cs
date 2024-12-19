@@ -5,7 +5,7 @@ namespace Domain.Repositories;
 
 public interface IMachinesRepository
 {
-    Task<Machine> GetByMacAddressAsync(PhysicalAddress macAddress, CancellationToken cancellationToken);
+    Task<Machine?> GetByMacAddressAsync(PhysicalAddress macAddress, CancellationToken cancellationToken);
 
     void Add(Machine machine);
 }
