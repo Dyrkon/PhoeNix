@@ -22,7 +22,7 @@
       ];
     shellHook = ''
       export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-      export DOTNET_ROOT=${solution.dotnet-runtime}
+      export DOTNET_ROOT=${solution.dotnet-sdk}
       export LD_LIBRARY_PATH="${solution.dotnet-sdk.icu}/lib:${pkgs.lib.makeLibraryPath solution.runtimeDeps}"
       unset DOTNET_SKIP_FIRST_TIME_EXPERIENCE
     '';
