@@ -6,6 +6,7 @@ namespace PhoeNix.Domain.Entities.Modules;
 
 public class RangeValue<T> : IEntryValue where T : INumber<T>
 {
+    public EntryValueId Id { get; init; }
     public string Name { get; init; }
     public Guid Placeholder { get; init; }
     public string Value => UpperValue.ToString();
@@ -18,8 +19,9 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
 
     public T Min { get; private set; }
 
-    private RangeValue(T max, T min, T upperValue, Guid placeholder)
+    private RangeValue(EntryValueId id, T max, T min, T upperValue, Guid placeholder)
     {
+        Id = id;
         UpperValue = upperValue;
         Max = max;
         Min = min;
@@ -53,7 +55,8 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
         return Result.Success();
     }
 
-    public static Result<RangeValue<T>> Create(string name, Guid placeHolder, T max, T min, T upperValue, T lowerValue)
+    public static Result<RangeValue<T>> Create(EntryValueId id, string name, Guid placeHolder, T max, T min,
+        T upperValue, T lowerValue)
     {
         if (max < min || min > max)
             return Result.Failure<RangeValue<T>>(new Error("", $"Max {max} has to be larger than min {min}"));
@@ -62,10 +65,10 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
             return Result.Failure<RangeValue<T>>(new Error("",
                 $"Max {max} and min {min} have to belong in <{min},{max}> interval"));
 
-        return new RangeValue<T>(max, min, upperValue, placeHolder) { LowerValue = lowerValue, Name = name };
+        return new RangeValue<T>(id, max, min, upperValue, placeHolder) { LowerValue = lowerValue, Name = name };
     }
 
-    public static Result<RangeValue<T>> Create(string name, Guid placeHolder, T max, T min, T value)
+    public static Result<RangeValue<T>> Create(EntryValueId id, string name, Guid placeHolder, T max, T min, T value)
     {
         if (max < min || min > max)
             return Result.Failure<RangeValue<T>>(new Error("", $"Max {max} has to be larger than min {min}"));
@@ -74,6 +77,6 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
             return Result.Failure<RangeValue<T>>(new Error("",
                 $"Value {value} has to belong in <{min},{max}> interval"));
 
-        return new RangeValue<T>(max, min, value, placeHolder) { Name = name };
+        return new RangeValue<T>(id, max, min, value, placeHolder) { Name = name };
     }
 }

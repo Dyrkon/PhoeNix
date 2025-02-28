@@ -21,6 +21,8 @@ public class Module : AggregateRoot<ModuleId>
 
     public IReadOnlyList<ModuleEntry> Entries => _entries;
 
+    public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
+
     public Result AddEntry(ModuleEntry entry)
     {
         if (_entries.Any(e => e.Id == entry.Id))
@@ -98,6 +100,4 @@ public class Module : AggregateRoot<ModuleId>
             Type = type
         };
     }
-
-    public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
 }
