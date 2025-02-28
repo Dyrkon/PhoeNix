@@ -121,7 +121,7 @@ public class Flake : Entity<FlakeId>
         return Result.Success();
     }
 
-    public Result<List<Architecture>> SupportedSystemArchitectures()
+    public IReadOnlyList<Architecture> SupportedSystemArchitectures()
     {
         List<Architecture> supportedArchitectures = new();
         if (_systems.All(s => s.System.Architecture == Architecture.X86Linux))
