@@ -10,10 +10,12 @@ public class MultiChoiceValue<T> : IEntryValue
 
     private T _value;
 
-    private MultiChoiceValue()
+    private MultiChoiceValue(EntryValueId id)
     {
+        Id = id;
     }
 
+    public EntryValueId Id { get; init; }
     public string Name { get; init; }
     public Guid Placeholder { get; init; }
     public string Value => _value.ToString();
@@ -57,14 +59,15 @@ public class MultiChoiceValue<T> : IEntryValue
         return Result.Success();
     }
 
-    public static Result<MultiChoiceValue<T>> Create(List<T> options, T defaultValue, Guid placeHolder, string name)
+    public static Result<MultiChoiceValue<T>> Create(EntryValueId id, List<T> options, T defaultValue, Guid placeHolder,
+        string name)
     {
         if (!options.Contains(defaultValue))
             return Result.Failure<MultiChoiceValue<T>>(new Error("",
                 $"Default value {defaultValue} is not present in options"));
 
         return new Result<MultiChoiceValue<T>>(true, Error.None,
-            new MultiChoiceValue<T>() { Placeholder = placeHolder, Name = name }).Tap(o =>
+            new MultiChoiceValue<T>(id) { Placeholder = placeHolder, Name = name }).Tap(o =>
             o.AddOptions(options));
     }
 }

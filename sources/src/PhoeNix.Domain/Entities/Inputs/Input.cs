@@ -11,7 +11,7 @@ public class Input : Entity<InputId>
 
     public string Source { get; private set; }
     public string Name { get; private set; }
-    public InputId Follows { get; private set; }
+    public InputId? Follows { get; private set; }
 
     public Result ChangeSource(string newSource)
     {
@@ -41,7 +41,7 @@ public class Input : Entity<InputId>
         return Result.Success();
     }
 
-    public static Result<Input> Create(InputId id, string source, string name, InputId follows)
+    public static Result<Input> Create(InputId id, string source, string name, InputId? follows = null)
     {
         return new Input(id)
         {

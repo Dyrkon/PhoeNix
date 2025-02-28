@@ -11,11 +11,23 @@ public class System : AggregateRoot<SystemId>
     private readonly List<SystemModule> _modules = new();
 
     public Architecture Architecture { get; private set; }
+
+    public string Name { get; private set; }
+
     public IReadOnlyList<SystemModule> Modules => _modules;
 
 
     private System(SystemId id) : base(id)
     {
+    }
+
+    public Result ChangeName(string newName)
+    {
+        if (newName == string.Empty)
+            return Result.Failure(new Error("", $"System name can't be empty"));
+
+        Name = newName;
+        return Result.Success();
     }
 
     public Result AddModule(Module module)
@@ -39,8 +51,8 @@ public class System : AggregateRoot<SystemId>
         return Result.Success();
     }
 
-    public static Result<System> Create(SystemId id, Architecture architecture)
+    public static Result<System> Create(SystemId id, Architecture architecture, string name)
     {
-        return new System(id) { Architecture = architecture };
+        return new System(id) { Architecture = architecture, Name = name };
     }
 }
