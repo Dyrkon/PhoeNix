@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
     </ItemGroup>
 
 </Project>

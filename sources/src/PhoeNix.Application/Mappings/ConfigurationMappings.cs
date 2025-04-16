@@ -1,0 +1,26 @@
+using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Extensions;
+using PhoeNix.Domain.Models.Configurations;
+
+namespace PhoeNix.Application.Mappings;
+
+public static class ConfigurationMappings
+{
+    public static ConfigurationResponse MapFlakeToDto(Configuration flake)
+    {
+        return new ConfigurationResponse(
+            flake.Id,
+            flake.Title,
+            flake.Description,
+            flake.Inputs.Select(InputMappings.MapInputToDto).ToList(),
+            flake.Modules.Select(m => ModuleMappings.MapModuleToListDto(m.Module)).ToList(),
+            flake.Systems.Select(s => SystemMappings.MapSystemToListDto(s.System)).ToList(),
+            flake.Homes.Select(h => HomeMappings.MapHomeToListDto(h.Home)).ToList(),
+            flake.SupportedSystemArchitectures().Value.ToList());
+    }
+
+    public static ConfigurationListResponse MapFlakeToListDto(Configuration flake)
+    {
+        return new ConfigurationListResponse(flake.Id, flake.Title, flake.Description);
+    }
+}
