@@ -1,4 +1,5 @@
 name: Nix Test
+
 on:
   push:
     branches: [ "main" ]
@@ -9,19 +10,26 @@ env:
   CI: true
 
 jobs:
-  Test:
+  test:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: cachix/install-nix-action@v27
-      with:
-        github_access_token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Go to development environment
-      run: nix develop
-    - name: Test Nix WebAPI
-      run: dotnet test sources/tests/PhoeNix.WebAPI.Tests/PhoeNix.WebAPI.Tests.csproj
-    - name: Test Nix WebApp
-      shell: bash
-      run: |
-        cd sources/tests/PhoeNix.WebAPP.Tests
-        nix run .#playwright
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Domain Unit Tests
+        run: nix develop --command dotnet test sources/tests/PhoeNix.Domain.UnitTests/PhoeNix.Domain.UnitTests.csproj
+
+      - name: Run Application Unit Tests
+        run: nix develop --command dotnet test sources/tests/PhoeNix.Application.UnitTests/PhoeNix.Application.UnitTests.csproj
+
+      - name: Run WebAPI Tests
+        run: nix develop --command dotnet test sources/tests/PhoeNix.WebAPI.Tests/PhoeNix.WebAPI.Tests.csproj
+
+      - name: Run WebApp Playwright Tests
+        run: nix develop --command bash -c "cd sources/tests/PhoeNix.WebAPP.Tests && nix run .#playwright"

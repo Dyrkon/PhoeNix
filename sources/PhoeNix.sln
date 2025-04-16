@@ -34,6 +34,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{AA608F2A-3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoeNix.Domain.UnitTests", "tests\PhoeNix.Domain.UnitTests\PhoeNix.Domain.UnitTests.csproj", "{FFE2E55C-53D9-479B-AC3A-F5B79706917D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoeNix.Application.UnitTests", "tests\PhoeNix.Application.UnitTests\PhoeNix.Application.UnitTests.csproj", "{51C52C70-E2F5-435F-8558-E329F19ED64E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,7 @@ Global
 		{8F6433BC-475A-4FEA-A616-21C1597CEB1F} = {C101AAC2-F2B9-4BF7-B482-1555EA87F592}
 		{AA608F2A-3F1A-42C4-801E-B97D1DBE656D} = {FC94C6EF-4555-4BE9-8110-EDDA9B0728FC}
 		{FFE2E55C-53D9-479B-AC3A-F5B79706917D} = {AA608F2A-3F1A-42C4-801E-B97D1DBE656D}
+		{51C52C70-E2F5-435F-8558-E329F19ED64E} = {AA608F2A-3F1A-42C4-801E-B97D1DBE656D}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E4E487DE-CEB2-4AC7-BC6C-E3281CAFF77D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -89,5 +92,9 @@ Global
 		{FFE2E55C-53D9-479B-AC3A-F5B79706917D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFE2E55C-53D9-479B-AC3A-F5B79706917D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFE2E55C-53D9-479B-AC3A-F5B79706917D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51C52C70-E2F5-435F-8558-E329F19ED64E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51C52C70-E2F5-435F-8558-E329F19ED64E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51C52C70-E2F5-435F-8558-E329F19ED64E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51C52C70-E2F5-435F-8558-E329F19ED64E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -26,4 +26,9 @@ public class HomeUser : Entity<HomeUserId>
             UserId = userId
         };
     }
+    
+    internal void SetUser(User user)
+    {
+        User = user;
+    }
 }

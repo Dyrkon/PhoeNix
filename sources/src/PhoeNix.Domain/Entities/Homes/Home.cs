@@ -42,4 +42,9 @@ public class Home : AggregateRoot<HomeId>
     {
         return new Home(id) { Name = name };
     }
+
+    internal void SetHomeUser(HomeUser user)
+    {
+        HomeUser = user;
+    }
 }

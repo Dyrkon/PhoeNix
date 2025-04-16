@@ -26,4 +26,9 @@ public class HomeModule : Entity<HomeModuleId>
             ModuleId = moduleId
         };
     }
+    
+    internal void SetModule(Module module)
+    {
+        Module = module;
+    }
 }

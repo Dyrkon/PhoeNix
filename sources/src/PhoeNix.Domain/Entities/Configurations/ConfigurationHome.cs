@@ -27,4 +27,9 @@ public class ConfigurationHome : Entity<ConfigurationHomeId>
             HomeId = configurationHomeId
         };
     }
+
+    internal void SetHome(Home home)
+    {
+        Home = home;
+    }
 }
