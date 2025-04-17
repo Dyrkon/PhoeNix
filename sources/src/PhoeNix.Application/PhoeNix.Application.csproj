@@ -10,4 +10,8 @@
         <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.15" />
+    </ItemGroup>
+
 </Project>

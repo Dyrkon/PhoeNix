@@ -8,6 +8,8 @@ namespace PhoeNix.Domain.Entities.Homes;
 
 public class Home : AggregateRoot<HomeId>
 {
+    private readonly List<HomeUser> _users = new();
+
     private Home(HomeId id) : base(id)
     {
     }
@@ -19,6 +21,8 @@ public class Home : AggregateRoot<HomeId>
     public string Name { get; private set; }
 
     public IReadOnlyList<HomeModule> Modules => _modules;
+
+    public IReadOnlyList<HomeUser> Users => _users;
 
     public Result AddModule(Module module)
     {
