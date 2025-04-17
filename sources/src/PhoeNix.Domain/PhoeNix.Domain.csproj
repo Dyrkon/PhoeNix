@@ -7,7 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
+        <InternalsVisibleTo Include="PhoeNix.Domain.UnitTests"/>
+        <InternalsVisibleTo Include="PhoeNix.Application.UnitTests"/>
     </ItemGroup>
 
 </Project>

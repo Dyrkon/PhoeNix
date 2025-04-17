@@ -7,6 +7,6 @@ public static class UserMappings
 {
     public static UserResponse MapUserToDto(User user)
     {
-        return new UserResponse();
+        return new UserResponse(user.Id);
     }
 }
