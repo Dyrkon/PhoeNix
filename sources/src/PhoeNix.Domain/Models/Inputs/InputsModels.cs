@@ -6,5 +6,5 @@ public record InputResponse(
     InputId Id,
     string Source,
     string Name,
-    InputId? Follows
+    InputResponse? Follows = null
 );

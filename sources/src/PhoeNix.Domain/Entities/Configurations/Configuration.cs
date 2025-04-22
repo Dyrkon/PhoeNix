@@ -11,14 +11,14 @@ namespace PhoeNix.Domain.Entities.Configurations;
 
 public class Configuration : AggregateRoot<ConfigurationId>
 {
-    private readonly List<Input> _inputs = new();
+    private readonly List<ConfigurationInput> _inputs = new();
     private readonly List<ConfigurationModule> _modules = new();
     private readonly List<ConfigurationSystem> _systems = new();
     private readonly List<ConfigurationHome> _homes = new();
 
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public IReadOnlyList<Input> Inputs => _inputs;
+    public IReadOnlyList<ConfigurationInput> Inputs => _inputs;
     public IReadOnlyList<ConfigurationModule> Modules => _modules;
     public IReadOnlyList<ConfigurationSystem> Systems => _systems;
     public IReadOnlyList<ConfigurationHome> Homes => _homes;
@@ -106,19 +106,20 @@ public class Configuration : AggregateRoot<ConfigurationId>
         return Result.Success();
     }
 
-    public Result AddInput(Input input)
+    public Result AddInput(InputId inputId)
     {
-        if (_inputs.Any(i => i.Id == input.Id))
+        if (_inputs.Any(i => i.InputId == inputId))
             return Result.Failure(new Error("",
-                $"This input ({input.Name}) is added to this ({Title}) configuration already"));
+                $"This input ({inputId}) is added to this ({Title}) configuration already"));
 
-        _inputs.Add(input);
+        return ConfigurationInput.Create(new ConfigurationInputId(Guid.NewGuid()), Id, inputId)
+            .Tap(i => _inputs.Add(i));
         return Result.Success();
     }
 
     public Result RemoveInput(InputId inputId)
     {
-        var removeHomes = _inputs.RemoveAll(i => i.Id == inputId);
+        var removeHomes = _inputs.RemoveAll(i => i.InputId == inputId);
         if (removeHomes == 0)
             return Result.Failure(new Error("",
                 $"There is no input with id {inputId} in this ({Title}) configuration"));

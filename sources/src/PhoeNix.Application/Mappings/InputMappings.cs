@@ -7,6 +7,8 @@ public static class InputMappings
 {
     public static InputResponse MapInputToDto(Input input)
     {
-        return new InputResponse(input.Id, input.Source, input.Name, input.Follows);
+        return input.Follows != null ? 
+            new InputResponse(input.Id, input.Source, input.Name, MapInputToDto(input.Follows)) :
+            new InputResponse(input.Id, input.Source, input.Name);
     }
 }

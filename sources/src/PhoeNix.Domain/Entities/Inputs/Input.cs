@@ -5,52 +5,59 @@ namespace PhoeNix.Domain.Entities.Inputs;
 
 public class Input : Entity<InputId>
 {
+    private readonly List<Input> _followers = new();
+
     private Input(InputId id) : base(id)
     {
     }
 
     public string Source { get; private set; }
     public string Name { get; private set; }
-    public InputId? Follows { get; private set; }
+
+    public InputId? FollowsId { get; private set; }
+    public Input? Follows { get; private set; }
+
+    public IReadOnlyCollection<Input> Followers => _followers;
 
     public Result ChangeSource(string newSource)
     {
-        if (newSource == string.Empty)
+        if (string.IsNullOrEmpty(newSource))
             return Result.Failure(new Error("", "Source can't be empty"));
 
-        // TODO add regex
         Source = newSource;
         return Result.Success();
     }
 
     public Result ChangeName(string newName)
     {
-        if (newName == string.Empty)
+        if (string.IsNullOrEmpty(newName))
             return Result.Failure(new Error("", "Name can't be empty"));
 
         Name = newName;
         return Result.Success();
     }
 
-    public Result ChangeFollows(InputId newInputId)
+    public Result ChangeFollows(Input newInput)
     {
-        if (newInputId == Follows)
-            return Result.Failure(new Error("", $"This input already follows this input ({newInputId})"));
+        if (newInput.Id == Follows?.Id)
+            return Result.Failure(new Error("", $"This input already follows this input ({newInput.Id})"));
 
-        if (newInputId == Id)
+        if (newInput.Id == Id)
             return Result.Failure(new Error("", "Input can't follow itself"));
 
-        Follows = newInputId;
+        Follows = newInput;
+        FollowsId = newInput.Id;
         return Result.Success();
     }
 
-    public static Result<Input> Create(InputId id, string source, string name, InputId? follows = null)
+    public static Result<Input> Create(InputId id, string source, string name, Input? follows = null)
     {
         return new Input(id)
         {
             Source = source,
             Name = name,
-            Follows = follows
+            Follows = follows,
+            FollowsId = follows?.Id
         };
     }
 }

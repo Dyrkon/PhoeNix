@@ -18,6 +18,7 @@ public interface IApplicationDbContext
     DbSet<ConfigurationHome> ConfigurationHomes { get; }
     DbSet<ConfigurationSystem> ConfigurationSystems { get; }
     DbSet<ConfigurationModule> ConfigurationModules { get; }
+    DbSet<ConfigurationInput> ConfigurationInput { get; }
     DbSet<HomeModule> HomeModules { get; }
     DbSet<HomeUser> HomeUsers { get; }
     DbSet<SystemModule> SystemModules { get; }

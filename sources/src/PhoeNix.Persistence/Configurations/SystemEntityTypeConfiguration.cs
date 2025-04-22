@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class SystemEntityTypeConfiguration : IEntityTypeConfiguration<Domain.Entities.Systems.System>
+public class SystemEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Domain.Entities.Systems.System>
 {
     public void Configure(EntityTypeBuilder<Domain.Entities.Systems.System> builder)
     {

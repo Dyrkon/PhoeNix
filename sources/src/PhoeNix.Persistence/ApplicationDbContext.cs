@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ConfigurationHome> ConfigurationHomes { get; set; }
     public DbSet<ConfigurationSystem> ConfigurationSystems { get; set; }
     public DbSet<ConfigurationModule> ConfigurationModules { get; set; }
+    public DbSet<ConfigurationInput> ConfigurationInput { get; set; }
     public DbSet<HomeModule> HomeModules { get; set; }
     public DbSet<HomeUser> HomeUsers { get; set; }
     public DbSet<SystemModule> SystemModules { get; set; }
@@ -41,8 +42,18 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             }
         );
 
-        // TODO Seeding
+        SeedDb(modelBuilder);
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    private void SeedDb(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>()
+            .HasData(
+                User.Create(
+                    new UserId(Guid.NewGuid())
+                ).Value
+            );
     }
 }

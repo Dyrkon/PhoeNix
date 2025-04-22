@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class SystemModuleEntityTypeConfiguration : IEntityTypeConfiguration<SystemModule>
+public class SystemModuleEntityTypeConfiguration : IApplicationEntityTypeConfiguration<SystemModule>
 {
     public void Configure(EntityTypeBuilder<SystemModule> builder)
     {

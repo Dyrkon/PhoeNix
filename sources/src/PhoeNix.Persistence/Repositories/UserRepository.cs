@@ -3,7 +3,7 @@ using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-internal sealed class UserRepository : Repository<User, UserId>, IUserRepository
+internal sealed class UserRepository : RepositoryBase<User, UserId>, IUserRepository
 {
     public UserRepository(ApplicationDbContext dbContext) : base(dbContext)
     {

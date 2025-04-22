@@ -4,19 +4,28 @@ using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-internal sealed class InputRepository : Repository<Input, InputId>, IInputRepository
+internal sealed class InputRepository : RepositoryBase<Input, InputId>, IInputRepository
 {
-    public InputRepository(ApplicationDbContext dbContext) : base(dbContext)
+    public InputRepository(ApplicationDbContext dbContext) : base(dbContext) { }
+
+    public override Task<Input?> GetByIdAsync(InputId id, CancellationToken token)
     {
+        return DbContext.Inputs
+            .Include(i => i.Follows)
+            .Include(i => i.Followers)
+            .SingleOrDefaultAsync(i => i.Id == id, cancellationToken: token);
     }
 
     public Task<Input?> GetByNameAsync(string name, CancellationToken token)
     {
-        return DbContext.Inputs.SingleOrDefaultAsync(i => i.Name.Contains(name), cancellationToken: token);
+        return DbContext.Inputs
+            .Include(i => i.Follows)
+            .Include(i => i.Followers)
+            .SingleOrDefaultAsync(i => i.Name.Contains(name), token);
     }
 
     public async Task<bool> IsSourceUniqueAsync(string source, CancellationToken token)
     {
-        return await DbContext.Inputs.CountAsync(i => i.Source == source, cancellationToken: token) == 1;
+        return await DbContext.Inputs.CountAsync(i => i.Source == source, token) == 1;
     }
 }

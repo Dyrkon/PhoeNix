@@ -23,6 +23,20 @@
           "Swashbuckle.AspNetCore.SwaggerUI": "6.4.0"
         }
       },
+      "MediatR": {
+        "type": "Transitive",
+        "resolved": "12.5.0",
+        "contentHash": "vqm2H8/nqL5NAJHPhsG1JOPwfkmbVrPyh4svdoRzu+uZh6Ex7PRoHBGsLYC0/RWCEJFqD1ohHNpteQvql9OktA==",
+        "dependencies": {
+          "MediatR.Contracts": "[2.0.1, 3.0.0)",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
+        }
+      },
+      "MediatR.Contracts": {
+        "type": "Transitive",
+        "resolved": "2.0.1",
+        "contentHash": "FYv95bNT4UwcNA+G/J1oX5OpRiSUxteXaUt2BJbRSdRNiIUNbggJF69wy6mnk2wYToaanpdXZdCwVylt96MpwQ=="
+      },
       "Microsoft.Data.Sqlite.Core": {
         "type": "Transitive",
         "resolved": "8.0.15",
@@ -51,6 +65,14 @@
         "type": "Transitive",
         "resolved": "8.0.15",
         "contentHash": "viyTqFw09xwhynmvYggUu48R0Y6WEU2dDKBKm7WwozDH5t1K7+RS9P+iXGe5uUNJstTH/STd2AMFKpT9GaX4OQ=="
+      },
+      "Microsoft.EntityFrameworkCore.InMemory": {
+        "type": "Transitive",
+        "resolved": "8.0.15",
+        "contentHash": "dA9D6HMKdWnZEpMQdL1CdpRALLEOyBno/S+vC8UEktqp/ZsxN3cnJWoouoAsrXmcNkh29Ryh+DpZdP1/LRKiug==",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "8.0.15"
+        }
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
@@ -227,6 +249,7 @@
       "phoenix.application": {
         "type": "Project",
         "dependencies": {
+          "MediatR": "[12.5.0, )",
           "Microsoft.EntityFrameworkCore": "[8.0.15, )",
           "PhoeNix.Domain": "[1.0.0, )"
         }
@@ -238,6 +261,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.EntityFrameworkCore": "[8.0.15, )",
+          "Microsoft.EntityFrameworkCore.InMemory": "[8.0.15, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[8.0.15, )",
           "PhoeNix.Application": "[1.0.0, )",
           "PhoeNix.Domain": "[1.0.0, )"

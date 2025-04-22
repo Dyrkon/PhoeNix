@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class ConfigurationHomeEntityTypeConfiguration : IEntityTypeConfiguration<ConfigurationHome>
+public class ConfigurationHomeEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ConfigurationHome>
 {
     public void Configure(EntityTypeBuilder<ConfigurationHome> builder)
     {

@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Inputs;
+using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class InputEntityTypeConfiguration : IEntityTypeConfiguration<Input>
+public class InputEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Input>
 {
     public void Configure(EntityTypeBuilder<Input> builder)
     {
@@ -17,5 +18,15 @@ public class InputEntityTypeConfiguration : IEntityTypeConfiguration<Input>
         builder.Property(i => i.Name).HasMaxLength(50);
 
         builder.Property(i => i.Source).HasMaxLength(500);
+
+        builder.Property(i => i.FollowsId).HasConversion(
+                id => id!.Value,
+                value => new InputId(value))
+            .IsRequired(false);
+
+        builder.HasOne(i => i.Follows)
+            .WithMany(i => i.Followers)
+            .HasForeignKey(i => i.FollowsId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

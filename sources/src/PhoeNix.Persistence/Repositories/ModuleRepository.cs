@@ -4,7 +4,7 @@ using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-internal sealed class ModuleRepository : Repository<Module, ModuleId>, IModuleRepository
+internal sealed class ModuleRepository : RepositoryBase<Module, ModuleId>, IModuleRepository
 {
     public ModuleRepository(ApplicationDbContext dbContext) : base(dbContext)
     {
@@ -12,6 +12,15 @@ internal sealed class ModuleRepository : Repository<Module, ModuleId>, IModuleRe
 
     public Task<Module?> GetByNameAsync(string name, CancellationToken token)
     {
-        return DbContext.Modules.SingleOrDefaultAsync(m => m.Name.Contains(name), cancellationToken: token);
+        return DbContext.Modules
+            .Include(m => m.Entries)
+            .SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+    }
+
+    public override Task<Module?> GetByIdAsync(ModuleId id, CancellationToken token)
+    {
+        return DbContext.Modules
+            .Include(m => m.Entries)
+            .SingleOrDefaultAsync(m => m.Id == id, token);
     }
 }

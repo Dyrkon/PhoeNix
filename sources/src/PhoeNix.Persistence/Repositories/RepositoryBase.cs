@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Domain.Primitives;
+using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-public abstract class Repository<TEntity, TId>
+public abstract class RepositoryBase<TEntity, TId> : IRepository<TEntity,TId> 
     where TId : StronglyTypedId
     where TEntity : Entity<TId>
 {
     protected readonly ApplicationDbContext DbContext;
 
-    protected Repository(ApplicationDbContext dbContext)
+    protected RepositoryBase(ApplicationDbContext dbContext)
     {
         DbContext = dbContext;
     }
@@ -18,9 +19,9 @@ public abstract class Repository<TEntity, TId>
     {
         DbContext.Set<TEntity>().Add(entity);
     }
-    
-    public virtual Task<TEntity?> GetByIdAsync(TId id)
+
+    public virtual Task<TEntity?> GetByIdAsync(TId id, CancellationToken token)
     {
-        return DbContext.Set<TEntity>().SingleOrDefaultAsync(e => e.Id == id);
+        return DbContext.Set<TEntity>().SingleOrDefaultAsync(e => e.Id == id, cancellationToken: token);
     }
 }

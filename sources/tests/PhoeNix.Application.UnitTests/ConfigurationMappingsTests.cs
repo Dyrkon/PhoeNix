@@ -7,8 +7,8 @@ using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Models.Configurations;
-using Xunit;
+
+namespace PhoeNix.Application.UnitTests;
 
 public class ConfigurationMappingsTests
 {
@@ -30,20 +30,19 @@ public class ConfigurationMappingsTests
     {
         var id = new ConfigurationId(Guid.NewGuid());
         var config = Configuration.Create(id, "Full Config", "Detailed description").Value;
-
-        var input = Input.Create(new InputId(Guid.NewGuid()), "github:nixos", "nixpkgs").Value;
+        
         var module = Module.Create(new ModuleId(Guid.NewGuid()), "mod", true, ModuleType.System,
             [Architecture.X86Linux]).Value;
         var system = PhoeNix.Domain.Entities.Systems.System
             .Create(new SystemId(Guid.NewGuid()), Architecture.X86Linux, "Name").Value;
         var home = Home.Create(new HomeId(Guid.NewGuid()), "My Home").Value;
+        var input = Input.Create(new InputId(Guid.NewGuid()), "github:nixos", "nixpkgs").Value;
 
-        // ✅ Set the HomeUser
         var userId = new UserId(Guid.NewGuid());
         var homeUser = HomeUser.Create(new HomeUserId(Guid.NewGuid()), home.Id, userId).Value;
         home.SetHomeUser(homeUser);
 
-        config.AddInput(input);
+        config.AddInput(input.Id);
         config.AddModule(module.Id);
         config.AddSystem(system.Id);
         config.AddHome(home.Id);
@@ -56,10 +55,14 @@ public class ConfigurationMappingsTests
 
         var ch = ConfigurationHome.Create(new ConfigurationHomeId(Guid.NewGuid()), config.Id, home.Id).Value;
         ch.SetHome(home);
+        
+        var ci = ConfigurationInput.Create(new ConfigurationInputId(Guid.NewGuid()), config.Id, input.Id).Value;
+        ci.SetInput(input);
 
         SetPrivateField(config, "_modules", [cm]);
         SetPrivateField(config, "_systems", [cs]);
         SetPrivateField(config, "_homes", [ch]);
+        SetPrivateField(config, "_inputs", [ci]);
 
         var dto = ConfigurationMappings.MapConfigurationToDto(config);
 
