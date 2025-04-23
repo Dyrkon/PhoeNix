@@ -10,9 +10,9 @@ public class InputMappingsTests
     public void MapInputToDto_Should_Map_Correctly()
     {
         var inputId = new InputId(Guid.NewGuid());
-        var followsId = new InputId(Guid.NewGuid());
+        var follows = Input.Create(inputId, "github:foo", "foo").Value;
 
-        var input = Input.Create(inputId, "github:nixos", "nixpkgs", followsId).Value;
+        var input = Input.Create(inputId, "github:nixos", "nixpkgs", follows).Value;
 
         var result = InputMappings.MapInputToDto(input);
 
@@ -20,7 +20,7 @@ public class InputMappingsTests
         result.Id.Should().Be(input.Id);
         result.Source.Should().Be(input.Source);
         result.Name.Should().Be(input.Name);
-        result.Follows.Should().Be(followsId);
+        result.Follows.Id.Should().Be(follows.Id);
     }
     
     [Fact]

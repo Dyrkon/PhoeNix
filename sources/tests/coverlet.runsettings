@@ -1,0 +1,15 @@
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Exclude>
+            <Exclude>
+              <ModuleName>PhoeNix.Common.Tests</ModuleName>
+            </Exclude>
+          </Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

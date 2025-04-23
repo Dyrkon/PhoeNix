@@ -176,7 +176,7 @@ public class ConfigurationTests
         var input = Input.Create(inputId1, "github:nixos", "nixpkgs").Value;
         var config = Configuration.Create(configId, title, description).Value;
 
-        var addResult = config.AddInput(input);
+        var addResult = config.AddInput(input.Id);
         var removeResult = config.RemoveInput(inputId1);
 
         addResult.IsSuccess.Should().BeTrue();
@@ -189,9 +189,9 @@ public class ConfigurationTests
     {
         var input = Input.Create(inputId1, "github:nixos", "nixpkgs").Value;
         var config = Configuration.Create(configId, title, description).Value;
-        config.AddInput(input);
+        config.AddInput(input.Id);
 
-        var result = config.AddInput(input);
+        var result = config.AddInput(input.Id);
 
         result.IsFailure.Should().BeTrue();
     }

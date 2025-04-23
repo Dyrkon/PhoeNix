@@ -27,11 +27,11 @@ public class InputTests
     public void Input_Should_Create_Input_That_Follows()
     {
         var snowfall = Input.Create(InputId1, Nixpkgs, NixpkgsName)
-            .Bind(r => Input.Create(InputId2, Snowfall, SnowfallName, r.Id));
+            .Bind(r => Input.Create(InputId2, Snowfall, SnowfallName, r));
 
         snowfall.IsSuccess.Should().BeTrue();
         snowfall.Value.Name.Should().Be(SnowfallName);
-        snowfall.Value.Follows.Should().Be(InputId1);
+        snowfall.Value.FollowsId.Should().Be(InputId1);
     }
 
     [Fact]
@@ -59,12 +59,14 @@ public class InputTests
     [Fact]
     public void Input_Should_Change_Following_Input()
     {
-        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName, InputId2);
+        var input2 = Input.Create(InputId2, Nixpkgs, NixpkgsName).Value;
+        var input3 = Input.Create(InputId3, Nixpkgs, NixpkgsName).Value;
+        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName, input2);
 
-        var result = input.Value.ChangeFollows(InputId3);
+        var result = input.Value.ChangeFollows(input3);
 
         result.IsSuccess.Should().BeTrue();
-        input.Value.Follows.Should().Be(InputId3);
+        input.Value.FollowsId.Should().Be(input3.Id);
     }
 
     [Theory]
@@ -94,9 +96,9 @@ public class InputTests
     [Fact]
     public void Input_Should_Fail_ChangeFollows_When_Follows_Self()
     {
-        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName);
+        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName).Value;
 
-        var result = input.Value.ChangeFollows(InputId1);
+        var result = input.ChangeFollows(input);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Input can't follow itself");
@@ -105,9 +107,10 @@ public class InputTests
     [Fact]
     public void Input_Should_Fail_ChangeFollows_When_Following_Same_Input()
     {
-        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName, InputId2);
+        var input2 = Input.Create(InputId2, Nixpkgs, NixpkgsName).Value;
+        var input = Input.Create(InputId1, Nixpkgs, NixpkgsName, input2);
 
-        var result = input.Value.ChangeFollows(InputId2);
+        var result = input.Value.ChangeFollows(input2);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be($"This input already follows this input ({InputId2})");
