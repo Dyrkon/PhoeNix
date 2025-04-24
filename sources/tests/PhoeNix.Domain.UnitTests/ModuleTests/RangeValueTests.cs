@@ -5,7 +5,7 @@ namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class RangeValueTests
 {
-    private readonly Guid placeholder = Guid.NewGuid();
+    private readonly string placeholder = Guid.NewGuid().ToString();
 
     [Fact]
     public void RangeValue_Should_Store_Values_And_Respect_Range()

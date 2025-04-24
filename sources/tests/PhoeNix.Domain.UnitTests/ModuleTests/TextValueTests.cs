@@ -5,7 +5,7 @@ namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class TextValueTests
 {
-    private readonly Guid placeholder = Guid.NewGuid();
+    private readonly string placeholder = Guid.NewGuid().ToString();
 
     [Fact]
     public void TextValue_Should_Store_Value_And_Placeholder()

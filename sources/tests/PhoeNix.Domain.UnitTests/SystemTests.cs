@@ -100,6 +100,6 @@ public class SystemTests
     // Helper
     private Module CreateModuleWithArch(ModuleId id, Architecture architecture)
     {
-        return Module.Create(id, "TestModule", true, ModuleType.Generic, [architecture]).Value;
+        return Module.Create(id, "TestModule", true, "", ModuleType.Generic, [architecture]).Value;
     }
 }

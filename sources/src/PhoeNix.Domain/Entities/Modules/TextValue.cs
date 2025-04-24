@@ -14,7 +14,7 @@ public class TextValue : IEntryValue
 
     public EntryValueId Id { get; init; }
     public string Name { get; init; }
-    public Guid Placeholder { get; init; }
+    public string Placeholder { get; init; }
     public string Value => _value;
 
     public Result SetValue(string value)
@@ -23,12 +23,12 @@ public class TextValue : IEntryValue
         return Result.Success();
     }
 
-    public static Result<TextValue> Create(EntryValueId id, string initialValue, string name, Guid placeHolder)
+    public static Result<TextValue> Create(EntryValueId id, string initialValue, string name, string placeHolder)
     {
         return new TextValue(id) { _value = initialValue, Placeholder = placeHolder, Name = name };
     }
 
-    public static Result<TextValue> Create(EntryValueId id, string name, Guid placeHolder)
+    public static Result<TextValue> Create(EntryValueId id, string name, string placeHolder)
     {
         return new TextValue(id) { _value = string.Empty, Placeholder = placeHolder, Name = name };
     }

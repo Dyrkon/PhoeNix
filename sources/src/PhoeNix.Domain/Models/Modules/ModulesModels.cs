@@ -15,19 +15,14 @@ public record ModuleResponse(
     string Name,
     bool Enabled,
     ModuleType Type,
-    List<ModuleEntryResponse> ModuleEntries,
-    List<Architecture> SupportedArchitectures
-);
-
-public record ModuleEntryResponse(
-    ModuleEntryId Id,
     string Content,
-    List<EntryValueResponse> EntryValues
+    List<EntryValueResponse> EntryValues,
+    List<Architecture> SupportedArchitectures
 );
 
 public record EntryValueResponse(
     EntryValueId Id,
     string Name,
-    Guid Placeholder,
+    string Placeholder,
     string Value
 );

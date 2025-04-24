@@ -22,6 +22,7 @@ public class HomeRepositoryTests : PersistenceTestsBase
             new ModuleId(Guid.NewGuid()),
             "Analytics",
             true,
+            "",
             ModuleType.Home,
             [Architecture.Aarch64Linux]
         ).Value;
@@ -59,6 +60,7 @@ public class HomeRepositoryTests : PersistenceTestsBase
             new ModuleId(Guid.NewGuid()),
             "Security",
             true,
+            "",
             ModuleType.Home,
             [Architecture.X86Linux]
         ).Value;

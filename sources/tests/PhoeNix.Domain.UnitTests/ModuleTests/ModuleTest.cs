@@ -2,15 +2,22 @@ using FluentAssertions;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
+using Xunit.Abstractions;
 
 namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class ModuleTest
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly ModuleId ModuleId1 = new(Guid.NewGuid());
-    private readonly ModuleEntryId EntryId1 = new(Guid.NewGuid());
+    private readonly EntryValueId EntryId1 = new(Guid.NewGuid());
     private readonly Architecture Arch1 = Architecture.X86Linux;
     private readonly Architecture Arch2 = Architecture.Aarch64Linux;
+
+    public ModuleTest(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
 
     [Theory]
     [InlineData(ModuleType.Generic)]
@@ -18,7 +25,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Create_Successfully(ModuleType moduleType)
     {
-        var module = Module.Create(ModuleId1, "TestModule", true, moduleType, [Arch1]);
+        var module = Module.Create(ModuleId1, "TestModule", true, "",moduleType, [Arch1]);
 
         module.IsSuccess.Should().BeTrue();
         module.Value.Name.Should().Be("TestModule");
@@ -33,7 +40,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, string.Empty, true, moduleType, [Arch1]);
+        var result = Module.Create(ModuleId1, string.Empty, true, "",moduleType, [Arch1]);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Modules name can't be empty");
@@ -45,7 +52,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, "ValidName", true, moduleType, []);
+        var result = Module.Create(ModuleId1, "ValidName", true, "", moduleType, []);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Module has to support at least one architecture");
@@ -54,39 +61,38 @@ public class ModuleTest
     [Fact]
     public void Module_Should_Add_Entry()
     {
-        var module = CreateValidModule();
-        var entry = ModuleEntry.Create(EntryId1).Value;
-
+        var module = CreateValidModule(true, "Init");
+        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
         var result = module.AddEntry(entry);
 
         result.IsSuccess.Should().BeTrue();
-        module.Entries.Should().Contain(entry);
+        module.EditableValues.Should().Contain(entry);
     }
 
     [Fact]
     public void Module_Should_Not_Add_Same_Entry_Twice()
     {
-        var module = CreateValidModule();
-        var entry = ModuleEntry.Create(EntryId1).Value;
+        var module = CreateValidModule(true, "Init");
+        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
 
         module.AddEntry(entry);
         var result = module.AddEntry(entry);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"Entry {entry.Id} is added already");
+        result.Error.Description.Should().Be("Can't add editable value twice");
     }
 
     [Fact]
     public void Module_Should_Remove_Entry()
     {
-        var module = CreateValidModule();
-        var entry = ModuleEntry.Create(EntryId1).Value;
+        var module = CreateValidModule(true, "Init");
+        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
 
         module.AddEntry(entry);
-        var result = module.RemoveEntry(EntryId1);
+        var result = module.RemoveEntry(entry.Id);
 
         result.IsSuccess.Should().BeTrue();
-        module.Entries.Should().BeEmpty();
+        module.EditableValues.Should().BeEmpty();
     }
 
     [Fact]
@@ -97,7 +103,7 @@ public class ModuleTest
         var result = module.RemoveEntry(EntryId1);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"There is no entry with Id {EntryId1} in module {module.Name}");
+        result.Error.Description.Should().Be($"Entry not present in module");
     }
 
     [Fact]
@@ -202,9 +208,9 @@ public class ModuleTest
     }
 
     // Helper
-    private Module CreateValidModule(bool enabled = true)
+    private Module CreateValidModule(bool enabled = true, string content = "")
     {
-        return Module.Create(ModuleId1, "ValidModule", enabled, ModuleType.Generic, [Arch1])
+        return Module.Create(ModuleId1, "ValidModule", enabled, content, ModuleType.Generic, [Arch1])
             .Value;
     }
 }

@@ -25,7 +25,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var homeId = new HomeId(Guid.NewGuid());
         var inputId = new InputId(Guid.NewGuid());
 
-        var module = Module.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
+        var module = Module.Create(moduleId, "Foo", true, "", ModuleType.Generic, [Architecture.X86Linux]).Value;
         var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "Test System").Value;
         var home = Home.Create(homeId, "Test Home").Value;
         var input = Input.Create(inputId, "Input1", "source").Value;
@@ -62,7 +62,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var configuration = Configuration.Create(configId, "Search Title", "Unique Description 123").Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var module = Module.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
+        var module = Module.Create(moduleId, "Foo", true, "",ModuleType.Generic, [Architecture.X86Linux]).Value;
 
         await PhoeNixDbContextSUT.Modules.AddAsync(module);
         configuration.AddModule(moduleId);

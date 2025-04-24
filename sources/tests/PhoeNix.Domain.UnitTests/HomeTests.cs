@@ -31,7 +31,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Add_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         var result = home.AddModule(module);
@@ -43,7 +43,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Remove_Existing_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
         home.AddModule(module);
 
@@ -56,7 +56,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Fail_To_Add_Duplicate_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         home.AddModule(module);
