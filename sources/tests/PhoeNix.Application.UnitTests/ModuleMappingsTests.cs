@@ -2,87 +2,70 @@ using FluentAssertions;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Models.Modules;
+using Xunit.Abstractions;
 
 namespace PhoeNix.Application.UnitTests;
 
 public class ModuleMappingsTests
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public ModuleMappingsTests(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
     [Fact]
     public void MapModuleToListDto_Should_Map_Correctly()
     {
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var id = new ModuleId(Guid.NewGuid());
+        var module = Module.Create(id, "Test Module", true, "some content", ModuleType.Generic, [Architecture.Aarch64Linux]).Value;
 
-        var module = Module.Create(moduleId, "MyModule", true, ModuleType.Generic,
-            [Architecture.X86Linux]).Value;
+        var dto = ModuleMappings.MapModuleToListDto(module);
 
-        var result = ModuleMappings.MapModuleToListDto(module);
-
-        result.Should().NotBeNull();
-        result.Id.Should().Be(module.Id);
-        result.Name.Should().Be("MyModule");
-        result.Enabled.Should().BeTrue();
-        result.Type.Should().Be(ModuleType.Generic);
+        dto.Id.Should().Be(id);
+        dto.Name.Should().Be("Test Module");
+        dto.Enabled.Should().BeTrue();
+        dto.Type.Should().Be(ModuleType.Generic);
     }
 
     [Fact]
-    public void MapModuleToDto_Should_Map_Full_Module()
+    public void MapModuleToDto_Should_Map_All_Fields_Correctly()
     {
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var id = new ModuleId(Guid.NewGuid());
+        var entryId = new EntryValueId(Guid.NewGuid());
+        var architecture = Architecture.Aarch64Linux;
 
-        var module = Module.Create(moduleId, "MyModule", true, ModuleType.System,
-            [Architecture.X86Linux, Architecture.Aarch64Linux]).Value;
-
-        var entryId = new ModuleEntryId(Guid.NewGuid());
-        var placeholder = Guid.NewGuid();
-
-        var entry = ModuleEntry.Create(entryId).Value;
-
-        var textValue = TextValue.Create(new EntryValueId(Guid.NewGuid()),"initial", "MyVar", placeholder).Value;
-        entry.EditContent($"echo {placeholder}", [textValue]);
-
+        var entry = TextValue.Create(entryId, "Init", "Name", "Init").Value;
+        var moduleResult = Module.Create(id, "Init", false, "Mod1 Name Placeholder1", ModuleType.Generic,
+            [architecture]);
+        var module = moduleResult.Value;
         module.AddEntry(entry);
 
-        var result = ModuleMappings.MapModuleToDto(module);
+        var dto = ModuleMappings.MapModuleToDto(module);
 
-        result.Should().NotBeNull();
-        result.Id.Should().Be(module.Id);
-        result.Name.Should().Be(module.Name);
-        result.Enabled.Should().BeTrue();
-        result.Type.Should().Be(ModuleType.System);
-        result.ModuleEntries.Should().ContainSingle(e => e.Id == entry.Id);
-        result.SupportedArchitectures.Should().BeEquivalentTo(module.SupportedArchitectures);
+        dto.Id.Should().Be(id);
+        dto.Name.Should().Be("Init");
+        dto.Enabled.Should().BeFalse();
+        dto.Type.Should().Be(ModuleType.Generic);
+        dto.Content.Should().Be("Mod1 Name Placeholder1");
+        dto.SupportedArchitectures.Should().ContainSingle().Which.Should().Be(architecture);
+        dto.EntryValues.Should().ContainSingle();
+        dto.EntryValues[0].Should().BeEquivalentTo(new EntryValueResponse(entryId, "Name", "Init", "Init"));
     }
 
     [Fact]
-    public void MapModuleEntryToDto_Should_Map_Correctly()
+    public void MapEntryValueToDto_Should_Map_All_Fields_Correctly()
     {
-        var entryId = new ModuleEntryId(Guid.NewGuid());
-        var placeholder = Guid.NewGuid();
+        var id = new EntryValueId(Guid.NewGuid());
+        var entry = TextValue.Create(id, "42", "Entry1", "ph1").Value;
 
-        var entry = ModuleEntry.Create(entryId).Value;
+        var dto = ModuleMappings.MapEntryValueToDto(entry);
 
-        var textValue = TextValue.Create(new EntryValueId(Guid.NewGuid()),"initVal", "MyText", placeholder).Value;
-        entry.EditContent($"#{placeholder}", [textValue]);
-
-        var result = ModuleMappings.MapModuleEntryToDto(entry);
-
-        result.Should().NotBeNull();
-        result.Id.Should().Be(entry.Id);
-        result.Content.Should().Be($"#{placeholder}");
-        result.EntryValues.Should().ContainSingle(v => v.Placeholder == placeholder);
-    }
-
-    [Fact]
-    public void MapEntryValueToDto_Should_Map_TextValue()
-    {
-        var placeholder = Guid.NewGuid();
-        var value = TextValue.Create(new EntryValueId(Guid.NewGuid()),"init", "TextName", placeholder).Value;
-
-        var result = ModuleMappings.MapEntryValueToDto(value);
-
-        result.Should().NotBeNull();
-        result.Name.Should().Be("TextName");
-        result.Placeholder.Should().Be(placeholder);
-        result.Value.Should().Be("init");
+        dto.Id.Should().Be(id);
+        dto.Name.Should().Be("Entry1");
+        dto.Placeholder.Should().Be("ph1");
+        dto.Value.Should().Be("42");
     }
 }

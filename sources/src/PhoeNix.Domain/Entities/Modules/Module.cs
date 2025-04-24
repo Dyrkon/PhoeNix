@@ -8,36 +8,51 @@ namespace PhoeNix.Domain.Entities.Modules;
 public class Module : AggregateRoot<ModuleId>
 {
     private readonly List<Architecture> _supportedArchitectures = new();
-    private readonly List<ModuleEntry> _entries = new();
+    private readonly List<IEntryValue> _editableValues = new();
 
     private Module(ModuleId id) : base(id)
     {
     }
 
     public string Name { get; private set; }
-
+    
     public bool Enabled { get; private set; }
 
     public ModuleType Type { get; private set; }
-
-    public IReadOnlyList<ModuleEntry> Entries => _entries;
-
-    public Result AddEntry(ModuleEntry entry)
+    
+    public string Content { get; private set; }
+    
+    public IReadOnlyList<IEntryValue> EditableValues => _editableValues;
+    
+    public Result ChangeContent(string content, List<IEntryValue> entries)
     {
-        if (_entries.Any(e => e.Id == entry.Id))
-            return Result.Failure(new Error("", $"Entry {entry.Id} is added already"));
+        foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name.ToString())))
+            return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
 
-        _entries.Add(entry);
+        Content = content;
+        _editableValues.Clear();
+        _editableValues.AddRange(entries);
+
         return Result.Success();
     }
 
-    public Result RemoveEntry(ModuleEntryId id)
+    public Result AddEntry(IEntryValue entry)
     {
-        var removed = _entries.RemoveAll(e => e.Id == id);
-        if (removed == 0)
-            return Result.Failure(new Error("", $"There is no entry with Id {id} in module {Name}"));
-
+        if (_editableValues.Any(v => v.Id == entry.Id))
+            return Result.Failure(new Error("", $"Can't add editable value twice"));
+        
+        if (!Content.Contains(entry.Name))
+            return Result.Failure(new Error("", $"Name of the entry {entry.Name} is not present in content"));
+        
+        _editableValues.Add(entry);
+        
         return Result.Success();
+    }
+    
+    public Result RemoveEntry(EntryValueId entryId)
+    {
+        var removed = _editableValues.RemoveAll(v => v.Id == entryId);
+        return removed == 0 ? Result.Failure(new Error("", $"Entry not present in module")) : Result.Success();
     }
 
     public Result Disable()
@@ -92,7 +107,7 @@ public class Module : AggregateRoot<ModuleId>
         return Result.Success();
     }
 
-    public static Result<Module> Create(ModuleId id, string name, bool enabled, ModuleType type,
+    public static Result<Module> Create(ModuleId id, string name, bool enabled, string content, ModuleType type,
         List<Architecture> architectures)
     {
         if (name == string.Empty)
@@ -105,7 +120,8 @@ public class Module : AggregateRoot<ModuleId>
         {
             Name = name,
             Enabled = enabled,
-            Type = type
+            Type = type,
+            Content = content
         };
         var result = newModule.AddArchitecturesSupport(architectures);
         return result.IsFailure ? Result.Failure<Module>(result.Error) : newModule;

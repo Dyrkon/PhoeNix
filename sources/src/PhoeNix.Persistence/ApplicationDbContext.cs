@@ -26,7 +26,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<HomeModule> HomeModules { get; set; }
     public DbSet<HomeUser> HomeUsers { get; set; }
     public DbSet<SystemModule> SystemModules { get; set; }
-    public DbSet<ModuleEntry> ModuleEntries { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

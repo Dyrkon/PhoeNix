@@ -8,7 +8,7 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
 {
     public EntryValueId Id { get; init; }
     public string Name { get; init; }
-    public Guid Placeholder { get; init; }
+    public string Placeholder { get; init; }
     public string Value => UpperValue.ToString();
 
     public T UpperValue { get; private set; }
@@ -19,7 +19,7 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
 
     public T Min { get; private set; }
 
-    private RangeValue(EntryValueId id, T max, T min, T upperValue, Guid placeholder)
+    private RangeValue(EntryValueId id, T max, T min, T upperValue, string placeholder)
     {
         Id = id;
         UpperValue = upperValue;
@@ -55,7 +55,7 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
         return Result.Success();
     }
 
-    public static Result<RangeValue<T>> Create(EntryValueId id, string name, Guid placeHolder, T max, T min,
+    public static Result<RangeValue<T>> Create(EntryValueId id, string name, string placeHolder, T max, T min,
         T upperValue, T lowerValue)
     {
         if (max < min || min > max)
@@ -72,7 +72,7 @@ public class RangeValue<T> : IEntryValue where T : INumber<T>
         return new RangeValue<T>(id, max, min, upperValue, placeHolder) { LowerValue = lowerValue, Name = name };
     }
 
-    public static Result<RangeValue<T>> Create(EntryValueId id, string name, Guid placeHolder, T max, T min, T value)
+    public static Result<RangeValue<T>> Create(EntryValueId id, string name, string placeHolder, T max, T min, T value)
     {
         if (max < min || min > max)
             return Result.Failure<RangeValue<T>>(new Error("", $"Max {max} has to be larger than min {min}"));

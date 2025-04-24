@@ -40,7 +40,7 @@ public class HomeMappingsTests
         homeUser.SetUser(user);
         home.SetHomeUser(homeUser);
 
-        var module = Module.Create(new ModuleId(Guid.NewGuid()), "mod", true, ModuleType.System,
+        var module = Module.Create(new ModuleId(Guid.NewGuid()), "mod", true, "", ModuleType.System,
             [Architecture.X86Linux]).Value;
 
         var homeModule = HomeModule.Create(new HomeModuleId(Guid.NewGuid()), home.Id, module.Id).Value;

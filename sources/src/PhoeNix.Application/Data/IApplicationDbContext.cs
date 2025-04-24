@@ -22,5 +22,4 @@ public interface IApplicationDbContext
     DbSet<HomeModule> HomeModules { get; }
     DbSet<HomeUser> HomeUsers { get; }
     DbSet<SystemModule> SystemModules { get; }
-    DbSet<ModuleEntry> ModuleEntries { get; }
 }

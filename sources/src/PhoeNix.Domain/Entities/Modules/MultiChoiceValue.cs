@@ -17,7 +17,7 @@ public class MultiChoiceValue<T> : IEntryValue
 
     public EntryValueId Id { get; init; }
     public string Name { get; init; }
-    public Guid Placeholder { get; init; }
+    public string Placeholder { get; init; }
     public string Value => _value.ToString();
 
     public IReadOnlyList<T> Options => _options;
@@ -59,7 +59,7 @@ public class MultiChoiceValue<T> : IEntryValue
         return Result.Success();
     }
 
-    public static Result<MultiChoiceValue<T>> Create(EntryValueId id, List<T> options, T defaultValue, Guid placeHolder,
+    public static Result<MultiChoiceValue<T>> Create(EntryValueId id, List<T> options, T defaultValue, string placeHolder,
         string name)
     {
         if (!options.Contains(defaultValue))

@@ -5,7 +5,7 @@ namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class MultiChoiceValueTests
 {
-    private readonly Guid placeholder = Guid.NewGuid();
+    private readonly string placeholder = Guid.NewGuid().ToString();
 
     [Fact]
     public void MultiChoiceValue_Should_Create_With_Default_Option()

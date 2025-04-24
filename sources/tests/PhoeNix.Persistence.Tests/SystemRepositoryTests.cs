@@ -20,7 +20,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         var system = systemResult.Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var moduleResult = Module.Create(moduleId, "ModuleX", true, ModuleType.System, [Architecture.Aarch64Linux]);
+        var moduleResult = Module.Create(moduleId, "ModuleX", true, "",ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 
@@ -56,7 +56,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         var system = systemResult.Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var moduleResult = Module.Create(moduleId, "NestedModule", false, ModuleType.System, [Architecture.Aarch64Linux]);
+        var moduleResult = Module.Create(moduleId, "NestedModule", false, "",ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 

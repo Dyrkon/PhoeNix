@@ -8,7 +8,7 @@ public interface IEntryValue
 
     public string Name { get; init; }
 
-    public Guid Placeholder { get; init; }
+    public string Placeholder { get; init; }
 
-    public abstract string Value { get; }
+    public string Value { get; }
 }

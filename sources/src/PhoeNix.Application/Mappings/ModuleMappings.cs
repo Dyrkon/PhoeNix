@@ -12,14 +12,8 @@ public static class ModuleMappings
 
     public static ModuleResponse MapModuleToDto(Module module)
     {
-        return new ModuleResponse(module.Id, module.Name, module.Enabled, module.Type,
-            module.Entries.Select(MapModuleEntryToDto).ToList(), module.SupportedArchitectures.ToList());
-    }
-
-    public static ModuleEntryResponse MapModuleEntryToDto(ModuleEntry moduleEntry)
-    {
-        return new ModuleEntryResponse(moduleEntry.Id, moduleEntry.Content,
-            moduleEntry.Editablevalues.Select(MapEntryValueToDto).ToList());
+        return new ModuleResponse(module.Id, module.Name, module.Enabled, module.Type, module.Content,
+            module.EditableValues.Select(MapEntryValueToDto).ToList(), module.SupportedArchitectures.ToList());
     }
 
     public static EntryValueResponse MapEntryValueToDto(IEntryValue entryValue)
