@@ -1,3 +1,4 @@
+using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using PhoeNix.Application;
 using PhoeNix.Domain.Service;
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
+
+builder.Services.AddCarter();
 
 builder.Services.ConfigureOptions<FileStorageOptionsSetup>();
 
@@ -31,5 +34,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
+
+app.MapCarter();
 
 app.Run();

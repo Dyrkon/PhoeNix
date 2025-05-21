@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Carter" Version="8.2.1" />
+      <PackageReference Include="MediatR" Version="12.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="MediatR">
+        <HintPath>..\..\..\..\..\..\.nuget\packages\mediatr\12.5.0\lib\net6.0\MediatR.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj" />
+    </ItemGroup>
+
+</Project>
