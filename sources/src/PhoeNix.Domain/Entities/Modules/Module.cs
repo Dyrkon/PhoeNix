@@ -114,7 +114,7 @@ public class Module : AggregateRoot<ModuleId>
             return Result.Failure<Module>(new Error("", "Modules name can't be empty"));
 
         if (architectures.Count == 0)
-            return Result.Failure<Module>(new Error("", $"Module has to support at least one architecture"));
+            return Result.Failure<Module>(new Error("", "Module has to support at least one architecture"));
 
         var newModule = new Module(id)
         {
@@ -128,4 +128,19 @@ public class Module : AggregateRoot<ModuleId>
     }
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
+    
+    public Result<ModuleBuildResult> Build(string moduleValuesName = "values")
+    {
+        var inputs = "{ ";
+        foreach (var value in EditableValues)
+        {
+            inputs += $"{value.Name} = {value.Value};";
+            Content = Content.Replace(value.Name, $"args.{value.Name}");
+        }
+        inputs += " }";
+        var inputsLocationPlaceholder = Guid.NewGuid().ToString();
+        var moduleContent = $"{{ config, pkgs, ... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {Content} }}";
+        
+        return new ModuleBuildResult(Name, moduleContent, inputs, inputsLocationPlaceholder);
+    }
 }

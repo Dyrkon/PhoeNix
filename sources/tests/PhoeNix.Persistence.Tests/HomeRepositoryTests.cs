@@ -27,7 +27,7 @@ public class HomeRepositoryTests : PersistenceTestsBase
             [Architecture.Aarch64Linux]
         ).Value;
 
-        var user = User.Create(new UserId(Guid.NewGuid())).Value;
+        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
 
         ModuleRepository.Add(module);
         UserRepository.Add(user);
@@ -65,7 +65,7 @@ public class HomeRepositoryTests : PersistenceTestsBase
             [Architecture.X86Linux]
         ).Value;
 
-        var user = User.Create(new UserId(Guid.NewGuid())).Value;
+        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
 
         ModuleRepository.Add(module);
         UserRepository.Add(user);

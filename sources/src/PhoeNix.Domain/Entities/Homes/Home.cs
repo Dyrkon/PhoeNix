@@ -68,4 +68,10 @@ public class Home : AggregateRoot<HomeId>
     {
         HomeUser = user;
     }
+
+    public Result<HomeBuildResult> Build()
+    {
+        // TODO not implemented  yet
+        return new HomeBuildResult();
+    }
 }

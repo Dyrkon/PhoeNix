@@ -147,4 +147,23 @@ public class Configuration : AggregateRoot<ConfigurationId>
     {
         return new Configuration(id) { Title = title, Description = description };
     }
+
+    public Result<ConfigurationBuildResult> Build()
+    {
+        var inputs = Inputs.Select(i => i.Input.Build());
+        if (inputs.Any(i => i.IsFailure))
+            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build input in configuration {Title}"));
+        var modules = Modules.Select(m => m.Module.Build());
+        if (modules.Any(i => i.IsFailure))
+            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build module in configuration {Title}"));
+        var systems = Systems.Select(s => s.System.Build());
+        if (systems.Any(i => i.IsFailure))
+            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build system in configuration {Title}"));
+        var supportedArchitectures = SupportedSystemArchitectures();
+        if (supportedArchitectures.IsFailure)
+            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to get supported architectures for configuration {Title}"));
+
+        // TODO homes are not supported yet
+        return new ConfigurationBuildResult(Title, Description, supportedArchitectures.Value, inputs.Select(i => i.Value), modules.Select(m => m.Value), systems.Select(s => s.Value));
+    }
 }

@@ -60,4 +60,10 @@ public class Input : Entity<InputId>
             FollowsId = follows?.Id
         };
     }
+
+    public Result<InputBuildResult> Build()
+    {
+        // TODO follows not implemented
+        return new InputBuildResult($"{Name} = {{ {Source} }}");
+    }
 }
