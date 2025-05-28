@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using PhoeNix.Application;
+using PhoeNix.Domain.Service;
+using PhoeNix.Infrastructure;
 using PhoeNix.Persistence;
+using PhoeNix.WebAPI.OptionSetsup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +13,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
+builder.Services.ConfigureOptions<FileStorageOptionsSetup>();
+
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddInfrastructure();
 builder.Services.AddApplication();
 
 var app = builder.Build();

@@ -241,10 +241,40 @@
         "resolved": "6.4.0",
         "contentHash": "1Hh3atb3pi8c+v7n4/3N80Jj8RvLOXgWxzix6w3OZhB7zBGRwsy7FWr4e3hwgPweSBpwfElqj4V4nkjYabH9nQ=="
       },
+      "System.IO.Abstractions": {
+        "type": "Transitive",
+        "resolved": "22.0.14",
+        "contentHash": "seKjLnYbWcD4nw8MCjECuqDjwthf9yF4WXhLkgiIb2eGtVhOPEaejQe/Gr6Sppk9KPe7ndJZMyTjDLmWdjcftQ==",
+        "dependencies": {
+          "TestableIO.System.IO.Abstractions": "22.0.14",
+          "TestableIO.System.IO.Abstractions.Wrappers": "22.0.14"
+        }
+      },
       "System.Memory": {
         "type": "Transitive",
         "resolved": "4.5.3",
         "contentHash": "3oDzvc/zzetpTKWMShs1AADwZjQ/36HnsufHRPcOjyRAAMLDlu2iD33MBI2opxnezcVUtXyqDXXjoFMOU9c7SA=="
+      },
+      "TestableIO.System.IO.Abstractions": {
+        "type": "Transitive",
+        "resolved": "22.0.14",
+        "contentHash": "WPqOl2TVNKUMcaTyCIoJqPz1K30u8Pw6sMtRzVuaik4XDuMJLNmp7JMQQVNcVi7Ws3TvH9FlLYQRxO01z5Gixw==",
+        "dependencies": {
+          "Testably.Abstractions.FileSystem.Interface": "9.0.0"
+        }
+      },
+      "TestableIO.System.IO.Abstractions.Wrappers": {
+        "type": "Transitive",
+        "resolved": "22.0.14",
+        "contentHash": "w8VwX0jiDSfj5bM+BopyZszvvEnQKDTNDp9pUKYwSOj34P9GAllmJ6kcGyye2IrzctdQs3xFpg8Vdsm8TrWfgQ==",
+        "dependencies": {
+          "Testably.Abstractions.FileSystem.Interface": "9.0.0"
+        }
+      },
+      "Testably.Abstractions.FileSystem.Interface": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "uksk86YlnzAdyfVNu3wICU0X5iXVe9LF7Q3UkngNliHWEvM5gvAlOUr+jmd9JwmbJWISH5+i1vyXE02lEVz7WQ=="
       },
       "phoenix.application": {
         "type": "Project",
@@ -256,6 +286,15 @@
       },
       "phoenix.domain": {
         "type": "Project"
+      },
+      "phoenix.infrastructure": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "[8.0.1, )",
+          "Microsoft.Extensions.Options": "[8.0.2, )",
+          "PhoeNix.Domain": "[1.0.0, )",
+          "System.IO.Abstractions": "[22.0.14, )"
+        }
       },
       "phoenix.persistence": {
         "type": "Project",
