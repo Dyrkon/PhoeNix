@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Carter" Version="8.2.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
@@ -14,6 +15,7 @@
     <ItemGroup>
         <ProjectReference Include="..\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj" />
         <ProjectReference Include="..\PhoeNix.Persistence\PhoeNix.Persistence.csproj"/>
+        <ProjectReference Include="..\Phoenix.Presentation\Phoenix.Presentation.csproj" />
     </ItemGroup>
 
 </Project>
