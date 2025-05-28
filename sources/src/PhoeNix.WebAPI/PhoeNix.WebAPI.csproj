@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj" />
         <ProjectReference Include="..\PhoeNix.Persistence\PhoeNix.Persistence.csproj"/>
     </ItemGroup>
 
