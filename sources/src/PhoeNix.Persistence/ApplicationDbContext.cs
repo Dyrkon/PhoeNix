@@ -6,6 +6,7 @@ using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Persistence.Configurations.Abstractions;
 using Module = PhoeNix.Domain.Entities.Modules.Module;
 
@@ -51,7 +52,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<User>()
             .HasData(
                 User.Create(
-                    new UserId(Guid.NewGuid())
+                    new UserId(Guid.NewGuid()),
+                    "Test", "Test user", "wheel", true, 1024, Shell.Fish, "./here"
                 ).Value
             );
     }

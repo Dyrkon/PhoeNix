@@ -33,7 +33,7 @@ public class HomeMappingsTests
         var homeId = new HomeId(Guid.NewGuid());
         var userId = new UserId(Guid.NewGuid());
 
-        var user = User.Create(userId).Value;
+        var user = User.Create(userId, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
         var home = Home.Create(homeId, "Test Home").Value;
 
         var homeUser = HomeUser.Create(new HomeUserId(Guid.NewGuid()), home.Id, user.Id).Value;

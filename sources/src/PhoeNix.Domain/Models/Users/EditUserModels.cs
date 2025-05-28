@@ -1,14 +1,8 @@
-using System.Text.RegularExpressions;
-using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.Models.Users;
 
-public record UserListResponse(UserId Id, string Name, string Description);
-
-public record UserResponse(
-    UserId Id,
-    string Name,
+public record EditUserModels(string Name,
     string Description,
     bool IsNormalUser,
     string HomePath,
@@ -16,4 +10,4 @@ public record UserResponse(
     uint Uid,
     Shell Shell,
     List<string> ExtraGroups
-);
+    );
