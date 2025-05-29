@@ -4,21 +4,14 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class MultiChoiceValue<T> : IEntryValue
+public class MultiChoiceValue<T> : EntryValue
 {
     private readonly List<T> _options = new();
-
-    private T _value;
 
     private MultiChoiceValue(EntryValueId id)
     {
         Id = id;
     }
-
-    public EntryValueId Id { get; init; }
-    public string Name { get; init; }
-    public string Placeholder { get; init; }
-    public string Value => _value.ToString();
 
     public IReadOnlyList<T> Options => _options;
 
@@ -26,7 +19,7 @@ public class MultiChoiceValue<T> : IEntryValue
     {
         if (!_options.Contains(value)) return Result.Failure(new Error("", $"Value {value} is not one of the options"));
 
-        _value = value;
+        Value = value?.ToString() ?? string.Empty;
         return Result.Success();
     }
 
@@ -59,7 +52,8 @@ public class MultiChoiceValue<T> : IEntryValue
         return Result.Success();
     }
 
-    public static Result<MultiChoiceValue<T>> Create(EntryValueId id, List<T> options, T defaultValue, string placeHolder,
+    public static Result<MultiChoiceValue<T>> Create(EntryValueId id, List<T> options, T defaultValue,
+        string placeHolder,
         string name)
     {
         if (!options.Contains(defaultValue))
@@ -67,7 +61,9 @@ public class MultiChoiceValue<T> : IEntryValue
                 $"Default value {defaultValue} is not present in options"));
 
         return new Result<MultiChoiceValue<T>>(true, Error.None,
-            new MultiChoiceValue<T>(id) { Placeholder = placeHolder, Name = name, _value = defaultValue }).Tap(o =>
-            o.AddOptions(options));
+                new MultiChoiceValue<T>(id)
+                    { Placeholder = placeHolder, Name = name, Value = defaultValue?.ToString() ?? string.Empty })
+            .Tap(o =>
+                o.AddOptions(options));
     }
 }

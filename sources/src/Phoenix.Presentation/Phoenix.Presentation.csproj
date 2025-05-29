@@ -7,18 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Carter" Version="8.2.1" />
-      <PackageReference Include="MediatR" Version="12.5.0" />
+        <PackageReference Include="Carter" Version="8.2.1"/>
+        <PackageReference Include="MediatR" Version="12.5.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="MediatR">
-        <HintPath>..\..\..\..\..\..\.nuget\packages\mediatr\12.5.0\lib\net6.0\MediatR.dll</HintPath>
-      </Reference>
+        <Reference Include="MediatR">
+            <HintPath>..\..\..\..\..\..\.nuget\packages\mediatr\12.5.0\lib\net6.0\MediatR.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj" />
+        <ProjectReference Include="..\PhoeNix.Application\PhoeNix.Application.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
     </ItemGroup>
 
 </Project>

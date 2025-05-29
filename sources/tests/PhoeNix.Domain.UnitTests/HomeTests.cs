@@ -31,7 +31,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Add_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         var result = home.AddModule(module);
@@ -43,7 +43,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Remove_Existing_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
         home.AddModule(module);
 
@@ -56,7 +56,7 @@ public class HomeTests
     [Fact]
     public void Home_Should_Fail_To_Add_Duplicate_Module()
     {
-        var module = Module.Create(ModuleId1, "mod1", true, "", ModuleType.Home, [Architecture.X86Linux]).Value;
+        var module = Module.Create(ModuleId1, "mod1", true, ModuleType.Home, [Architecture.X86Linux]).Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         home.AddModule(module);
@@ -80,7 +80,8 @@ public class HomeTests
     [Fact]
     public void Home_Should_Add_User()
     {
-        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
+        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here")
+            .Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         var result = home.AddUser(user);
@@ -92,7 +93,8 @@ public class HomeTests
     [Fact]
     public void Home_Should_Remove_Existing_User()
     {
-        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
+        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here")
+            .Value;
         var home = Home.Create(HomeId1, HomeName).Value;
         home.AddUser(user);
 
@@ -105,7 +107,8 @@ public class HomeTests
     [Fact]
     public void Home_Should_Fail_To_Add_Duplicate_User()
     {
-        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
+        var user = User.Create(UserId1, "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here")
+            .Value;
         var home = Home.Create(HomeId1, HomeName).Value;
 
         home.AddUser(user);

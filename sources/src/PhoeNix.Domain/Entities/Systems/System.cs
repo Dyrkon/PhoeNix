@@ -59,14 +59,14 @@ public class System : AggregateRoot<SystemId>
     {
         var modules = Modules.Select(m => m.Module.Build());
         if (modules.Any(m => m.IsFailure))
-        {
             return Result.Failure<SystemBuildResult>(new Error("", $"Failed to build module/s for system {Name}"));
-        }
 
         var moduleResults = modules.Select(m => m.Value);
         var modulesListPlaceholder = Guid.NewGuid().ToString();
-        var systemContent = $"{{ config, pkgs, lib, ... }} {{ {Name} = lib.nixosSystem {{ system = {Architecture.ToArchitectureString()}; modules = [ {modulesListPlaceholder} ] }} }}";
-        
-        return new SystemBuildResult(Architecture, systemContent, moduleResults, modulesListPlaceholder);
+        var systemContent =
+            $"{{ inputs, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ system = {Architecture.ToArchitectureString()}; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
+
+
+        return new SystemBuildResult(Name, Architecture, systemContent, moduleResults, modulesListPlaceholder);
     }
 }

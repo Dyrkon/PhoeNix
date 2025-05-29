@@ -20,7 +20,7 @@ public static class DependencyInjection
 
         return services;
     }
-    
+
     private static IServiceCollection ConfigureDbContext(this IServiceCollection services)
     {
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
@@ -32,20 +32,22 @@ public static class DependencyInjection
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
-        {
-            var dbName = configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlite($"Data Source={dbName};Cache=Shared");
-        })
+            {
+                // TODO the DB shouldn't be in TMP folder
+                var dbName = Path.Combine(Path.GetTempPath(),
+                    configuration.GetConnectionString("PhoeNix") ?? "phoenix.db");
+                options.UseSqlite($"Data Source={dbName}");
+            })
             .ConfigureDbContext()
             .AddRepositories();
 
         return services;
     }
-    
+
     public static IServiceCollection AddInMemoryPersistence(this IServiceCollection services, string dbName = "TestDb")
     {
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseInMemoryDatabase(dbName))
+                options.UseInMemoryDatabase(dbName))
             .ConfigureDbContext()
             .AddRepositories();
 

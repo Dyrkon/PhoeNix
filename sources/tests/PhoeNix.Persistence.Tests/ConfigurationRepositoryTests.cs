@@ -11,7 +11,9 @@ namespace PhoeNix.Persistence.Tests;
 
 public class ConfigurationRepositoryTests : PersistenceTestsBase
 {
-    public ConfigurationRepositoryTests(ITestOutputHelper output) : base(output) { }
+    public ConfigurationRepositoryTests(ITestOutputHelper output) : base(output)
+    {
+    }
 
     [Fact]
     public async Task GetByIdAsync_ShouldReturnConfigurationWithAllRelations()
@@ -25,7 +27,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var homeId = new HomeId(Guid.NewGuid());
         var inputId = new InputId(Guid.NewGuid());
 
-        var module = Module.Create(moduleId, "Foo", true, "", ModuleType.Generic, [Architecture.X86Linux]).Value;
+        var module = Module.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
         var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "Test System").Value;
         var home = Home.Create(homeId, "Test Home").Value;
         var input = Input.Create(inputId, "Input1", "source").Value;
@@ -48,12 +50,12 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         // Assert
         result.Should().NotBeNull();
-        result!.Modules.Should().ContainSingle(m => m.ModuleId == moduleId);
-        result.Homes.Should().ContainSingle(h => h.HomeId == homeId);
-        result.Inputs.Should().ContainSingle(i => i.InputId == inputId);
-        result.Systems.Should().ContainSingle(s => s.SystemId == systemId);
+        result!.Modules.Should().ContainSingle(m => m.Module.Id == moduleId);
+        result.Homes.Should().ContainSingle(h => h.Home.Id == homeId);
+        result.Inputs.Should().ContainSingle(i => i.Input.Id == inputId);
+        result.Systems.Should().ContainSingle(s => s.System.Id == systemId);
     }
-    
+
     [Fact]
     public async Task GetByDescriptionAsync_ShouldReturnMatchingConfigurationWithRelations()
     {
@@ -62,7 +64,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var configuration = Configuration.Create(configId, "Search Title", "Unique Description 123").Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var module = Module.Create(moduleId, "Foo", true, "",ModuleType.Generic, [Architecture.X86Linux]).Value;
+        var module = Module.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
 
         await PhoeNixDbContextSUT.Modules.AddAsync(module);
         configuration.AddModule(moduleId);
@@ -76,7 +78,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(configId);
-        result.Modules.Should().ContainSingle(m => m.ModuleId == moduleId);
+        result.Modules.Should().ContainSingle(m => m.Module.Id == moduleId);
     }
 
     [Fact]
@@ -101,7 +103,6 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(configId);
-        result.Inputs.Should().ContainSingle(i => i.InputId == inputId);
+        result.Inputs.Should().ContainSingle(i => i.Input.Id == inputId);
     }
-
 }

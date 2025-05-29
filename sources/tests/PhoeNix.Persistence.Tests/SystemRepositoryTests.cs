@@ -8,7 +8,9 @@ namespace PhoeNix.Persistence.Tests;
 
 public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
 {
-    public SystemRepositoryWithIncludesTests(ITestOutputHelper output) : base(output) { }
+    public SystemRepositoryWithIncludesTests(ITestOutputHelper output) : base(output)
+    {
+    }
 
     [Fact]
     public async Task GetByIdAsync_ShouldLoadSystemWithModulesAndModuleDetails()
@@ -20,7 +22,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         var system = systemResult.Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var moduleResult = Module.Create(moduleId, "ModuleX", true, "",ModuleType.System, [Architecture.Aarch64Linux]);
+        var moduleResult = Module.Create(moduleId, "ModuleX", true, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 
@@ -56,7 +58,8 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         var system = systemResult.Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var moduleResult = Module.Create(moduleId, "NestedModule", false, "",ModuleType.System, [Architecture.Aarch64Linux]);
+        var moduleResult =
+            Module.Create(moduleId, "NestedModule", false, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 
@@ -77,7 +80,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         fetched.Modules.Should().ContainSingle();
 
         var sysModule = fetched.Modules.First();
-        sysModule.ModuleId.Should().Be(moduleId);
+        sysModule.Module.Id.Should().Be(moduleId);
         sysModule.Module.Should().NotBeNull();
         sysModule.Module!.Name.Should().Be("NestedModule");
         sysModule.Module.Enabled.Should().BeFalse();

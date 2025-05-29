@@ -15,4 +15,8 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.15"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Configurations\Queries\"/>
+    </ItemGroup>
+
 </Project>

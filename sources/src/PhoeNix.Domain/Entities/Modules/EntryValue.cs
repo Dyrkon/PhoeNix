@@ -2,7 +2,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public interface IEntryValue
+public abstract class EntryValue
 {
     public EntryValueId Id { get; init; }
 
@@ -10,5 +10,7 @@ public interface IEntryValue
 
     public string Placeholder { get; init; }
 
-    public string Value { get; }
+    public string Value { get; protected set; }
+
+    public ModuleId ModuleId { get; private set; }
 }

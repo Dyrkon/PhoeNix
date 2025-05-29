@@ -1,7 +1,6 @@
 using Carter;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application;
-using PhoeNix.Domain.Service;
 using PhoeNix.Infrastructure;
 using PhoeNix.Persistence;
 using PhoeNix.WebAPI.OptionSetsup;
@@ -29,6 +28,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (app.Environment.IsDevelopment())
+        db.Database.EnsureCreated();
+    else
+        db.Database.Migrate();
 }
 
 app.UseHttpsRedirection();

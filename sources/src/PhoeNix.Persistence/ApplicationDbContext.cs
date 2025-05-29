@@ -7,6 +7,7 @@ using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Persistence.Configurations.Abstractions;
 using Module = PhoeNix.Domain.Entities.Modules.Module;
 
@@ -18,6 +19,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Home> Homes { get; set; }
     public DbSet<Input> Inputs { get; set; }
     public DbSet<Module> Modules { get; set; }
+    public DbSet<EntryValue> EntryValues { get; set; }
     public DbSet<Domain.Entities.Systems.System> Systems { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<ConfigurationHome> ConfigurationHomes { get; set; }
@@ -42,19 +44,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             }
         );
 
-        SeedDb(modelBuilder);
-
         base.OnModelCreating(modelBuilder);
     }
 
-    private void SeedDb(ModelBuilder modelBuilder)
+    public void SeedDb()
     {
-        modelBuilder.Entity<User>()
-            .HasData(
-                User.Create(
-                    new UserId(Guid.NewGuid()),
-                    "Test", "Test user", "wheel", true, 1024, Shell.Fish, "./here"
-                ).Value
-            );
     }
 }

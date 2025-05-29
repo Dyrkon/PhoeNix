@@ -7,15 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Carter" Version="8.2.1" />
+        <PackageReference Include="Carter" Version="8.2.1"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.16">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj" />
+        <ProjectReference Include="..\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj"/>
         <ProjectReference Include="..\PhoeNix.Persistence\PhoeNix.Persistence.csproj"/>
-        <ProjectReference Include="..\Phoenix.Presentation\Phoenix.Presentation.csproj" />
+        <ProjectReference Include="..\Phoenix.Presentation\Phoenix.Presentation.csproj"/>
     </ItemGroup>
 
 </Project>

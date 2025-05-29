@@ -5,12 +5,13 @@ using System.IO.Abstractions;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Options;
-using PhoeNix.Domain.Service;
+using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class FileSystemService(IOptions<FileStorageOptions> storageOptions) : IFileSystemService
+public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INixFormatterService nixFormatterService)
+    : IFileSystemService
 {
     private const string TempFolderName = "phoenix";
 
@@ -31,6 +32,14 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions) : IF
         }
     }
 
+    private static Result CheckAndRemoveDirectory(string path)
+    {
+        var fs = new FileSystem();
+        if (fs.Directory.Exists(path)) fs.Directory.Delete(path, true);
+
+        return Result.Success();
+    }
+
     private static Result<string> WriteFile(string path, string contents)
     {
         if (Directory.Exists(path))
@@ -48,83 +57,94 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions) : IF
         }
     }
 
-    public string GetConfigurationFolderPath(ConfigurationId id)
+    private static Result<string> WriteFolderStructure(string rootPath, Folder folder)
+    {
+        return CreateFolder(Path.Combine(rootPath, folder.Name)).Bind(path =>
+        {
+            foreach (var file in folder.Files)
+                if (file.IsFolder)
+                {
+                    var result = WriteFolderStructure(path, (Folder)file);
+                    if (result.IsFailure) return result;
+                }
+                else
+                {
+                    var result = WriteFile($"{path}/{file.Name}", ((TextFile)file).Content);
+                    if (result.IsFailure) return result;
+                }
+
+            return Result.Success(rootPath);
+        });
+    }
+
+    public Result<string> GetConfigurationFolderPath(ConfigurationId id)
     {
         return Path.Combine(storageOptions.Value.ConfigurationsPath, id.Value.ToString());
     }
 
-    public string GetModuleFolderPath(ModuleId id)
+    public Result<string> GetModuleFolderPath(ModuleId id)
     {
         return Path.Combine(storageOptions.Value.ModulesPath, id.Value.ToString());
     }
 
-    public string GetTempModuleFolderPath(ModuleId id)
+    public Result<string> GetTempModuleFolderPath(ModuleId id)
     {
         return Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
     }
 
-    public string GetTempConfigurationFolderPath(ConfigurationId id)
+    public Result<string> GetTempConfigurationFolderPath(ConfigurationId id)
     {
-        return Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
+        var path = Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
+        return path;
     }
 
     public Result<string> CreateConfigurationFolder(ConfigurationId id)
     {
-        return CreateFolder(GetConfigurationFolderPath(id));
+        return GetConfigurationFolderPath(id).Tap(path => CreateFolder(path));
     }
 
     public Result<string> CreateTempConfigurationFolder(ConfigurationId id)
     {
-        return CreateFolder(GetTempConfigurationFolderPath(id));
+        return GetTempConfigurationFolderPath(id).Tap(path => CreateFolder(path));
     }
 
     public Result<string> CreateTempModuleFolder(ModuleId id)
     {
-        return CreateFolder(GetTempModuleFolderPath(id));
+        return GetTempModuleFolderPath(id).Tap(path => CreateFolder(path));
     }
 
     public Result<string> CreateModuleFolder(ModuleId id)
     {
-        return CreateFolder(GetModuleFolderPath(id));
-    }
-
-    private static Result<string> WriteFolderStructure(string rootPath, Folder folder)
-    {
-        return CreateFolder(Path.Combine(rootPath, folder.Name)).Tap(path =>
-        {
-            foreach (var file in folder.Files)
-                if (file.IsFolder)
-                    WriteFolderStructure(path, (Folder)file);
-                else
-                    WriteFile(path, ((TextFile)file).Content);
-        });
+        return GetModuleFolderPath(id).Tap(path => CreateFolder(path));
     }
 
     public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id)
     {
-        var configFolderPath = GetConfigurationFolderPath(id);
-        // TODO if (!fs.Directory.Exists(configFolder))
-        return WriteFolderStructure(configFolderPath, configurationFolder);
+        return GetConfigurationFolderPath(id)
+            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
+            .Bind(path => WriteFolderStructure(path, configurationFolder))
+            .Tap(path => nixFormatterService.FormatNixInPlace(path));
     }
 
     public Result<string> WriteModuleToFs(Folder moduleFolder, ModuleId id)
     {
-        var moduleFolderPath = GetModuleFolderPath(id);
-        // TODO if (!fs.Directory.Exists(configFolder))
-        return WriteFolderStructure(moduleFolderPath, moduleFolder);
+        return GetModuleFolderPath(id)
+            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
+            .Tap(path => WriteFolderStructure(path, moduleFolder));
     }
 
     public Result<string> WriteModuleToTmp(Folder moduleFolder, ModuleId id)
     {
-        var moduleFolderPath = GetTempModuleFolderPath(id);
-        // TODO if (!fs.Directory.Exists(configFolder))
-        return WriteFolderStructure(moduleFolderPath, moduleFolder);
+        return GetTempModuleFolderPath(id)
+            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
+            .Tap(path => WriteFolderStructure(path, moduleFolder));
     }
 
     public Result<string> WriteConfigurationToTmp(Folder configurationFolder, ConfigurationId id)
     {
-        var configFolderPath = GetTempConfigurationFolderPath(id);
-        // TODO if (!fs.Directory.Exists(configFolder))
-        return WriteFolderStructure(configFolderPath, configurationFolder);
+        return GetTempConfigurationFolderPath(id)
+            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
+            .Bind(path => WriteFolderStructure(path, configurationFolder))
+            .Tap(path => nixFormatterService.FormatNixInPlace(path));
     }
 }

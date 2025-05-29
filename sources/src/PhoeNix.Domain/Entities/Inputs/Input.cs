@@ -64,6 +64,6 @@ public class Input : Entity<InputId>
     public Result<InputBuildResult> Build()
     {
         // TODO follows not implemented
-        return new InputBuildResult($"{Name} = {{ {Source} }}");
+        return new InputBuildResult($"{Name} = {{ {Source} }};");
     }
 }
