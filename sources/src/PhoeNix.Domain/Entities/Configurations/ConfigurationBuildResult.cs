@@ -5,4 +5,11 @@ using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.Entities.Configurations;
 
-public record ConfigurationBuildResult(string Title, string Description, IEnumerable<Architecture> SupportedArchitectures, IEnumerable<InputBuildResult> Inputs, IEnumerable<ModuleBuildResult> Modules, IEnumerable<SystemBuildResult> Systems);
+public record ConfigurationBuildResult(
+    string Title,
+    string Content,
+    string SharedModulesPlaceholder,
+    string SystemsPlaceholder,
+    IEnumerable<Architecture> SupportedArchitectures,
+    IEnumerable<ModuleBuildResult> CommonModules,
+    IEnumerable<SystemBuildResult> Systems);

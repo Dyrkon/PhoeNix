@@ -8,25 +8,25 @@ namespace PhoeNix.Domain.Entities.Modules;
 public class Module : AggregateRoot<ModuleId>
 {
     private readonly List<Architecture> _supportedArchitectures = new();
-    private readonly List<IEntryValue> _editableValues = new();
+    private readonly List<EntryValue> _editableValues = new();
 
     private Module(ModuleId id) : base(id)
     {
     }
 
     public string Name { get; private set; }
-    
+
     public bool Enabled { get; private set; }
 
     public ModuleType Type { get; private set; }
-    
+
     public string Content { get; private set; }
-    
-    public IReadOnlyList<IEntryValue> EditableValues => _editableValues;
-    
-    public Result ChangeContent(string content, List<IEntryValue> entries)
+
+    public IReadOnlyList<EntryValue> EditableValues => _editableValues;
+
+    public Result ChangeContent(string content, List<EntryValue> entries)
     {
-        foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name.ToString())))
+        foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))
             return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
 
         Content = content;
@@ -36,19 +36,19 @@ public class Module : AggregateRoot<ModuleId>
         return Result.Success();
     }
 
-    public Result AddEntry(IEntryValue entry)
+    public Result AddEntry(EntryValue entry)
     {
         if (_editableValues.Any(v => v.Id == entry.Id))
             return Result.Failure(new Error("", $"Can't add editable value twice"));
-        
+
         if (!Content.Contains(entry.Name))
             return Result.Failure(new Error("", $"Name of the entry {entry.Name} is not present in content"));
-        
+
         _editableValues.Add(entry);
-        
+
         return Result.Success();
     }
-    
+
     public Result RemoveEntry(EntryValueId entryId)
     {
         var removed = _editableValues.RemoveAll(v => v.Id == entryId);
@@ -107,7 +107,7 @@ public class Module : AggregateRoot<ModuleId>
         return Result.Success();
     }
 
-    public static Result<Module> Create(ModuleId id, string name, bool enabled, string content, ModuleType type,
+    public static Result<Module> Create(ModuleId id, string name, bool enabled, ModuleType type,
         List<Architecture> architectures)
     {
         if (name == string.Empty)
@@ -121,26 +121,29 @@ public class Module : AggregateRoot<ModuleId>
             Name = name,
             Enabled = enabled,
             Type = type,
-            Content = content
+            Content = string.Empty
         };
         var result = newModule.AddArchitecturesSupport(architectures);
         return result.IsFailure ? Result.Failure<Module>(result.Error) : newModule;
     }
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
-    
-    public Result<ModuleBuildResult> Build(string moduleValuesName = "values")
+
+    public Result<ModuleBuildResult> Build(string moduleValuesName = "values.nix")
     {
         var inputs = "{ ";
+        var outputContent = Content;
         foreach (var value in EditableValues)
         {
             inputs += $"{value.Name} = {value.Value};";
-            Content = Content.Replace(value.Name, $"args.{value.Name}");
+            outputContent = outputContent.Replace(value.Name, $"args.{value.Name}");
         }
+
         inputs += " }";
         var inputsLocationPlaceholder = Guid.NewGuid().ToString();
-        var moduleContent = $"{{ config, pkgs, ... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {Content} }}";
-        
-        return new ModuleBuildResult(Name, moduleContent, inputs, inputsLocationPlaceholder);
+        var moduleContent =
+            $"{{ config, pkgs, ... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}; \nin {{ {outputContent} }}";
+
+        return new ModuleBuildResult(Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder);
     }
 }

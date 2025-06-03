@@ -25,7 +25,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Create_Successfully(ModuleType moduleType)
     {
-        var module = Module.Create(ModuleId1, "TestModule", true, "",moduleType, [Arch1]);
+        var module = Module.Create(ModuleId1, "TestModule", true, moduleType, [Arch1]);
 
         module.IsSuccess.Should().BeTrue();
         module.Value.Name.Should().Be("TestModule");
@@ -40,7 +40,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, string.Empty, true, "",moduleType, [Arch1]);
+        var result = Module.Create(ModuleId1, string.Empty, true, moduleType, [Arch1]);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Modules name can't be empty");
@@ -52,7 +52,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, "ValidName", true, "", moduleType, []);
+        var result = Module.Create(ModuleId1, "ValidName", true, moduleType, []);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Module has to support at least one architecture");
@@ -61,9 +61,9 @@ public class ModuleTest
     [Fact]
     public void Module_Should_Add_Entry()
     {
-        var module = CreateValidModule(true, "Init");
-        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
-        var result = module.AddEntry(entry);
+        var module = CreateValidModule();
+        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Something", "Foo").Value;
+        var result = module.ChangeContent("Value = Something", [entry]);
 
         result.IsSuccess.Should().BeTrue();
         module.EditableValues.Should().Contain(entry);
@@ -72,10 +72,10 @@ public class ModuleTest
     [Fact]
     public void Module_Should_Not_Add_Same_Entry_Twice()
     {
-        var module = CreateValidModule(true, "Init");
+        var module = CreateValidModule();
         var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
 
-        module.AddEntry(entry);
+        module.ChangeContent("Something = Init", [entry]);
         var result = module.AddEntry(entry);
 
         result.IsFailure.Should().BeTrue();
@@ -85,10 +85,10 @@ public class ModuleTest
     [Fact]
     public void Module_Should_Remove_Entry()
     {
-        var module = CreateValidModule(true, "Init");
+        var module = CreateValidModule();
         var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
 
-        module.AddEntry(entry);
+        module.ChangeContent("Value = Init", [entry]);
         var result = module.RemoveEntry(entry.Id);
 
         result.IsSuccess.Should().BeTrue();
@@ -208,9 +208,9 @@ public class ModuleTest
     }
 
     // Helper
-    private Module CreateValidModule(bool enabled = true, string content = "")
+    private Module CreateValidModule(bool enabled = true)
     {
-        return Module.Create(ModuleId1, "ValidModule", enabled, content, ModuleType.Generic, [Arch1])
+        return Module.Create(ModuleId1, "ValidModule", enabled, ModuleType.Generic, [Arch1])
             .Value;
     }
 }

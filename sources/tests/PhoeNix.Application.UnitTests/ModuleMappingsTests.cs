@@ -20,7 +20,7 @@ public class ModuleMappingsTests
     public void MapModuleToListDto_Should_Map_Correctly()
     {
         var id = new ModuleId(Guid.NewGuid());
-        var module = Module.Create(id, "Test Module", true, "some content", ModuleType.Generic, [Architecture.Aarch64Linux]).Value;
+        var module = Module.Create(id, "Test Module", true, ModuleType.Generic, [Architecture.Aarch64Linux]).Value;
 
         var dto = ModuleMappings.MapModuleToListDto(module);
 
@@ -38,10 +38,10 @@ public class ModuleMappingsTests
         var architecture = Architecture.Aarch64Linux;
 
         var entry = TextValue.Create(entryId, "Init", "Name", "Init").Value;
-        var moduleResult = Module.Create(id, "Init", false, "Mod1 Name Placeholder1", ModuleType.Generic,
+        var moduleResult = Module.Create(id, "Init", false, ModuleType.Generic,
             [architecture]);
         var module = moduleResult.Value;
-        module.AddEntry(entry);
+        module.ChangeContent("Mod1 Name Placeholder1", [entry]);
 
         var dto = ModuleMappings.MapModuleToDto(module);
 

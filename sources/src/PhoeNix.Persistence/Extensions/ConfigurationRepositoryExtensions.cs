@@ -5,14 +5,20 @@ namespace PhoeNix.Persistence.Extensions;
 
 public static class ConfigurationRepositoryExtensions
 {
-    public static IQueryable<Configuration> AddIncludeStatements(this IQueryable<Configuration> query) =>
-        query
+    public static IQueryable<Configuration> AddIncludeStatements(this IQueryable<Configuration> query)
+    {
+        return query
             .Include(c => c.Modules)
             .ThenInclude(m => m.Module)
+            .ThenInclude(m => m.EditableValues)
             .Include(c => c.Homes)
             .ThenInclude(h => h.Home)
             .Include(c => c.Inputs)
             .ThenInclude(i => i.Input)
             .Include(c => c.Systems)
-            .ThenInclude(s => s.System);
+            .ThenInclude(s => s.System)
+            .ThenInclude(s => s.Modules)
+            .ThenInclude(sm => sm.Module)
+            .ThenInclude(m => m.EditableValues);
+    }
 }

@@ -3,14 +3,14 @@ using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Service;
+namespace PhoeNix.Domain.Services;
 
 public interface IFileSystemService
 {
-    public string GetConfigurationFolderPath(ConfigurationId id);
-    public string GetModuleFolderPath(ModuleId id);
-    public string GetTempModuleFolderPath(ModuleId id);
-    public string GetTempConfigurationFolderPath(ConfigurationId id);
+    public Result<string> GetConfigurationFolderPath(ConfigurationId id);
+    public Result<string> GetModuleFolderPath(ModuleId id);
+    public Result<string> GetTempModuleFolderPath(ModuleId id);
+    public Result<string> GetTempConfigurationFolderPath(ConfigurationId id);
     public Result<string> CreateModuleFolder(ModuleId id);
     public Result<string> CreateConfigurationFolder(ConfigurationId id);
     public Result<string> CreateTempConfigurationFolder(ConfigurationId id);

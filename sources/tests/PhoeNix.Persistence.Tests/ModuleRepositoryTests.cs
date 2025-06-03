@@ -7,7 +7,9 @@ namespace PhoeNix.Persistence.Tests;
 
 public class ModuleRepositoryTests : PersistenceTestsBase
 {
-    public ModuleRepositoryTests(ITestOutputHelper output) : base(output) {}
+    public ModuleRepositoryTests(ITestOutputHelper output) : base(output)
+    {
+    }
 
     [Fact]
     public async Task Should_Persist_Module_And_Retrieve_ByName()
@@ -17,16 +19,15 @@ public class ModuleRepositoryTests : PersistenceTestsBase
         var module = Module.Create(
             moduleId,
             "MyTestModule",
-            enabled: true,
-            content: "entry1 entry2",
-            type: ModuleType.Generic,
-            architectures: [Architecture.Aarch64Linux]
+            true,
+            ModuleType.Generic,
+            [Architecture.Aarch64Linux]
         ).Value;
 
         var entry1 = TextValue.Create(new EntryValueId(Guid.NewGuid()), "entry1", "val1").Value;
         var entry2 = TextValue.Create(new EntryValueId(Guid.NewGuid()), "entry2", "val2").Value;
 
-        var result = module.ChangeContent(module.Content, [entry1, entry2]);
+        var result = module.ChangeContent("entry1 entry2", [entry1, entry2]);
         result.IsSuccess.Should().BeTrue();
 
         ModuleRepository.Add(module);
@@ -51,7 +52,6 @@ public class ModuleRepositoryTests : PersistenceTestsBase
             new ModuleId(Guid.NewGuid()),
             "InvalidModule",
             true,
-            "something else",
             ModuleType.Generic,
             [Architecture.Aarch64Linux]
         ).Value;

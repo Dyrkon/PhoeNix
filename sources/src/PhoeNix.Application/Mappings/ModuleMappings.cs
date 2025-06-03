@@ -16,7 +16,7 @@ public static class ModuleMappings
             module.EditableValues.Select(MapEntryValueToDto).ToList(), module.SupportedArchitectures.ToList());
     }
 
-    public static EntryValueResponse MapEntryValueToDto(IEntryValue entryValue)
+    public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)
     {
         return new EntryValueResponse(entryValue.Id, entryValue.Name, entryValue.Placeholder, entryValue.Value);
     }

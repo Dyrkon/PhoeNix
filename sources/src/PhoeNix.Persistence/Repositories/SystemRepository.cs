@@ -15,6 +15,7 @@ internal sealed class SystemRepository : RepositoryBase<Domain.Entities.Systems.
         return DbContext.Systems
             .Include(s => s.Modules)
             .ThenInclude(m => m.Module)
+            .ThenInclude(m => m.EditableValues)
             .SingleOrDefaultAsync(s => s.Name.Contains(name), token);
     }
 
@@ -23,6 +24,7 @@ internal sealed class SystemRepository : RepositoryBase<Domain.Entities.Systems.
         return DbContext.Systems
             .Include(s => s.Modules)
             .ThenInclude(m => m.Module)
+            .ThenInclude(m => m.EditableValues)
             .SingleOrDefaultAsync(s => s.Id == id, token);
     }
 }

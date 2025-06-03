@@ -152,18 +152,36 @@ public class Configuration : AggregateRoot<ConfigurationId>
     {
         var inputs = Inputs.Select(i => i.Input.Build());
         if (inputs.Any(i => i.IsFailure))
-            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build input in configuration {Title}"));
+            return Result.Failure<ConfigurationBuildResult>(new Error("",
+                $"Failed to build input in configuration {Title}"));
         var modules = Modules.Select(m => m.Module.Build());
         if (modules.Any(i => i.IsFailure))
-            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build module in configuration {Title}"));
+            return Result.Failure<ConfigurationBuildResult>(new Error("",
+                $"Failed to build module in configuration {Title}"));
         var systems = Systems.Select(s => s.System.Build());
         if (systems.Any(i => i.IsFailure))
-            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to build system in configuration {Title}"));
+            return Result.Failure<ConfigurationBuildResult>(new Error("",
+                $"Failed to build system in configuration {Title}"));
         var supportedArchitectures = SupportedSystemArchitectures();
         if (supportedArchitectures.IsFailure)
-            return Result.Failure<ConfigurationBuildResult>(new Error("", $"Failed to get supported architectures for configuration {Title}"));
+            return Result.Failure<ConfigurationBuildResult>(new Error("",
+                $"Failed to get supported architectures for configuration {Title}"));
+
+        var systemsPlaceholder = Guid.NewGuid();
+        var sharedModulesPlaceholder = Guid.NewGuid();
+        var inputsValues = string.Empty;
+        var formatters = string.Empty;
+        foreach (var result in inputs) inputsValues += $"{result.Value.Input}\n";
+        foreach (var architecture in Enum.GetValues<Architecture>())
+            formatters +=
+                $"formatter.{architecture.ToArchitectureString()} = nixpkgs.legacyPackages.{architecture.ToArchitectureString()}.nixfmt-rfc-style;\n";
+        var content =
+            $"{{ description = \"{Description}\"; inputs = {{ {inputsValues} }};\n outputs = {{self, nixpkgs, ...}} @ inputs: let\n sharedModules = [ {sharedModulesPlaceholder} ]; \nin\n {{ {formatters}\n nixosConfigurations = {{ {systemsPlaceholder} }}; }}; }}";
 
         // TODO homes are not supported yet
-        return new ConfigurationBuildResult(Title, Description, supportedArchitectures.Value, inputs.Select(i => i.Value), modules.Select(m => m.Value), systems.Select(s => s.Value));
+        return new ConfigurationBuildResult(Title, content, sharedModulesPlaceholder.ToString(),
+            systemsPlaceholder.ToString(), supportedArchitectures.Value,
+            modules.Select(m => m.Value),
+            systems.Select(s => s.Value));
     }
 }

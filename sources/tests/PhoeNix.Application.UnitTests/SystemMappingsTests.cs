@@ -29,7 +29,7 @@ public class SystemMappingsTests
         var moduleId = new ModuleId(Guid.NewGuid());
 
         var system = Domain.Entities.Systems.System.Create(systemId, Architecture.Aarch64Linux, "System A").Value;
-        var module = Module.Create(moduleId, "My Module", true, "", ModuleType.System,
+        var module = Module.Create(moduleId, "My Module", true, ModuleType.System,
             [Architecture.Aarch64Linux]).Value;
 
         var sysModule = SystemModule.Create(new SystemModuleId(Guid.NewGuid()), system.Id, moduleId).Value;

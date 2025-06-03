@@ -13,6 +13,14 @@ internal sealed class ModuleRepository : RepositoryBase<Module, ModuleId>, IModu
     public Task<Module?> GetByNameAsync(string name, CancellationToken token)
     {
         return DbContext.Modules
+            .Include(m => m.EditableValues)
             .SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+    }
+
+    public override Task<Module?> GetByIdAsync(ModuleId id, CancellationToken token)
+    {
+        return DbContext.Modules
+            .Include(m => m.EditableValues)
+            .SingleOrDefaultAsync(c => c.Id == id, token);
     }
 }

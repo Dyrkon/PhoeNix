@@ -9,7 +9,9 @@ namespace PhoeNix.Persistence.Tests;
 
 public class HomeRepositoryTests : PersistenceTestsBase
 {
-    public HomeRepositoryTests(ITestOutputHelper output) : base(output) { }
+    public HomeRepositoryTests(ITestOutputHelper output) : base(output)
+    {
+    }
 
     [Fact]
     public async Task Should_Persist_Home_With_Users_And_Modules()
@@ -22,12 +24,12 @@ public class HomeRepositoryTests : PersistenceTestsBase
             new ModuleId(Guid.NewGuid()),
             "Analytics",
             true,
-            "",
             ModuleType.Home,
             [Architecture.Aarch64Linux]
         ).Value;
 
-        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
+        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024,
+            Shell.Fish, "./here").Value;
 
         ModuleRepository.Add(module);
         UserRepository.Add(user);
@@ -60,12 +62,12 @@ public class HomeRepositoryTests : PersistenceTestsBase
             new ModuleId(Guid.NewGuid()),
             "Security",
             true,
-            "",
             ModuleType.Home,
             [Architecture.X86Linux]
         ).Value;
 
-        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024, Shell.Fish, "./here").Value;
+        var user = User.Create(new UserId(Guid.NewGuid()), "Test name", "Test description", "wheel", true, 1024,
+            Shell.Fish, "./here").Value;
 
         ModuleRepository.Add(module);
         UserRepository.Add(user);

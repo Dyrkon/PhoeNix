@@ -3,4 +3,9 @@ using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.Entities.Systems;
 
-public record SystemBuildResult(Architecture Architecture, string Content, IEnumerable<ModuleBuildResult> Modules, string ModulesListPlaceholder);
+public record SystemBuildResult(
+    string Name,
+    Architecture Architecture,
+    string Content,
+    IEnumerable<ModuleBuildResult> Modules,
+    string ModulesListPlaceholder);

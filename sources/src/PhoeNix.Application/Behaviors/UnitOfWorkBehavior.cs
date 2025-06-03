@@ -8,7 +8,7 @@ namespace PhoeNix.Application.Behaviors;
 
 public sealed class UnitOfWorkBehavior<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : ICommandBase
+    where TRequest : ICommand
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -22,7 +22,8 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+        // TODO transaction scope doesn't work is SQLite
+        // using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
         var response = await next();
 
@@ -32,7 +33,7 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        transactionScope.Complete();
+        // transactionScope.Complete();
 
         return response;
     }

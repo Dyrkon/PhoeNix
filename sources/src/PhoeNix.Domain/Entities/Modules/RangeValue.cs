@@ -4,12 +4,9 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class RangeValue<T> : IEntryValue where T : INumber<T>
+public class RangeValue<T> : EntryValue where T : INumber<T>
 {
-    public EntryValueId Id { get; init; }
-    public string Name { get; init; }
-    public string Placeholder { get; init; }
-    public string Value => UpperValue.ToString();
+    public new string Value => UpperValue.ToString();
 
     public T UpperValue { get; private set; }
 
