@@ -48,6 +48,8 @@ public class ConfigurationsModule : CarterModule
     private async Task<IResult> DeleteConfiguration(Guid configurationId, ISender sender,
         CancellationToken cancellationToken)
     {
-        return Results.Problem();
+        var command = new RemoveConfigurationCommand(new ConfigurationId(configurationId));
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
     }
 }

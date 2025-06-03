@@ -19,6 +19,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Home> Homes { get; set; }
     public DbSet<Input> Inputs { get; set; }
     public DbSet<Module> Modules { get; set; }
+    public DbSet<Test> Tests { get; set; }
+    public DbSet<ModuleTest> ModuleTests { get; set; }
     public DbSet<EntryValue> EntryValues { get; set; }
     public DbSet<Domain.Entities.Systems.System> Systems { get; set; }
     public DbSet<User> Users { get; set; }

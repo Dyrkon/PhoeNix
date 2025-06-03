@@ -16,6 +16,7 @@ internal sealed class AddConfigurationCommandHandler(
     IModuleRepository moduleRepository,
     IInputRepository inputRepository,
     ISystemRepository systemRepository,
+    ITestRepository testRepository,
     IConfigurationRepository configurationRepository) : ICommandHandler<AddConfigurationCommand>
 {
     public Task<Result> Handle(AddConfigurationCommand request, CancellationToken cancellationToken)
@@ -53,6 +54,15 @@ internal sealed class AddConfigurationCommandHandler(
                 [textValue3]
             )).Value;
 
+        var sysModuleTest = Test.Create(new TestId(Guid.NewGuid()), "SysModuleTest").Value;
+        var shareModuleTest = Test.Create(new TestId(Guid.NewGuid()), "SharedModuleTest").Value;
+
+        sharedModule.AddModuleTest(shareModuleTest.Id);
+        systemModule.AddModuleTest(sysModuleTest.Id);
+
+        testRepository.Add(sysModuleTest);
+        testRepository.Add(shareModuleTest);
+
         moduleRepository.Add(sharedModule);
         moduleRepository.Add(systemModule);
 
@@ -63,6 +73,7 @@ internal sealed class AddConfigurationCommandHandler(
         system.AddModule(systemModule);
 
         systemRepository.Add(system);
+
 
         var configuration = Configuration.Create(configurationId, "ExampleConfiguration", "Example configuration flake")
             .Value;

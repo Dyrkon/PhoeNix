@@ -10,6 +10,7 @@ public record ConfigurationBuildResult(
     string Content,
     string SharedModulesPlaceholder,
     string SystemsPlaceholder,
+    string ChecksPlaceholder,
     IEnumerable<Architecture> SupportedArchitectures,
     IEnumerable<ModuleBuildResult> CommonModules,
     IEnumerable<SystemBuildResult> Systems);

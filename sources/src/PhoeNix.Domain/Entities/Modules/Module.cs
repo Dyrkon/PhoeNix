@@ -9,6 +9,7 @@ public class Module : AggregateRoot<ModuleId>
 {
     private readonly List<Architecture> _supportedArchitectures = new();
     private readonly List<EntryValue> _editableValues = new();
+    private readonly List<ModuleTest> _moduleTests = new();
 
     private Module(ModuleId id) : base(id)
     {
@@ -23,6 +24,8 @@ public class Module : AggregateRoot<ModuleId>
     public string Content { get; private set; }
 
     public IReadOnlyList<EntryValue> EditableValues => _editableValues;
+
+    public IReadOnlyList<ModuleTest> Tests => _moduleTests;
 
     public Result ChangeContent(string content, List<EntryValue> entries)
     {
@@ -101,8 +104,22 @@ public class Module : AggregateRoot<ModuleId>
     public Result RemoveArchitectureSupport(Architecture architecture)
     {
         var removed = _supportedArchitectures.RemoveAll(a => a == architecture);
-        if (removed == 0)
-            return Result.Failure(Error.ValueNotFound);
+        return removed == 0 ? Result.Failure(Error.ValueNotFound) : Result.Success();
+    }
+
+    public Result AddModuleTest(TestId testId)
+    {
+        if (_moduleTests.Any(h => h.TestId == testId))
+            return Result.Failure(new Error("", $"Module {Name} is already tested"));
+
+        return ModuleTest.Create(new ModuleTestId(Guid.NewGuid()), Id, testId).Tap(test => _moduleTests.Add(test));
+    }
+
+    public Result RemoveModuleTest(TestId id)
+    {
+        var removedModules = _moduleTests.RemoveAll(m => m.ModuleId == Id);
+        if (removedModules == 0)
+            return Result.Failure(new Error("", $"There is no module with id {id.Value} in this module"));
 
         return Result.Success();
     }
@@ -144,6 +161,11 @@ public class Module : AggregateRoot<ModuleId>
         var moduleContent =
             $"{{ config, pkgs, ... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}; \nin {{ {outputContent} }}";
 
-        return new ModuleBuildResult(Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder);
+        var moduleTests = _moduleTests.Select(t => t.Test.Build()).ToList();
+        if (moduleTests.Any(i => i.IsFailure))
+            return Result.Failure<ModuleBuildResult>(new Error("", $"Failed to build tests for module {Name}."));
+
+        return new ModuleBuildResult(Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder,
+            moduleTests.Select(t => t.Value).ToList());
     }
 }

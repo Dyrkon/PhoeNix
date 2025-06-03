@@ -9,25 +9,40 @@ public class ConfigurationBuilderService(IModuleBuilderService moduleBuilderServ
 {
     public Result<Folder> BuildConfiguration(ConfigurationBuildResult configurationBuild)
     {
-        var sharedModulesList = string.Empty;
-        var systemPathsList = string.Empty;
         var configModulesFolderPath = $"{configurationBuild.Title}Modules";
         var configSystemsFolderPath = $"{configurationBuild.Title}Systems";
 
-        systemPathsList = configurationBuild.Systems.Aggregate(systemPathsList,
-            (current, s) =>
-                current +
-                $"{s.Name} = import ./{configSystemsFolderPath}/{s.Name}/{s.Name}-{s.Architecture}.nix {{ inherit inputs sharedModules; }};\n");
+        var systemPathsList = configurationBuild.Systems.Aggregate("", (current, s) =>
+            current +
+            $"{s.Name} = import ./{configSystemsFolderPath}/{s.Name}/{s.Name}-{s.Architecture}.nix {{ inherit inputs sharedModules; }};\n");
 
-        foreach (var m in configurationBuild.CommonModules)
-            sharedModulesList += $"./{configModulesFolderPath}/{m.Name}/default.nix ";
+        var sharedModulesList = configurationBuild.CommonModules.Aggregate("",
+            (current, m) => current + $"./{configModulesFolderPath}/{m.Name}/{DefaultNames.ModuleName} ");
+
+        var checksPaths = string.Empty;
+
+        foreach (var moduleBuildResult in configurationBuild.CommonModules.Where(m =>
+                     m.ModuleTests != null && m.ModuleTests.Count != 0))
+            if (moduleBuildResult.ModuleTests != null)
+                foreach (var moduleTest in moduleBuildResult.ModuleTests)
+                    checksPaths +=
+                        $"{moduleTest.Name} = import ./{configModulesFolderPath}/{moduleBuildResult.Name}/{moduleTest.Name} {{ inherit pkgs; }}; ";
+
+        foreach (var system in configurationBuild.Systems)
+        foreach (var moduleBuildResult in system.Modules)
+            if (moduleBuildResult.ModuleTests != null)
+                foreach (var moduleTestBuildResult in moduleBuildResult.ModuleTests)
+                    checksPaths +=
+                        $"{moduleTestBuildResult.Name} = import ./{configSystemsFolderPath}/{system.Name}/{moduleBuildResult.Name}/{moduleTestBuildResult.Name} {{ inherit pkgs; }}; ";
+
 
         var files = new List<FileBase>
         {
             new TextFile("flake.nix",
                 configurationBuild.Content
                     .Replace(configurationBuild.SystemsPlaceholder, systemPathsList)
-                    .Replace(configurationBuild.SharedModulesPlaceholder, sharedModulesList)),
+                    .Replace(configurationBuild.SharedModulesPlaceholder, sharedModulesList)
+                    .Replace(configurationBuild.ChecksPlaceholder, checksPaths)),
             new Folder(configModulesFolderPath,
                 configurationBuild.CommonModules.Select(moduleBuilderService.BuildModule)),
             new Folder(configSystemsFolderPath,

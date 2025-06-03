@@ -5,4 +5,5 @@ public record ModuleBuildResult(
     string Module,
     string Inputs,
     string InputsFileName,
-    string InputsLocationPlaceholder);
+    string InputsLocationPlaceholder,
+    List<ModuleTestBuildResult>? ModuleTests = null);
