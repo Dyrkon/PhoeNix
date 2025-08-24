@@ -40,7 +40,8 @@ public class ConfigurationsModule : CarterModule
     private async Task<IResult> CreateConfiguration(CreateConfigurationRequest request, ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new AddConfigurationCommand();
+        var command =
+            new AddConfigurationCommand(request.Name, request.Description);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

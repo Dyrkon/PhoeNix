@@ -11,6 +11,10 @@ public static class ConfigurationRepositoryExtensions
             .Include(c => c.Modules)
             .ThenInclude(m => m.Module)
             .ThenInclude(m => m.EditableValues)
+            .Include(c => c.Modules)
+            .ThenInclude(m => m.Module)
+            .ThenInclude(m => m.Tests)
+            .ThenInclude(m => m.Test)
             .Include(c => c.Homes)
             .ThenInclude(h => h.Home)
             .Include(c => c.Inputs)
@@ -19,6 +23,12 @@ public static class ConfigurationRepositoryExtensions
             .ThenInclude(s => s.System)
             .ThenInclude(s => s.Modules)
             .ThenInclude(sm => sm.Module)
-            .ThenInclude(m => m.EditableValues);
+            .ThenInclude(m => m.EditableValues)
+            .Include(c => c.Systems)
+            .ThenInclude(s => s.System)
+            .ThenInclude(s => s.Modules)
+            .ThenInclude(sm => sm.Module)
+            .ThenInclude(s => s.Tests)
+            .ThenInclude(s => s.Test);
     }
 }

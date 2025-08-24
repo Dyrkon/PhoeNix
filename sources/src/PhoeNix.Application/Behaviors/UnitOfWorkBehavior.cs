@@ -8,7 +8,7 @@ namespace PhoeNix.Application.Behaviors;
 
 public sealed class UnitOfWorkBehavior<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : ICommand
+    where TRequest : ICommandBase
 {
     private readonly IUnitOfWork _unitOfWork;
 

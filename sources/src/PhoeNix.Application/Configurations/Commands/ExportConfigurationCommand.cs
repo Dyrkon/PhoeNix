@@ -26,14 +26,9 @@ internal sealed class ExportConfigurationCommandHandler(
         if (config is null)
             return Result.Failure<string>(new Error("", $"Configuration {command.ConfigurationId} not found!"));
 
-        var outputPath = string.Empty;
-
-        config.Build()
+        return config.Build()
             .Bind(configurationBuilderService.BuildConfiguration)
             .Tap(_ => fileSystemService.CreateConfigurationFolder(command.ConfigurationId))
-            .Bind(cFolder => fileSystemService.WriteConfigurationToTmp(cFolder, command.ConfigurationId))
-            .Tap(path => outputPath = path);
-
-        return outputPath;
+            .Bind(cFolder => fileSystemService.WriteConfigurationToTmp(cFolder, command.ConfigurationId));
     }
 }

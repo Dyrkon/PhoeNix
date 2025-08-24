@@ -163,7 +163,7 @@ public class Configuration : AggregateRoot<ConfigurationId>
             return Result.Failure<ConfigurationBuildResult>(new Error("",
                 $"Failed to build system in configuration {Title}"));
         var supportedArchitectures = SupportedSystemArchitectures();
-        if (supportedArchitectures.IsFailure)
+        if (supportedArchitectures.IsFailure || supportedArchitectures.Value.Count == 0)
             return Result.Failure<ConfigurationBuildResult>(new Error("",
                 $"Failed to get supported architectures for configuration {Title}"));
 
@@ -171,18 +171,20 @@ public class Configuration : AggregateRoot<ConfigurationId>
         var sharedModulesPlaceholder = Guid.NewGuid().ToString();
         var checksPlaceholder = Guid.NewGuid().ToString();
         var inputsValues = inputs.Aggregate("", (current, result) => current + $"{result.Value.Input}\n");
-        var formatters = Enum.GetValues<Architecture>().Aggregate("",
-            (current, architecture) =>
-                current +
-                $"formatter.{architecture.ToArchitectureString()} = nixpkgs.legacyPackages.{architecture.ToArchitectureString()}.nixfmt-rfc-style;\n");
 
         var content =
-            $"{{ description = \"{Description}\"; inputs = {{ {inputsValues} }};\n outputs = {{self, nixpkgs, ...}} @ inputs: " +
-            $"let\n sharedModules = [ {sharedModulesPlaceholder} ]; \nin\n {{" +
-            $" {formatters}\n " +
-            $"nixosConfigurations = {{ {systemsPlaceholder} }};\n " +
-            $"checks = {{ {checksPlaceholder} }}" +
-            $"}}; }}";
+            $"{{ description = \"{Description}\"; " +
+            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; {inputsValues} }};\n " +
+            $"outputs = {{self, nixpkgs, flake-utils, ...}} @ inputs: " +
+            $"let\n systems = [{supportedArchitectures.Value.Aggregate("", (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +
+            $"sharedModules = [ {sharedModulesPlaceholder} ];\n" +
+            $"lib = nixpkgs.lib;" +
+            $"in\n" +
+            $"flake-utils.lib.eachSystem systems (system: let " +
+            $"pkgs = nixpkgs.legacyPackages.${{system}}; \nin {{ \n" +
+            $"formatter = pkgs.nixfmt;\n " +
+            $"checks = {{ {checksPlaceholder} }};" +
+            $"}}) // {{ nixosConfigurations = {{ {systemsPlaceholder} }}; }}; }}";
 
         // TODO homes are not supported yet
         return new ConfigurationBuildResult(Title, content, sharedModulesPlaceholder,

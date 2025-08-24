@@ -39,7 +39,7 @@ public class Test : Entity<TestId>
         return new Test(testId) { Content = string.Empty, Name = name };
     }
 
-    public Result<ModuleTestBuildResult> Build(string moduleValuesName = "values.nix")
+    public Result<ModuleTestBuildResult> Build(string moduleValuesName = "values")
     {
         var inputsLocationPlaceholder = Guid.NewGuid().ToString();
         var testedModulePathPlaceholder = Guid.NewGuid().ToString();
@@ -48,9 +48,11 @@ public class Test : Entity<TestId>
         var moduleTestContent =
             $"{{ inputs, pkgs, ... }}: let\n inherit (pkgs) lib; \n inherit inputs; \n inherit (lib) runTests; \n " +
             $"testedModule = import {testedModulePathPlaceholder} {{inherit lib inputs pkgs; }}; \n" +
-            $" args = import {inputsLocationPlaceholder}/{moduleValuesName}; \n" +
-            $"in {{ runTests {{ {outputContent} }} }}";
-        return new ModuleTestBuildResult(Name, moduleTestContent, testedModulePathPlaceholder,
+            $"testResults = lib.runTests {{ {outputContent} }}; \n" +
+            $" args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \n" +
+            $"in\npkgs.runCommand \"{Name}\" {{ failures = builtins.toJSON testResults; }} \'\'\nif [ \"$failures\" = \"[]\" ]; " +
+            $"then\n echo \"All tests passed!\";\n touch $out;\nelse\n echo \"$failures\";\n exit 1\nfi\'\'";
+        return new ModuleTestBuildResult(moduleTestContent, Name, testedModulePathPlaceholder,
             inputsLocationPlaceholder);
     }
 }

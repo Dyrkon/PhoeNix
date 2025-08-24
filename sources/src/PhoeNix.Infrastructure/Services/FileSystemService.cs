@@ -123,7 +123,7 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         return GetConfigurationFolderPath(id)
             .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
             .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Tap(path => nixFormatterService.FormatNixInPlace(path));
+            .Bind(nixFormatterService.FormatNixFilesInPlace);
     }
 
     public Result<string> WriteModuleToFs(Folder moduleFolder, ModuleId id)
@@ -145,6 +145,6 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         return GetTempConfigurationFolderPath(id)
             .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
             .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Tap(path => nixFormatterService.FormatNixInPlace(path));
+            .Bind(nixFormatterService.FormatNixFilesInPlace);
     }
 }

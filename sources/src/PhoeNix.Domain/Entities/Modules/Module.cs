@@ -146,7 +146,7 @@ public class Module : AggregateRoot<ModuleId>
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
 
-    public Result<ModuleBuildResult> Build(string moduleValuesName = "values.nix")
+    public Result<ModuleBuildResult> Build(string moduleValuesName = "values")
     {
         var inputs = "{ ";
         var outputContent = Content;
@@ -157,9 +157,10 @@ public class Module : AggregateRoot<ModuleId>
         }
 
         inputs += " }";
+        var config = Type == ModuleType.System ? "config, " : "";
         var inputsLocationPlaceholder = Guid.NewGuid().ToString();
         var moduleContent =
-            $"{{ config, pkgs, ... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}; \nin {{ {outputContent} }}";
+            $"{{ inputs, pkgs, lib, system, {config}... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {outputContent} }}";
 
         var moduleTests = _moduleTests.Select(t => t.Test.Build()).ToList();
         if (moduleTests.Any(i => i.IsFailure))

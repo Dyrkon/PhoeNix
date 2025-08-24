@@ -1,4 +1,5 @@
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
@@ -14,10 +15,10 @@ public class ConfigurationBuilderService(IModuleBuilderService moduleBuilderServ
 
         var systemPathsList = configurationBuild.Systems.Aggregate("", (current, s) =>
             current +
-            $"{s.Name} = import ./{configSystemsFolderPath}/{s.Name}/{s.Name}-{s.Architecture}.nix {{ inherit inputs sharedModules; }};\n");
+            $"{s.Name} = import ./{configSystemsFolderPath}/{s.Name}/{s.Name}-{s.Architecture.ToArchitectureString()}.nix {{ inherit inputs sharedModules lib; }};\n");
 
         var sharedModulesList = configurationBuild.CommonModules.Aggregate("",
-            (current, m) => current + $"./{configModulesFolderPath}/{m.Name}/{DefaultNames.ModuleName} ");
+            (current, m) => current + $"./{configModulesFolderPath}/{m.Name}/{DefaultNames.ModuleName}.nix");
 
         var checksPaths = string.Empty;
 
@@ -26,14 +27,14 @@ public class ConfigurationBuilderService(IModuleBuilderService moduleBuilderServ
             if (moduleBuildResult.ModuleTests != null)
                 foreach (var moduleTest in moduleBuildResult.ModuleTests)
                     checksPaths +=
-                        $"{moduleTest.Name} = import ./{configModulesFolderPath}/{moduleBuildResult.Name}/{moduleTest.Name} {{ inherit pkgs; }}; ";
+                        $"{moduleTest.Name} = import ./{configModulesFolderPath}/{moduleBuildResult.Name}/{moduleTest.Name}.nix {{ inherit inputs pkgs lib system; }}; ";
 
         foreach (var system in configurationBuild.Systems)
         foreach (var moduleBuildResult in system.Modules)
             if (moduleBuildResult.ModuleTests != null)
                 foreach (var moduleTestBuildResult in moduleBuildResult.ModuleTests)
                     checksPaths +=
-                        $"{moduleTestBuildResult.Name} = import ./{configSystemsFolderPath}/{system.Name}/{moduleBuildResult.Name}/{moduleTestBuildResult.Name} {{ inherit pkgs; }}; ";
+                        $"{moduleTestBuildResult.Name} = import ./{configSystemsFolderPath}/{system.Name}/{system.Name}{moduleBuildResult.Name}s/{moduleBuildResult.Name}/{moduleTestBuildResult.Name}.nix {{ inherit inputs pkgs lib system; }}; ";
 
 
         var files = new List<FileBase>

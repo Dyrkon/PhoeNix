@@ -6,10 +6,10 @@ namespace PhoeNix.Infrastructure.Services;
 
 public class NixFormatterService : INixFormatterService
 {
-    public Result FormatNixInPlace(string path)
+    public Result<string> FormatNixFilesInPlace(string path)
     {
         if (!Directory.Exists(path))
-            return Result.Failure(new Error("InvalidPath", $"Directory '{path}' does not exist."));
+            return Result.Failure<string>(new Error("InvalidPath", $"Directory '{path}' does not exist."));
 
         try
         {
@@ -33,16 +33,16 @@ public class NixFormatterService : INixFormatterService
             process.WaitForExit();
 
             if (process.ExitCode != 0)
-                return Result.Failure(new Error(
+                return Result.Failure<string>(new Error(
                     "NixFmtFailed",
                     $"Formatter exited with code {process.ExitCode}. Error: {stdErr.Trim()}"
                 ));
 
-            return Result.Success();
+            return path;
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("NixFormatterException", ex.Message));
+            return Result.Failure<string>(new Error("NixFormatterException", ex.Message));
         }
     }
 }

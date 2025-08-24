@@ -10,8 +10,13 @@ public record RemoveConfigurationCommand(ConfigurationId Id) : ICommand;
 internal sealed class RemoveConfigurationCommandHandler(IConfigurationRepository configurationRepository)
     : ICommandHandler<RemoveConfigurationCommand>
 {
-    public Task<Result> Handle(RemoveConfigurationCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(RemoveConfigurationCommand request, CancellationToken cancellationToken)
     {
-        return configurationRepository.RemoveByIdAsync(request.Id, cancellationToken);
+        var conf = await configurationRepository.GetByDescriptionAsync("string", cancellationToken);
+        if (conf != null)
+            Console.WriteLine(conf.Description);
+
+
+        return await configurationRepository.RemoveByIdAsync(request.Id, cancellationToken);
     }
 }
