@@ -6,6 +6,7 @@ using PhoeNix.Domain.Enums;
 namespace PhoeNix.Domain.Entities.Configurations;
 
 public record ConfigurationBuildResult(
+    ConfigurationId Id,
     string Title,
     string Content,
     string SharedModulesPlaceholder,

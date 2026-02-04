@@ -15,9 +15,9 @@ public record ExportConfigurationCommand(ConfigurationId ConfigurationId) : ICom
 
 internal sealed class ExportConfigurationCommandHandler(
     IConfigurationRepository configurationRepository,
-    IModuleRepository moduleRepository,
     IConfigurationBuilderService configurationBuilderService,
-    IFileSystemService fileSystemService) : ICommandHandler<ExportConfigurationCommand, string>
+    IFileSystemService fileSystemService)
+    : ICommandHandler<ExportConfigurationCommand, string>
 {
     public async Task<Result<string>> Handle(ExportConfigurationCommand command, CancellationToken cancellationToken)
     {
@@ -28,7 +28,6 @@ internal sealed class ExportConfigurationCommandHandler(
 
         return config.Build()
             .Bind(configurationBuilderService.BuildConfiguration)
-            .Tap(_ => fileSystemService.CreateConfigurationFolder(command.ConfigurationId))
-            .Bind(cFolder => fileSystemService.WriteConfigurationToTmp(cFolder, command.ConfigurationId));
+            .Bind(cFolder => fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId));
     }
 }

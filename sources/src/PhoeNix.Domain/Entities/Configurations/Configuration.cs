@@ -187,7 +187,7 @@ public class Configuration : AggregateRoot<ConfigurationId>
             $"}}) // {{ nixosConfigurations = {{ {systemsPlaceholder} }}; }}; }}";
 
         // TODO homes are not supported yet
-        return new ConfigurationBuildResult(Title, content, sharedModulesPlaceholder,
+        return new ConfigurationBuildResult(Id, Title, content, sharedModulesPlaceholder,
             systemsPlaceholder, checksPlaceholder, supportedArchitectures.Value,
             modules.Select(m => m.Value),
             systems.Select(s => s.Value));

@@ -67,6 +67,6 @@ public class System : AggregateRoot<SystemId>
         var systemContent =
             $"{{ inputs, lib, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ system = \"{Architecture.ToArchitectureString()}\"; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
 
-        return new SystemBuildResult(Name, Architecture, systemContent, moduleResults, modulesListPlaceholder);
+        return new SystemBuildResult(Id, Name, Architecture, systemContent, moduleResults, modulesListPlaceholder);
     }
 }

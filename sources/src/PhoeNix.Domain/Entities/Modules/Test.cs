@@ -52,7 +52,7 @@ public class Test : Entity<TestId>
             $" args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \n" +
             $"in\npkgs.runCommand \"{Name}\" {{ failures = builtins.toJSON testResults; }} \'\'\nif [ \"$failures\" = \"[]\" ]; " +
             $"then\n echo \"All tests passed!\";\n touch $out;\nelse\n echo \"$failures\";\n exit 1\nfi\'\'";
-        return new ModuleTestBuildResult(moduleTestContent, Name, testedModulePathPlaceholder,
+        return new ModuleTestBuildResult(Id, moduleTestContent, Name, testedModulePathPlaceholder,
             inputsLocationPlaceholder);
     }
 }

@@ -166,7 +166,7 @@ public class Module : AggregateRoot<ModuleId>
         if (moduleTests.Any(i => i.IsFailure))
             return Result.Failure<ModuleBuildResult>(new Error("", $"Failed to build tests for module {Name}."));
 
-        return new ModuleBuildResult(Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder,
+        return new ModuleBuildResult(Id, Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder,
             moduleTests.Select(t => t.Value).ToList());
     }
 }

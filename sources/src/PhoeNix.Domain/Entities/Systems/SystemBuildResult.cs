@@ -4,6 +4,7 @@ using PhoeNix.Domain.Enums;
 namespace PhoeNix.Domain.Entities.Systems;
 
 public record SystemBuildResult(
+    SystemId Id,
     string Name,
     Architecture Architecture,
     string Content,

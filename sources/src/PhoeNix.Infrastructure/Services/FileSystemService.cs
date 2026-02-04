@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Options;
@@ -77,73 +78,17 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         });
     }
 
-    public Result<string> GetConfigurationFolderPath(ConfigurationId id)
+    public Result<string> GetRootFolder()
     {
-        return Path.Combine(storageOptions.Value.ConfigurationsPath, id.Value.ToString());
-    }
-
-    public Result<string> GetModuleFolderPath(ModuleId id)
-    {
-        return Path.Combine(storageOptions.Value.ModulesPath, id.Value.ToString());
-    }
-
-    public Result<string> GetTempModuleFolderPath(ModuleId id)
-    {
-        return Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
-    }
-
-    public Result<string> GetTempConfigurationFolderPath(ConfigurationId id)
-    {
-        var path = Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
-        return path;
-    }
-
-    public Result<string> CreateConfigurationFolder(ConfigurationId id)
-    {
-        return GetConfigurationFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateTempConfigurationFolder(ConfigurationId id)
-    {
-        return GetTempConfigurationFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateTempModuleFolder(ModuleId id)
-    {
-        return GetTempModuleFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateModuleFolder(ModuleId id)
-    {
-        return GetModuleFolderPath(id).Tap(path => CreateFolder(path));
+        return storageOptions.Value.UseTemp
+            ? Path.Combine(Path.GetTempPath(), TempFolderName)
+            : Path.Combine(storageOptions.Value.RootPath);
     }
 
     public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id)
     {
-        return GetConfigurationFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
-            .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Bind(nixFormatterService.FormatNixFilesInPlace);
-    }
-
-    public Result<string> WriteModuleToFs(Folder moduleFolder, ModuleId id)
-    {
-        return GetModuleFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
-            .Tap(path => WriteFolderStructure(path, moduleFolder));
-    }
-
-    public Result<string> WriteModuleToTmp(Folder moduleFolder, ModuleId id)
-    {
-        return GetTempModuleFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
-            .Tap(path => WriteFolderStructure(path, moduleFolder));
-    }
-
-    public Result<string> WriteConfigurationToTmp(Folder configurationFolder, ConfigurationId id)
-    {
-        return GetTempConfigurationFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
+        return GetRootFolder()
+            .Tap(path => CheckAndRemoveDirectory(path))
             .Bind(path => WriteFolderStructure(path, configurationFolder))
             .Bind(nixFormatterService.FormatNixFilesInPlace);
     }
