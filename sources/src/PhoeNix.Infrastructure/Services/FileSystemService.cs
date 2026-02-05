@@ -33,12 +33,12 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         }
     }
 
-    private static Result CheckAndRemoveDirectory(string path)
+    private static Result<string> CheckAndRemoveDirectory(string path)
     {
         var fs = new FileSystem();
         if (fs.Directory.Exists(path)) fs.Directory.Delete(path, true);
 
-        return Result.Success();
+        return path;
     }
 
     private static Result<string> WriteFile(string path, string contents)
@@ -74,7 +74,7 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
                     if (result.IsFailure) return result;
                 }
 
-            return Result.Success(rootPath);
+            return Result.Success(folder.Name);
         });
     }
 
@@ -87,9 +87,9 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
 
     public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id)
     {
-        return GetRootFolder()
-            .Tap(path => CheckAndRemoveDirectory(path))
+        var rootPath = GetRootFolder().Value;
+        return CheckAndRemoveDirectory(rootPath)
             .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Bind(nixFormatterService.FormatNixFilesInPlace);
+            .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}"));
     }
 }

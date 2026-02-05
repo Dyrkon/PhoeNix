@@ -22,10 +22,10 @@ public class ConfigurationsModule : CarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPost("/create", CreateConfiguration)
+        app.MapPost("/{configurationId:guid}/create", CreateConfiguration)
             .Produces(StatusCodes.Status200OK);
 
-        app.MapDelete("/delete", DeleteConfiguration)
+        app.MapDelete("/{configurationId:guid}/delete", DeleteConfiguration)
             .Produces(StatusCodes.Status200OK);
     }
 

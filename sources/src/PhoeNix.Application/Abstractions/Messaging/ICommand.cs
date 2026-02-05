@@ -26,3 +26,8 @@ public interface IQueryHandler<in TQuery, TResponse>
     where TQuery : IQuery<TResponse>
 {
 }
+
+public interface IQuery : IRequest<Result>;
+
+public interface IQueryHandler<in TQuery> : IRequestHandler<TQuery, Result>
+    where TQuery : IQuery;

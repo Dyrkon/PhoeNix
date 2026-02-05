@@ -21,12 +21,9 @@ internal sealed class ExportConfigurationCommandHandler(
 {
     public async Task<Result<string>> Handle(ExportConfigurationCommand command, CancellationToken cancellationToken)
     {
-        var config = await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken);
-
-        if (config is null)
-            return Result.Failure<string>(new Error("", $"Configuration {command.ConfigurationId} not found!"));
-
-        return config.Build()
+        return await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken)
+            .EnsureNotNull(new Error("", $"Configuration {command.ConfigurationId} not found!"))
+            .Bind(config => config.Build())
             .Bind(configurationBuilderService.BuildConfiguration)
             .Bind(cFolder => fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId));
     }

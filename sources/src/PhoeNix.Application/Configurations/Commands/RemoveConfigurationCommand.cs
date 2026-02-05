@@ -1,5 +1,6 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
@@ -12,11 +13,8 @@ internal sealed class RemoveConfigurationCommandHandler(IConfigurationRepository
 {
     public async Task<Result> Handle(RemoveConfigurationCommand request, CancellationToken cancellationToken)
     {
-        var conf = await configurationRepository.GetByDescriptionAsync("string", cancellationToken);
-        if (conf != null)
-            Console.WriteLine(conf.Description);
-
-
-        return await configurationRepository.RemoveByIdAsync(request.Id, cancellationToken);
+        return await configurationRepository.GetByDescriptionAsync("string", cancellationToken)
+            .EnsureNotNull(new Error($"", $"Configuration {request.Id} not found!"))
+            .Tap(conf => configurationRepository.RemoveByIdAsync(conf.Id, cancellationToken));
     }
 }

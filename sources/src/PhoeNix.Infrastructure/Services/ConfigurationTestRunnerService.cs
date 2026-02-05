@@ -9,7 +9,7 @@ namespace PhoeNix.Infrastructure.Services;
 
 public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
 {
-    public Result<bool> RunModuleTest(string name, Architecture architecture)
+    public Result RunModuleTest(string name, Architecture architecture, string path)
     {
         try
         {
@@ -18,7 +18,7 @@ public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "nix",
-                    Arguments = $"build .#checks.{architecture.ToArchitectureString()}.{name} -L",
+                    Arguments = $"build {path}#checks.{architecture.ToArchitectureString()}.{name} -L",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -33,16 +33,16 @@ public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
             process.WaitForExit();
 
             if (process.ExitCode != 0)
-                return Result.Failure<bool>(new Error(
+                return Result.Failure(new Error(
                     "ModuleTestFailed",
                     $"Module test exited with code {process.ExitCode}. Error: {stdErr.Trim()}"
                 ));
 
-            return true;
+            return Result.Success();
         }
         catch (Exception ex)
         {
-            return Result.Failure<bool>(new Error("NixModuleTestException", ex.Message));
+            return Result.Failure(new Error("NixModuleTestException", ex.Message));
         }
     }
 
