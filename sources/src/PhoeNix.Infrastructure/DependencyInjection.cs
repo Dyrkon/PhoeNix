@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<IModuleBuilderService, ModuleBuilderService>();
         services.AddSingleton<IConfigurationBuilderService, ConfigurationBuilderService>();
         services.AddSingleton<IConfigurationTestRunnerService, ConfigurationTestRunnerService>();
+        services.AddSingleton<INixErrorParserService, NixErrorParserService>();
 
         return services;
     }

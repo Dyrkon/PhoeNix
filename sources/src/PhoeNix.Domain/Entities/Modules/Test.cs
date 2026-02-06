@@ -51,7 +51,7 @@ public class Test : Entity<TestId>
             $"testResults = lib.runTests {{ {outputContent} }}; \n" +
             $" args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \n" +
             $"in\npkgs.runCommand \"{Name}\" {{ failures = builtins.toJSON testResults; }} \'\'\nif [ \"$failures\" = \"[]\" ]; " +
-            $"then\n echo \"All tests passed!\";\n touch $out;\nelse\n echo \"$failures\";\n exit 1\nfi\'\'";
+            $"then\n echo \"All tests passed!\";\n touch $out;\nelse\n printf \'%s\' \"$failures\";\n exit 1\nfi\'\'";
         return new ModuleTestBuildResult(Id, moduleTestContent, Name, testedModulePathPlaceholder,
             inputsLocationPlaceholder);
     }

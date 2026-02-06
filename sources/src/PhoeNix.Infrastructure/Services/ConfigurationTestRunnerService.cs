@@ -1,15 +1,16 @@
 using System.Diagnostics;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
+public class ConfigurationTestRunnerService(INixErrorParserService nixErrorParserService)
+    : IConfigurationTestRunnerService
 {
-    public Result RunModuleTest(string name, Architecture architecture, string path)
+    public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path)
     {
         try
         {
@@ -18,7 +19,8 @@ public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "nix",
-                    Arguments = $"build {path}#checks.{architecture.ToArchitectureString()}.{name} -L",
+                    Arguments =
+                        $"build {path}#checks.{architecture.ToArchitectureString()}.{id.ToStringWithPrefix()} -L --quiet",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -29,20 +31,16 @@ public class ConfigurationTestRunnerService : IConfigurationTestRunnerService
             process.Start();
 
             var stdErr = process.StandardError.ReadToEnd();
+            var stdOut = process.StandardOutput.ReadToEnd();
 
             process.WaitForExit();
 
-            if (process.ExitCode != 0)
-                return Result.Failure(new Error(
-                    "ModuleTestFailed",
-                    $"Module test exited with code {process.ExitCode}. Error: {stdErr.Trim()}"
-                ));
-
-            return Result.Success();
+            return nixErrorParserService.ParseModelTestResult(id, testName, stdOut.Trim(), stdErr.Trim(),
+                process.ExitCode);
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("NixModuleTestException", ex.Message));
+            return Result.Failure<ModuleTestResponse>(new Error("NixModuleTestException", ex.Message));
         }
     }
 
