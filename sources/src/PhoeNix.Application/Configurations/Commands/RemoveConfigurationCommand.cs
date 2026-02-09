@@ -13,7 +13,7 @@ internal sealed class RemoveConfigurationCommandHandler(IConfigurationRepository
 {
     public async Task<Result> Handle(RemoveConfigurationCommand request, CancellationToken cancellationToken)
     {
-        return await configurationRepository.GetByDescriptionAsync("string", cancellationToken)
+        return await configurationRepository.GetByIdAsync(request.Id, cancellationToken)
             .EnsureNotNull(new Error($"", $"Configuration {request.Id} not found!"))
             .Tap(conf => configurationRepository.RemoveByIdAsync(conf.Id, cancellationToken));
     }

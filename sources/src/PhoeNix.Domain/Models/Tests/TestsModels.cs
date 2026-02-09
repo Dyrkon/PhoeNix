@@ -1,11 +1,14 @@
 using System.Text.Json;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Systems;
 
 namespace PhoeNix.Domain.Models.Tests;
 
 public record ModuleTestResponse(TestId Id, string Name, bool IsSuccess, IReadOnlyList<ModuleTestErrorResponse> Errors);
 
 public record ModuleTestErrorResponse(string Expected, string Name, string Result);
+
+public record SystemTestResponse(SystemId Id, bool IsSuccess, string BuildTime);
 
 public static class ModuleTestParser
 {

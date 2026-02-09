@@ -10,5 +10,5 @@ public interface IConfigurationTestRunnerService
 {
     public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path);
 
-    public Result<bool> RunSystemTest(string name, Architecture architecture, string path);
+    public Result<SystemTestResponse> RunSystemTest(SystemId id, Architecture architecture, string path);
 }

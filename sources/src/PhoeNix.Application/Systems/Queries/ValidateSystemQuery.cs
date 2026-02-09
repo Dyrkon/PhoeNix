@@ -2,22 +2,23 @@ using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
+using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Systems.Queries;
 
-public record ValidateSystemQuery(ConfigurationId ConfigurationId, SystemId SystemId) : IQuery<bool>;
+public record ValidateSystemQuery(ConfigurationId ConfigurationId, SystemId SystemId) : IQuery<SystemTestResponse>;
 
 internal sealed class ValidateSystemQueryHandler(
     IConfigurationTestRunnerService configurationTestRunnerService,
     IConfigurationRepository configurationRepository,
     ISystemRepository systemRepository,
     IFileSystemService fileSystemService)
-    : IQueryHandler<ValidateSystemQuery, bool>
+    : IQueryHandler<ValidateSystemQuery, SystemTestResponse>
 {
-    public async Task<Result<bool>> Handle(ValidateSystemQuery query, CancellationToken cancellationToken)
+    public async Task<Result<SystemTestResponse>> Handle(ValidateSystemQuery query, CancellationToken cancellationToken)
     {
         return await configurationRepository
             .GetByIdAsync(query.ConfigurationId, cancellationToken)
@@ -35,7 +36,7 @@ internal sealed class ValidateSystemQueryHandler(
                     .GetRootFolder()
                     .Bind(path =>
                         configurationTestRunnerService.RunSystemTest(
-                            x.system.Id.ToStringWithPrefix(),
+                            x.system.Id,
                             x.system.Architecture,
                             $"{path}/{x.config.Id.Value}")));
     }

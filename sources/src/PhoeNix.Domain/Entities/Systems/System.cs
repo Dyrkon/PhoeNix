@@ -65,7 +65,7 @@ public class System : AggregateRoot<SystemId>
         var modulesListPlaceholder = Guid.NewGuid().ToString();
         // TODO Can't use lib.nixosSystem for darwin
         var systemContent =
-            $"{{ inputs, lib, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ system = \"{Architecture.ToArchitectureString()}\"; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
+            $"{{ inputs, lib, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ specialArgs = {{ inherit inputs; }}; system = \"{Architecture.ToArchitectureString()}\"; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
 
         return new SystemBuildResult(Id, Name, Architecture, systemContent, moduleResults, modulesListPlaceholder);
     }

@@ -174,7 +174,7 @@ public class Configuration : AggregateRoot<ConfigurationId>
 
         var content =
             $"{{ description = \"{Description}\"; " +
-            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; {inputsValues} }};\n " +
+            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"github:nix-community/disko/latest\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n " +
             $"outputs = {{self, nixpkgs, flake-utils, ...}} @ inputs: " +
             $"let\n systems = [{supportedArchitectures.Value.Aggregate("", (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +
             $"sharedModules = [ {sharedModulesPlaceholder} ];\n" +
