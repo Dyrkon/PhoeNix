@@ -67,7 +67,7 @@ internal sealed class ValidateModuleQueryHandler(
                 test.TestId,
                 test.Test.Name,
                 query.Architecture,
-                configPath);
+                configPath, ct);
 
             if (r.IsFailure)
                 return Result.Failure<List<ModuleTestResponse>>(r.Error);

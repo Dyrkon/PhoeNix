@@ -1,48 +1,25 @@
 using System.Diagnostics;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Domain.Services;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class NixFormatterService : INixFormatterService
+public class NixFormatterService(IProcessRunner processRunner) : INixFormatterService
 {
-    public Result<string> FormatNixFilesInPlace(string path)
+    public Result<string> FormatNixFilesInPlace(string path, CancellationToken cancellationToken)
     {
         if (!Directory.Exists(path))
             return Result.Failure<string>(new Error("InvalidPath", $"Directory '{path}' does not exist."));
 
-        try
-        {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "nix",
-                    Arguments = $"fmt \"{path}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+        List<string> arguments =
+        [
+            "fmt",
+            $"{path}"
+        ];
 
-            process.Start();
-
-            var stdErr = process.StandardError.ReadToEnd();
-
-            process.WaitForExit();
-
-            if (process.ExitCode != 0)
-                return Result.Failure<string>(new Error(
-                    "NixFmtFailed",
-                    $"Formatter exited with code {process.ExitCode}. Error: {stdErr.Trim()}"
-                ));
-
-            return path;
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure<string>(new Error("NixFormatterException", ex.Message));
-        }
+        return processRunner
+            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3), workingDirectory: path)
+            .Map(_ => path);
     }
 }

@@ -85,11 +85,12 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
             : Path.Combine(storageOptions.Value.RootPath);
     }
 
-    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id)
+    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,
+        CancellationToken cancellationToken)
     {
         var rootPath = GetRootFolder().Value;
         return CheckAndRemoveDirectory(rootPath)
             .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}"));
+            .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}", cancellationToken));
     }
 }

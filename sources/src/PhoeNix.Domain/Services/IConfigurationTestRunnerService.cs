@@ -8,7 +8,9 @@ namespace PhoeNix.Domain.Services;
 
 public interface IConfigurationTestRunnerService
 {
-    public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path);
+    public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path,
+        CancellationToken cancellationToken);
 
-    public Result<SystemTestResponse> RunSystemTest(SystemId id, Architecture architecture, string path);
+    public Result<SystemTestResponse> RunSystemTest(SystemId id, Architecture architecture, string path,
+        CancellationToken cancellationToken);
 }

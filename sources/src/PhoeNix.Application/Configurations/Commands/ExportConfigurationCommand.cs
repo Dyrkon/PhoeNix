@@ -25,6 +25,7 @@ internal sealed class ExportConfigurationCommandHandler(
             .EnsureNotNull(new Error("", $"Configuration {command.ConfigurationId} not found!"))
             .Bind(config => config.Build())
             .Bind(configurationBuilderService.BuildConfiguration)
-            .Bind(cFolder => fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId));
+            .Bind(cFolder =>
+                fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId, cancellationToken));
     }
 }

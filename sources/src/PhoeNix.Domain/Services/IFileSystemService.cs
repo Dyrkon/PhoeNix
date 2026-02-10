@@ -9,5 +9,7 @@ namespace PhoeNix.Domain.Services;
 public interface IFileSystemService
 {
     public Result<string> GetRootFolder();
-    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id);
+
+    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,
+        CancellationToken cancellationToken);
 }

@@ -110,7 +110,7 @@ public class Module : AggregateRoot<ModuleId>
     public Result AddModuleTest(TestId testId)
     {
         if (_moduleTests.Any(h => h.TestId == testId))
-            return Result.Failure(new Error("", $"Module {Name} is already tested"));
+            return Result.Failure(new Error("", $"Module {Name} has {testId.Value} already"));
 
         return ModuleTest.Create(new ModuleTestId(Guid.NewGuid()), Id, testId).Tap(test => _moduleTests.Add(test));
     }

@@ -38,6 +38,6 @@ internal sealed class ValidateSystemQueryHandler(
                         configurationTestRunnerService.RunSystemTest(
                             x.system.Id,
                             x.system.Architecture,
-                            $"{path}/{x.config.Id.Value}")));
+                            $"{path}/{x.config.Id.Value}", cancellationToken)));
     }
 }
