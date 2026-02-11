@@ -1,6 +1,5 @@
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Models.Homes;
 using PhoeNix.Domain.Models.Inputs;
 using PhoeNix.Domain.Models.Modules;
 using PhoeNix.Domain.Models.Systems;
@@ -20,6 +19,5 @@ public record ConfigurationResponse(
     List<InputResponse> Inputs,
     List<ModuleListResponse> Modules,
     List<SystemListResponse> Systems,
-    List<HomeListResponse> Homes,
     List<Architecture> SupportedArchitectures
 );

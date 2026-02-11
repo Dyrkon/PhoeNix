@@ -24,7 +24,6 @@ public class PersistenceTestsBase : IAsyncLifetime
 
     protected IInputRepository InputRepository => ServiceProvider.GetRequiredService<IInputRepository>();
     protected IUserRepository UserRepository => ServiceProvider.GetRequiredService<IUserRepository>();
-    protected IHomeRepository HomeRepository => ServiceProvider.GetRequiredService<IHomeRepository>();
     protected IModuleRepository ModuleRepository => ServiceProvider.GetRequiredService<IModuleRepository>();
     protected IConfigurationRepository ConfigurationRepository => ServiceProvider.GetRequiredService<IConfigurationRepository>();
     protected ISystemRepository SystemRepository => ServiceProvider.GetRequiredService<ISystemRepository>();

@@ -3,7 +3,6 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Entities.Homes;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.UnitTests;
@@ -15,7 +14,6 @@ public class ConfigurationTests
     private readonly string description = "Config description";
     private readonly ModuleId moduleId1 = new(Guid.NewGuid());
     private readonly SystemId systemId1 = new(Guid.NewGuid());
-    private readonly HomeId homeId1 = new(Guid.NewGuid());
     private readonly InputId inputId1 = new(Guid.NewGuid());
 
     [Fact]
@@ -131,41 +129,6 @@ public class ConfigurationTests
         var config = Configuration.Create(configId, title, description).Value;
 
         var result = config.RemoveSystem(systemId1);
-
-        result.IsFailure.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Configuration_Should_Add_And_Remove_Home()
-    {
-        var config = Configuration.Create(configId, title, description).Value;
-
-        var addResult = config.AddHome(homeId1);
-        var removeResult = config.RemoveHome(homeId1);
-
-        addResult.IsSuccess.Should().BeTrue();
-        removeResult.IsSuccess.Should().BeTrue();
-        config.Homes.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Configuration_Should_Not_Add_Duplicate_Home()
-    {
-        var config = Configuration.Create(configId, title, description).Value;
-        config.AddHome(homeId1);
-
-        var result = config.AddHome(homeId1);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Contain("already");
-    }
-
-    [Fact]
-    public void Configuration_Should_Fail_To_Remove_Nonexistent_Home()
-    {
-        var config = Configuration.Create(configId, title, description).Value;
-
-        var result = config.RemoveHome(homeId1);
 
         result.IsFailure.Should().BeTrue();
     }
