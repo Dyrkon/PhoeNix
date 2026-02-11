@@ -12,6 +12,9 @@ public static class DependencyInjection
         services.AddSingleton<INixFormatterService, NixFormatterService>();
         services.AddSingleton<IModuleBuilderService, ModuleBuilderService>();
         services.AddSingleton<IConfigurationBuilderService, ConfigurationBuilderService>();
+        services.AddSingleton<IConfigurationTestRunnerService, ConfigurationTestRunnerService>();
+        services.AddSingleton<INixErrorParserService, NixErrorParserService>();
+        services.AddSingleton<IProcessRunner, ProcessRunner>();
 
         return services;
     }

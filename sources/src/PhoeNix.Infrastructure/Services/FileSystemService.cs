@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Options;
@@ -32,12 +33,12 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         }
     }
 
-    private static Result CheckAndRemoveDirectory(string path)
+    private static Result<string> CheckAndRemoveDirectory(string path)
     {
         var fs = new FileSystem();
         if (fs.Directory.Exists(path)) fs.Directory.Delete(path, true);
 
-        return Result.Success();
+        return path;
     }
 
     private static Result<string> WriteFile(string path, string contents)
@@ -73,78 +74,23 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
                     if (result.IsFailure) return result;
                 }
 
-            return Result.Success(rootPath);
+            return Result.Success(folder.Name);
         });
     }
 
-    public Result<string> GetConfigurationFolderPath(ConfigurationId id)
+    public Result<string> GetRootFolder()
     {
-        return Path.Combine(storageOptions.Value.ConfigurationsPath, id.Value.ToString());
+        return storageOptions.Value.UseTemp
+            ? Path.Combine(Path.GetTempPath(), TempFolderName)
+            : Path.Combine(storageOptions.Value.RootPath);
     }
 
-    public Result<string> GetModuleFolderPath(ModuleId id)
+    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,
+        CancellationToken cancellationToken)
     {
-        return Path.Combine(storageOptions.Value.ModulesPath, id.Value.ToString());
-    }
-
-    public Result<string> GetTempModuleFolderPath(ModuleId id)
-    {
-        return Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
-    }
-
-    public Result<string> GetTempConfigurationFolderPath(ConfigurationId id)
-    {
-        var path = Path.Combine(Path.GetTempPath(), TempFolderName, id.Value.ToString());
-        return path;
-    }
-
-    public Result<string> CreateConfigurationFolder(ConfigurationId id)
-    {
-        return GetConfigurationFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateTempConfigurationFolder(ConfigurationId id)
-    {
-        return GetTempConfigurationFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateTempModuleFolder(ModuleId id)
-    {
-        return GetTempModuleFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> CreateModuleFolder(ModuleId id)
-    {
-        return GetModuleFolderPath(id).Tap(path => CreateFolder(path));
-    }
-
-    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id)
-    {
-        return GetConfigurationFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
+        var rootPath = GetRootFolder().Value;
+        return CheckAndRemoveDirectory(rootPath)
             .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Tap(path => nixFormatterService.FormatNixInPlace(path));
-    }
-
-    public Result<string> WriteModuleToFs(Folder moduleFolder, ModuleId id)
-    {
-        return GetModuleFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
-            .Tap(path => WriteFolderStructure(path, moduleFolder));
-    }
-
-    public Result<string> WriteModuleToTmp(Folder moduleFolder, ModuleId id)
-    {
-        return GetTempModuleFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{moduleFolder.Name}"))
-            .Tap(path => WriteFolderStructure(path, moduleFolder));
-    }
-
-    public Result<string> WriteConfigurationToTmp(Folder configurationFolder, ConfigurationId id)
-    {
-        return GetTempConfigurationFolderPath(id)
-            .Tap(path => CheckAndRemoveDirectory($"{path}/{configurationFolder.Name}"))
-            .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Tap(path => nixFormatterService.FormatNixInPlace(path));
+            .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}", cancellationToken));
     }
 }

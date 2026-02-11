@@ -264,6 +264,30 @@ namespace PhoeNix.Persistence.Migrations
                     b.ToTable("Modules");
                 });
 
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ModuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId")
+                        .IsUnique();
+
+                    b.ToTable("ModuleTests");
+                });
+
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>
                 {
                     b.Property<Guid>("Id")
@@ -555,6 +579,17 @@ namespace PhoeNix.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTest", b =>
+                {
+                    b.HasOne("PhoeNix.Domain.Entities.Modules.Module", "Module")
+                        .WithOne("ModuleTest")
+                        .HasForeignKey("PhoeNix.Domain.Entities.Modules.ModuleTest", "ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+                });
+
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.SystemModule", b =>
                 {
                     b.HasOne("PhoeNix.Domain.Entities.Modules.Module", "Module")
@@ -603,6 +638,8 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Module", b =>
                 {
                     b.Navigation("EditableValues");
+
+                    b.Navigation("ModuleTest");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>

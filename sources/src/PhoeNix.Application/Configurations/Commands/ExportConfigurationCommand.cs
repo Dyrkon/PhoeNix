@@ -15,25 +15,17 @@ public record ExportConfigurationCommand(ConfigurationId ConfigurationId) : ICom
 
 internal sealed class ExportConfigurationCommandHandler(
     IConfigurationRepository configurationRepository,
-    IModuleRepository moduleRepository,
     IConfigurationBuilderService configurationBuilderService,
-    IFileSystemService fileSystemService) : ICommandHandler<ExportConfigurationCommand, string>
+    IFileSystemService fileSystemService)
+    : ICommandHandler<ExportConfigurationCommand, string>
 {
     public async Task<Result<string>> Handle(ExportConfigurationCommand command, CancellationToken cancellationToken)
     {
-        var config = await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken);
-
-        if (config is null)
-            return Result.Failure<string>(new Error("", $"Configuration {command.ConfigurationId} not found!"));
-
-        var outputPath = string.Empty;
-
-        config.Build()
+        return await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken)
+            .EnsureNotNull(new Error("", $"Configuration {command.ConfigurationId} not found!"))
+            .Bind(config => config.Build())
             .Bind(configurationBuilderService.BuildConfiguration)
-            .Tap(_ => fileSystemService.CreateConfigurationFolder(command.ConfigurationId))
-            .Bind(cFolder => fileSystemService.WriteConfigurationToTmp(cFolder, command.ConfigurationId))
-            .Tap(path => outputPath = path);
-
-        return outputPath;
+            .Bind(cFolder =>
+                fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId, cancellationToken));
     }
 }

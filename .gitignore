@@ -1,6 +1,7 @@
 .idea/
 .phoenix/
-phoenix.db
+phoenix.db*
+result
 identifier.sqlite
 .storage
 ## Ignore Visual Studio temporary files, build results, and

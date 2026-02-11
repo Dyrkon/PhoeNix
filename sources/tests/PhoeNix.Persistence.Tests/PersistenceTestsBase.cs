@@ -13,7 +13,7 @@ public class PersistenceTestsBase : IAsyncLifetime
     {
         var services = new ServiceCollection();
 
-        services.AddInMemoryPersistence(Guid.NewGuid().ToString()); // ensures isolated state
+        services.AddInMemoryPersistence(Guid.NewGuid().ToString());
 
         ServiceProvider = services.BuildServiceProvider();
         PhoeNixDbContextSUT = ServiceProvider.GetRequiredService<ApplicationDbContext>();

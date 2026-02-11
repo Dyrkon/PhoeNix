@@ -25,7 +25,7 @@ public class ConfigurationsModule : CarterModule
         app.MapPost("/create", CreateConfiguration)
             .Produces(StatusCodes.Status200OK);
 
-        app.MapDelete("/delete", DeleteConfiguration)
+        app.MapDelete("/{configurationId:guid}/delete", DeleteConfiguration)
             .Produces(StatusCodes.Status200OK);
     }
 
@@ -40,7 +40,8 @@ public class ConfigurationsModule : CarterModule
     private async Task<IResult> CreateConfiguration(CreateConfigurationRequest request, ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new AddConfigurationCommand();
+        var command =
+            new AddConfigurationCommand(request.Name, request.Description);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
@@ -48,6 +49,8 @@ public class ConfigurationsModule : CarterModule
     private async Task<IResult> DeleteConfiguration(Guid configurationId, ISender sender,
         CancellationToken cancellationToken)
     {
-        return Results.Problem();
+        var command = new RemoveConfigurationCommand(new ConfigurationId(configurationId));
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
     }
 }

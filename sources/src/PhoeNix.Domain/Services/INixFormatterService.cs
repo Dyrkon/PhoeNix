@@ -4,5 +4,5 @@ namespace PhoeNix.Domain.Services;
 
 public interface INixFormatterService
 {
-    public Result FormatNixInPlace(string path);
+    public Result<string> FormatNixFilesInPlace(string path, CancellationToken cancellationToken);
 }

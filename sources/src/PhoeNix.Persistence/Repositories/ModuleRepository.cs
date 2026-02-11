@@ -14,6 +14,8 @@ internal sealed class ModuleRepository : RepositoryBase<Module, ModuleId>, IModu
     {
         return DbContext.Modules
             .Include(m => m.EditableValues)
+            .Include(m => m.Tests)
+            .ThenInclude(m => m.Test)
             .SingleOrDefaultAsync(m => m.Name.Contains(name), token);
     }
 
@@ -21,6 +23,8 @@ internal sealed class ModuleRepository : RepositoryBase<Module, ModuleId>, IModu
     {
         return DbContext.Modules
             .Include(m => m.EditableValues)
+            .Include(m => m.Tests)
+            .ThenInclude(m => m.Test)
             .SingleOrDefaultAsync(c => c.Id == id, token);
     }
 }
