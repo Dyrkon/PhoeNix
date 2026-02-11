@@ -1,6 +1,5 @@
 using FluentAssertions;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Homes;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
@@ -24,22 +23,18 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         var moduleId = new ModuleId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
-        var homeId = new HomeId(Guid.NewGuid());
         var inputId = new InputId(Guid.NewGuid());
 
         var module = Module.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
         var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "Test System").Value;
-        var home = Home.Create(homeId, "Test Home").Value;
         var input = Input.Create(inputId, "Input1", "source").Value;
 
         await PhoeNixDbContextSUT.Modules.AddAsync(module);
         await PhoeNixDbContextSUT.Systems.AddAsync(system);
-        await PhoeNixDbContextSUT.Homes.AddAsync(home);
         await PhoeNixDbContextSUT.Inputs.AddAsync(input);
 
         configuration.AddModule(moduleId);
         configuration.AddSystem(systemId);
-        configuration.AddHome(homeId);
         configuration.AddInput(inputId);
 
         await PhoeNixDbContextSUT.Configurations.AddAsync(configuration);
@@ -51,7 +46,6 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         // Assert
         result.Should().NotBeNull();
         result!.Modules.Should().ContainSingle(m => m.Module.Id == moduleId);
-        result.Homes.Should().ContainSingle(h => h.Home.Id == homeId);
         result.Inputs.Should().ContainSingle(i => i.Input.Id == inputId);
         result.Systems.Should().ContainSingle(s => s.System.Id == systemId);
     }

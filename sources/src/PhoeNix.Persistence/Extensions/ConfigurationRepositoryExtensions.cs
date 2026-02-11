@@ -15,8 +15,6 @@ public static class ConfigurationRepositoryExtensions
             .ThenInclude(m => m.Module)
             .ThenInclude(m => m.Tests)
             .ThenInclude(m => m.Test)
-            .Include(c => c.Homes)
-            .ThenInclude(h => h.Home)
             .Include(c => c.Inputs)
             .ThenInclude(i => i.Input)
             .Include(c => c.Systems)

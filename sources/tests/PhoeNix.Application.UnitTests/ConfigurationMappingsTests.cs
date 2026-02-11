@@ -1,7 +1,6 @@
 using FluentAssertions;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Homes;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
@@ -35,17 +34,13 @@ public class ConfigurationMappingsTests
             [Architecture.X86Linux]).Value;
         var system = PhoeNix.Domain.Entities.Systems.System
             .Create(new SystemId(Guid.NewGuid()), Architecture.X86Linux, "Name").Value;
-        var home = Home.Create(new HomeId(Guid.NewGuid()), "My Home").Value;
         var input = Input.Create(new InputId(Guid.NewGuid()), "github:nixos", "nixpkgs").Value;
 
         var userId = new UserId(Guid.NewGuid());
-        var homeUser = HomeUser.Create(new HomeUserId(Guid.NewGuid()), home.Id, userId).Value;
-        home.SetHomeUser(homeUser);
 
         config.AddInput(input.Id);
         config.AddModule(module.Id);
         config.AddSystem(system.Id);
-        config.AddHome(home.Id);
 
         var cm = ConfigurationModule.Create(new ConfigurationModuleId(Guid.NewGuid()), config.Id, module.Id).Value;
         typeof(ConfigurationModule).GetProperty(nameof(ConfigurationModule.Module))!.SetValue(cm, module);
@@ -53,15 +48,11 @@ public class ConfigurationMappingsTests
         var cs = ConfigurationSystem.Create(new ConfigurationSystemId(Guid.NewGuid()), config.Id, system.Id).Value;
         cs.SetSystem(system);
 
-        var ch = ConfigurationHome.Create(new ConfigurationHomeId(Guid.NewGuid()), config.Id, home.Id).Value;
-        ch.SetHome(home);
-
         var ci = ConfigurationInput.Create(new ConfigurationInputId(Guid.NewGuid()), config.Id, input.Id).Value;
         ci.SetInput(input);
 
         SetPrivateField(config, "_modules", [cm]);
         SetPrivateField(config, "_systems", [cs]);
-        SetPrivateField(config, "_homes", [ch]);
         SetPrivateField(config, "_inputs", [ci]);
 
         var dto = ConfigurationMappings.MapConfigurationToDto(config);
@@ -70,7 +61,6 @@ public class ConfigurationMappingsTests
         dto.Inputs.Should().ContainSingle(i => i.Name == input.Name);
         dto.Modules.Should().ContainSingle(m => m.Name == module.Name);
         dto.Systems.Should().ContainSingle(s => s.Id == system.Id);
-        dto.Homes.Should().ContainSingle(h => h.Id == home.Id);
         dto.SupportedArchitectures.Should().Contain(Architecture.X86Linux);
     }
 

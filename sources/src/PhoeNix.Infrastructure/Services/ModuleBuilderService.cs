@@ -1,8 +1,5 @@
-using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Homes;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
@@ -53,10 +50,5 @@ public class ModuleBuilderService : IModuleBuilderService
         };
 
         return new Folder(systemBuild.Id.ToStringWithPrefix(), files);
-    }
-
-    public Folder BuildHomeModule(HomeBuildResult homeBuild)
-    {
-        throw new NotImplementedException();
     }
 }

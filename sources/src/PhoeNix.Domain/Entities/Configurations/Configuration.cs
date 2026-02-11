@@ -1,4 +1,3 @@
-using PhoeNix.Domain.Entities.Homes;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
@@ -14,14 +13,12 @@ public class Configuration : AggregateRoot<ConfigurationId>
     private readonly List<ConfigurationInput> _inputs = new();
     private readonly List<ConfigurationModule> _modules = new();
     private readonly List<ConfigurationSystem> _systems = new();
-    private readonly List<ConfigurationHome> _homes = new();
 
     public string Title { get; private set; }
     public string Description { get; private set; }
     public IReadOnlyList<ConfigurationInput> Inputs => _inputs;
     public IReadOnlyList<ConfigurationModule> Modules => _modules;
     public IReadOnlyList<ConfigurationSystem> Systems => _systems;
-    public IReadOnlyList<ConfigurationHome> Homes => _homes;
 
     private Configuration(ConfigurationId id) : base(id)
     {
@@ -84,24 +81,6 @@ public class Configuration : AggregateRoot<ConfigurationId>
         if (removedSystems == 0)
             return Result.Failure(new Error("",
                 $"There is no system with id {systemId} in this ({Title}) configuration"));
-
-        return Result.Success();
-    }
-
-    public Result AddHome(HomeId homeId)
-    {
-        if (_homes.Any(h => h.HomeId == homeId))
-            return Result.Failure(new Error("", $"This home ({homeId}) is added to this ({Id}) configuration already"));
-
-        return ConfigurationHome.Create(new ConfigurationHomeId(Guid.NewGuid()), Id, homeId)
-            .Tap(configurationHome => _homes.Add(configurationHome));
-    }
-
-    public Result RemoveHome(HomeId homeId)
-    {
-        var removeHomes = _homes.RemoveAll(h => h.HomeId == homeId);
-        if (removeHomes == 0)
-            return Result.Failure(new Error("", $"There is no home with id {homeId} in this ({Title}) configuration"));
 
         return Result.Success();
     }
