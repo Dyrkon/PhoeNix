@@ -14,7 +14,6 @@ public record AddConfigurationCommand(string Name, string Description) : IComman
 
 internal sealed class AddConfigurationCommandHandler(
     IModuleRepository moduleRepository,
-    IInputRepository inputRepository,
     ISystemRepository systemRepository,
     ITestRepository testRepository,
     IConfigurationRepository configurationRepository) : ICommandHandler<AddConfigurationCommand, string>
@@ -26,6 +25,7 @@ internal sealed class AddConfigurationCommandHandler(
         var configurationId = new ConfigurationId(new Guid("7e85a62f-ad28-484d-93fd-dc52af305d53"));
 
         var nixpkgsInputId = new InputId(Guid.NewGuid());
+        var testInputId = new InputId(Guid.NewGuid());
 
         var sharedModuleId = new ModuleId(Guid.NewGuid());
         var systemModuleId = new ModuleId(Guid.NewGuid());
@@ -46,6 +46,12 @@ internal sealed class AddConfigurationCommandHandler(
 
         var placeholderDiskDevice = "DiskDevice";
         var placeholderVmStateVersion = "VmStateVersion";
+
+        var diskDevice = TextValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            placeholderDiskDevice,
+            "[\"/foo/bar\"]"
+        ).Value;
 
         var valDiskDevice = TextValue.Create(
             new EntryValueId(Guid.NewGuid()),
@@ -75,11 +81,11 @@ internal sealed class AddConfigurationCommandHandler(
                 [Architecture.X86Linux])
             .Tap(m => m.ChangeContent(
                 "boot.loader.grub.enable = true;\n" +
-                "boot.loader.grub.device = args.DiskDevice;\n" +
+                $"boot.loader.grub.devices = {placeholderDiskDevice};\n" +
                 $"boot.isContainer = {placeholder3};\n" +
                 $"system.stateVersion = {placeholder4};\n" +
                 $"networking.hostName = \"test-container\";",
-                [valIsContainer, valStateVersion]
+                [diskDevice, valIsContainer, valStateVersion]
             )).Value;
 
         var diskoSystemModule = Module.Create(diskoSystemModuleId, "DiskoSystemModule", true, ModuleType.System,
@@ -90,7 +96,7 @@ internal sealed class AddConfigurationCommandHandler(
                 "networking.hostName = \"vm-disko-test\";\n\n" +
                 "disko.devices.disk.main = {\n" +
                 "type = \"disk\";\n" +
-                "device = args.DiskDevice;\n" +
+                $"device = {placeholderDiskDevice};\n" +
                 "content = {\n" +
                 "type = \"gpt\";\n" +
                 "partitions = {\n" +
@@ -124,14 +130,6 @@ internal sealed class AddConfigurationCommandHandler(
         moduleRepository.Add(systemModule);
         moduleRepository.Add(diskoSystemModule);
 
-        var nixpkgsInput = Input.Create(
-            nixpkgsInputId,
-            "url = \"github:NixOS/nixpkgs/nixos-unstable\";",
-            "nixpkgs"
-        ).Value;
-
-        inputRepository.Add(nixpkgsInput);
-
         var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "TestSystem").Value;
         system.AddModule(systemModule);
         systemRepository.Add(system);
@@ -142,18 +140,16 @@ internal sealed class AddConfigurationCommandHandler(
         vmDiskoSystem.AddModule(diskoSystemModule);
         systemRepository.Add(vmDiskoSystem);
 
-        var configuration = Configuration.Create(configurationId, "ExampleConfiguration", "Example configuration flake")
-            .Value;
-
-        configuration.AddInput(nixpkgsInputId);
-
-        configuration.AddSystem(systemId);
-        configuration.AddSystem(vmDiskoSystemId);
-
-        configuration.AddModule(sharedModuleId);
-
-        configurationRepository.Add(configuration);
-
-        return Task.FromResult(Result.Success(configurationId.ToString()));
+        return Task.FromResult(Configuration
+            .Create(configurationId, "ExampleConfiguration", "Example configuration flake")
+            .Tap(
+                configuration => configuration.AddInput("github:NixOS/nixpkgs/nixos-unstable", "nixpkgs")
+                    .Tap(i => configuration.AddInput("github:snowfallorg/flake", "snowfall")
+                        .Tap(iS => configuration.AddInputFollow(iS.Id, i.Name, i.Name))))
+            .Tap(configuration => configuration.AddSystem(systemId))
+            .Tap(configuration => configuration.AddSystem(vmDiskoSystemId))
+            .Tap(configuration => configuration.AddModule(sharedModuleId))
+            .Tap(configurationRepository.Add)
+            .Bind(conf => Result.Success(conf.Id.Value.ToString())));
     }
 }

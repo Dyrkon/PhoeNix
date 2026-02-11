@@ -10,13 +10,13 @@ namespace PhoeNix.Domain.Entities.Configurations;
 
 public class Configuration : AggregateRoot<ConfigurationId>
 {
-    private readonly List<ConfigurationInput> _inputs = new();
+    private readonly List<Input> _inputs = new();
     private readonly List<ConfigurationModule> _modules = new();
     private readonly List<ConfigurationSystem> _systems = new();
 
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public IReadOnlyList<ConfigurationInput> Inputs => _inputs;
+    public IReadOnlyList<Input> Inputs => _inputs;
     public IReadOnlyList<ConfigurationModule> Modules => _modules;
     public IReadOnlyList<ConfigurationSystem> Systems => _systems;
 
@@ -85,20 +85,35 @@ public class Configuration : AggregateRoot<ConfigurationId>
         return Result.Success();
     }
 
-    public Result AddInput(InputId inputId)
+    public Result<Input> AddInput(string source, string name)
     {
-        if (_inputs.Any(i => i.InputId == inputId))
-            return Result.Failure(new Error("",
-                $"This input ({inputId}) is added to this ({Title}) configuration already"));
+        if (_inputs.Any(i => i.Name == name))
+            return Result.Failure<Input>(new Error("",
+                $"This input ({name}) is added to this ({Title}) configuration already"));
 
-        return ConfigurationInput.Create(new ConfigurationInputId(Guid.NewGuid()), Id, inputId)
-            .Tap(i => _inputs.Add(i));
-        return Result.Success();
+        return Input.Create(new InputId(Guid.NewGuid()), Id, source, name).Tap(i => _inputs.Add(i));
+    }
+
+    public Result AddInputFollow(InputId inputId, string followName, string followValue)
+    {
+        var input = _inputs.FirstOrDefault(i => i.Id == inputId);
+        return input is null
+            ? Result.Failure(new Error("ConfigurationInputCannotFindInput", $"Cannot find input {inputId.Value}"))
+            : input.AddFollow(followName, followValue);
+    }
+
+    public Result RemoveInputFollow(Guid followId)
+    {
+        var input = _inputs.FirstOrDefault(i => i.Followers.Any(f => f.Id == followId));
+        return input is null
+            ? Result.Failure(
+                new Error("ConfigurationInputCannotFindInput", $"Cannot find input with follow {followId}"))
+            : input.RemoveFollow(followId);
     }
 
     public Result RemoveInput(InputId inputId)
     {
-        var removeHomes = _inputs.RemoveAll(i => i.InputId == inputId);
+        var removeHomes = _inputs.RemoveAll(i => i.Id == inputId);
         if (removeHomes == 0)
             return Result.Failure(new Error("",
                 $"There is no input with id {inputId} in this ({Title}) configuration"));
@@ -129,7 +144,7 @@ public class Configuration : AggregateRoot<ConfigurationId>
 
     public Result<ConfigurationBuildResult> Build()
     {
-        var inputs = Inputs.Select(i => i.Input.Build());
+        var inputs = Inputs.Select(i => i.Build());
         if (inputs.Any(i => i.IsFailure))
             return Result.Failure<ConfigurationBuildResult>(new Error("",
                 $"Failed to build input in configuration {Title}"));
@@ -165,7 +180,6 @@ public class Configuration : AggregateRoot<ConfigurationId>
             $"checks = {{ {checksPlaceholder} }};" +
             $"}}) // {{ nixosConfigurations = {{ {systemsPlaceholder} }}; }}; }}";
 
-        // TODO homes are not supported yet
         return new ConfigurationBuildResult(Id, Title, content, sharedModulesPlaceholder,
             systemsPlaceholder, checksPlaceholder, supportedArchitectures.Value,
             modules.Select(m => m.Value),

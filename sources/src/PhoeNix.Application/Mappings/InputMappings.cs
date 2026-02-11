@@ -7,8 +7,13 @@ public static class InputMappings
 {
     public static InputResponse MapInputToDto(Input input)
     {
-        return input.Follows != null ? 
-            new InputResponse(input.Id, input.Source, input.Name, MapInputToDto(input.Follows)) :
-            new InputResponse(input.Id, input.Source, input.Name);
+        return input.Followers.Any()
+            ? new InputResponse(input.Id, input.Source, input.Name, MapInputsFollowsToDto(input.Followers.ToList()))
+            : new InputResponse(input.Id, input.Source, input.Name, []);
+    }
+
+    public static List<FollowInputResponse> MapInputsFollowsToDto(List<FollowInput> followInputs)
+    {
+        return followInputs.Select(fI => new FollowInputResponse(fI.FollowName, fI.FollowValue)).ToList();
     }
 }

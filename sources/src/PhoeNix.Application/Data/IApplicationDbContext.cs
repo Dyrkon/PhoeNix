@@ -10,7 +10,6 @@ namespace PhoeNix.Application.Data;
 public interface IApplicationDbContext
 {
     DbSet<Configuration> Configurations { get; }
-    DbSet<Input> Inputs { get; }
     DbSet<Domain.Entities.Systems.System> Systems { get; }
     DbSet<User> Users { get; }
     DbSet<Module> Modules { get; }
@@ -18,6 +17,5 @@ public interface IApplicationDbContext
     DbSet<ModuleTest> ModuleTests { get; }
     DbSet<ConfigurationSystem> ConfigurationSystems { get; }
     DbSet<ConfigurationModule> ConfigurationModules { get; }
-    DbSet<ConfigurationInput> ConfigurationInput { get; }
     DbSet<SystemModule> SystemModules { get; }
 }

@@ -143,6 +143,17 @@ public static class ResultExtensions
         return result;
     }
 
+    public static Result<TIn> TapIfNotNull<TIn>(this Result<TIn> result, Func<TIn, Result> action)
+    {
+        if (result is { IsSuccess: true, Value: not null })
+        {
+            var actionResult = action(result.Value);
+            if (actionResult.IsFailure) return Result.Failure<TIn>(actionResult.Error);
+        }
+
+        return result;
+    }
+
     public static TOut Match<TIn, TOut>(this Result<TIn> result, Func<TIn, TOut> onSuccess, Func<Error, TOut> onFailure)
     {
         return result.IsSuccess ? onSuccess(result.Value) : onFailure(result.Error);

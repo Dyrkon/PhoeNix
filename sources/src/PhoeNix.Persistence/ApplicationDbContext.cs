@@ -22,7 +22,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ConfigurationSystem> ConfigurationSystems { get; set; }
     public DbSet<ConfigurationModule> ConfigurationModules { get; set; }
-    public DbSet<ConfigurationInput> ConfigurationInput { get; set; }
     public DbSet<SystemModule> SystemModules { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
