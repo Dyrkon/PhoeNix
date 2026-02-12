@@ -6,7 +6,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Services;
 
-public interface IConfigurationTestRunnerService
+public interface INixTestRunner
 {
     public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path,
         CancellationToken cancellationToken);

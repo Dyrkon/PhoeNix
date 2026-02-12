@@ -5,7 +5,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Services;
 
-public interface IModuleBuilderService
+public interface IModuleRenderer
 {
     public Folder BuildModule(ModuleBuildResult moduleBuild);
 

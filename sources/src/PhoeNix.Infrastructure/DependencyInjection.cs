@@ -10,9 +10,9 @@ public static class DependencyInjection
     {
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddSingleton<INixFormatterService, NixFormatterService>();
-        services.AddSingleton<IModuleBuilderService, ModuleBuilderService>();
-        services.AddSingleton<IConfigurationBuilderService, ConfigurationBuilderService>();
-        services.AddSingleton<IConfigurationTestRunnerService, ConfigurationTestRunnerService>();
+        services.AddSingleton<IModuleRenderer, ModuleRenderer>();
+        services.AddSingleton<IConfigurationExportService, ConfigurationExportService>();
+        services.AddSingleton<INixTestRunner, NixTestRunner>();
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
 

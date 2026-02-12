@@ -10,8 +10,8 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class ConfigurationTestRunnerService(INixErrorParserService nixErrorParserService, IProcessRunner processRunner)
-    : IConfigurationTestRunnerService
+public class NixTestRunner(INixErrorParserService nixErrorParserService, IProcessRunner processRunner)
+    : INixTestRunner
 {
     public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path,
         CancellationToken cancellationToken)

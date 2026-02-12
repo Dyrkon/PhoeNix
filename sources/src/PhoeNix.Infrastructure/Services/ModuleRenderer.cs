@@ -6,7 +6,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class ModuleBuilderService : IModuleBuilderService
+public class ModuleRenderer : IModuleRenderer
 {
     private ConfigurationLayout _configurationLayout = new();
 

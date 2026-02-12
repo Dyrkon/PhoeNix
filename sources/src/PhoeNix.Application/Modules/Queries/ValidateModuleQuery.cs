@@ -15,7 +15,7 @@ public record ValidateModuleQuery(ConfigurationId ConfigurationId, ModuleId Modu
     : IQuery<List<ModuleTestResponse>>;
 
 internal sealed class ValidateModuleQueryHandler(
-    IConfigurationTestRunnerService configurationTestRunnerService,
+    INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
     IModuleRepository moduleRepository,
     IFileSystemService fileSystemService) : IQueryHandler<ValidateModuleQuery, List<ModuleTestResponse>>
@@ -63,7 +63,7 @@ internal sealed class ValidateModuleQueryHandler(
 
         foreach (var test in module.Tests)
         {
-            var r = configurationTestRunnerService.RunModuleTest(
+            var r = nixTestRunner.RunModuleTest(
                 test.TestId,
                 test.Test.Name,
                 query.Architecture,

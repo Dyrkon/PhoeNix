@@ -15,7 +15,7 @@ public record ExportConfigurationCommand(ConfigurationId ConfigurationId) : ICom
 
 internal sealed class ExportConfigurationCommandHandler(
     IConfigurationRepository configurationRepository,
-    IConfigurationBuilderService configurationBuilderService,
+    IConfigurationExportService configurationExportService,
     IFileSystemService fileSystemService)
     : ICommandHandler<ExportConfigurationCommand, string>
 {
@@ -24,7 +24,7 @@ internal sealed class ExportConfigurationCommandHandler(
         return await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error("", $"Configuration {command.ConfigurationId} not found!"))
             .Bind(config => config.Build())
-            .Bind(configurationBuilderService.BuildConfiguration)
+            .Bind(configurationExportService.BuildConfiguration)
             .Bind(cFolder =>
                 fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId, cancellationToken));
     }

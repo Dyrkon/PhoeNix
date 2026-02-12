@@ -4,7 +4,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Services;
 
-public interface IConfigurationBuilderService
+public interface IConfigurationExportService
 {
     public Result<Folder> BuildConfiguration(ConfigurationBuildResult configurationBuild);
 }
