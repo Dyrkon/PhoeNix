@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
-public class ModuleTest
+public class ModuleTemplateTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly ModuleId ModuleId1 = new(Guid.NewGuid());
@@ -14,7 +14,7 @@ public class ModuleTest
     private readonly Architecture Arch1 = Architecture.X86Linux;
     private readonly Architecture Arch2 = Architecture.Aarch64Linux;
 
-    public ModuleTest(ITestOutputHelper testOutputHelper)
+    public ModuleTemplateTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
     }
@@ -25,7 +25,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Create_Successfully(ModuleType moduleType)
     {
-        var module = Module.Create(ModuleId1, "TestModule", true, moduleType, [Arch1]);
+        var module = ModuleTemplate.Create(ModuleId1, "TestModule", true, moduleType, [Arch1]);
 
         module.IsSuccess.Should().BeTrue();
         module.Value.Name.Should().Be("TestModule");
@@ -40,7 +40,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, string.Empty, true, moduleType, [Arch1]);
+        var result = ModuleTemplate.Create(ModuleId1, string.Empty, true, moduleType, [Arch1]);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Modules name can't be empty");
@@ -52,7 +52,7 @@ public class ModuleTest
     [InlineData(ModuleType.System)]
     public void Module_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
     {
-        var result = Module.Create(ModuleId1, "ValidName", true, moduleType, []);
+        var result = ModuleTemplate.Create(ModuleId1, "ValidName", true, moduleType, []);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Module has to support at least one architecture");
@@ -208,9 +208,9 @@ public class ModuleTest
     }
 
     // Helper
-    private Module CreateValidModule(bool enabled = true)
+    private ModuleTemplate CreateValidModule(bool enabled = true)
     {
-        return Module.Create(ModuleId1, "ValidModule", enabled, ModuleType.Generic, [Arch1])
+        return ModuleTemplate.Create(ModuleId1, "ValidModule", enabled, ModuleType.Generic, [Arch1])
             .Value;
     }
 }

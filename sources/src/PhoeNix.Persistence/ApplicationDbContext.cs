@@ -6,7 +6,6 @@ using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
-using Module = PhoeNix.Domain.Entities.Modules.Module;
 
 namespace PhoeNix.Persistence;
 
@@ -14,7 +13,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public DbSet<Configuration> Configurations { get; set; }
     public DbSet<Input> Inputs { get; set; }
-    public DbSet<Module> Modules { get; set; }
+    public DbSet<ModuleTemplate> Modules { get; set; }
     public DbSet<Test> Tests { get; set; }
     public DbSet<ModuleTest> ModuleTests { get; set; }
     public DbSet<EntryValue> EntryValues { get; set; }

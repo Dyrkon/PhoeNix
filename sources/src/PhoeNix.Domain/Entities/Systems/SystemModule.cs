@@ -17,7 +17,7 @@ public class SystemModule : Entity<SystemModuleId>
 
     public System System { get; private set; }
 
-    public Module Module { get; private set; }
+    public ModuleTemplate ModuleTemplate { get; private set; }
 
     public static Result<SystemModule> Create(SystemModuleId id, SystemId systemId, ModuleId moduleId)
     {
@@ -27,9 +27,9 @@ public class SystemModule : Entity<SystemModuleId>
             ModuleId = moduleId
         };
     }
-    
-    internal void SetModule(Module module)
+
+    internal void SetModule(ModuleTemplate moduleTemplate)
     {
-        Module = module;
+        ModuleTemplate = moduleTemplate;
     }
 }

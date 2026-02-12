@@ -1,23 +1,21 @@
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class Module : AggregateRoot<ModuleId>
+public class ModuleTemplate : AggregateRoot<ModuleId>
 {
     private readonly List<Architecture> _supportedArchitectures = new();
     private readonly List<EntryValue> _editableValues = new();
-    private readonly List<ModuleTest> _moduleTests = new();
+    private readonly List<Test> _tests = new();
 
-    private Module(ModuleId id) : base(id)
+    private ModuleTemplate(ModuleId id) : base(id)
     {
     }
 
     public string Name { get; private set; }
 
-    public bool Enabled { get; private set; }
 
     public ModuleType Type { get; private set; }
 
@@ -25,7 +23,7 @@ public class Module : AggregateRoot<ModuleId>
 
     public IReadOnlyList<EntryValue> EditableValues => _editableValues;
 
-    public IReadOnlyList<ModuleTest> Tests => _moduleTests;
+    public IReadOnlyList<Test> Tests => _tests;
 
     public Result ChangeContent(string content, List<EntryValue> entries)
     {
@@ -109,31 +107,31 @@ public class Module : AggregateRoot<ModuleId>
 
     public Result AddModuleTest(TestId testId)
     {
-        if (_moduleTests.Any(h => h.TestId == testId))
+        if (_tests.Any(h => h.TestId == testId))
             return Result.Failure(new Error("", $"Module {Name} has {testId.Value} already"));
 
-        return ModuleTest.Create(new ModuleTestId(Guid.NewGuid()), Id, testId).Tap(test => _moduleTests.Add(test));
+        return ModuleTest.Create(new ModuleTestId(Guid.NewGuid()), Id, testId).Tap(test => _tests.Add(test));
     }
 
     public Result RemoveModuleTest(TestId id)
     {
-        var removedModules = _moduleTests.RemoveAll(m => m.ModuleId == Id);
+        var removedModules = _tests.RemoveAll(m => m.ModuleId == Id);
         if (removedModules == 0)
             return Result.Failure(new Error("", $"There is no module with id {id.Value} in this module"));
 
         return Result.Success();
     }
 
-    public static Result<Module> Create(ModuleId id, string name, bool enabled, ModuleType type,
+    public static Result<ModuleTemplate> Create(ModuleId id, string name, bool enabled, ModuleType type,
         List<Architecture> architectures)
     {
         if (name == string.Empty)
-            return Result.Failure<Module>(new Error("", "Modules name can't be empty"));
+            return Result.Failure<ModuleTemplate>(new Error("", "Modules name can't be empty"));
 
         if (architectures.Count == 0)
-            return Result.Failure<Module>(new Error("", "Module has to support at least one architecture"));
+            return Result.Failure<ModuleTemplate>(new Error("", "Module has to support at least one architecture"));
 
-        var newModule = new Module(id)
+        var newModule = new ModuleTemplate(id)
         {
             Name = name,
             Enabled = enabled,
@@ -141,7 +139,7 @@ public class Module : AggregateRoot<ModuleId>
             Content = string.Empty
         };
         var result = newModule.AddArchitecturesSupport(architectures);
-        return result.IsFailure ? Result.Failure<Module>(result.Error) : newModule;
+        return result.IsFailure ? Result.Failure<ModuleTemplate>(result.Error) : newModule;
     }
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
@@ -162,7 +160,7 @@ public class Module : AggregateRoot<ModuleId>
         var moduleContent =
             $"{{ inputs, pkgs, lib, system, {config}... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {outputContent} }}";
 
-        var moduleTests = _moduleTests.Select(t => t.Test.Build()).ToList();
+        var moduleTests = _tests.Select(t => t.Test.Build()).ToList();
         if (moduleTests.Any(i => i.IsFailure))
             return Result.Failure<ModuleBuildResult>(new Error("", $"Failed to build tests for module {Name}."));
 

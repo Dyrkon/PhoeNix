@@ -5,15 +5,18 @@ namespace PhoeNix.Application.Mappings;
 
 public static class ModuleMappings
 {
-    public static ModuleListResponse MapModuleToListDto(Module module)
+    public static ModuleListResponse MapModuleToListDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleListResponse(module.Id, module.Name, module.Enabled, module.Type);
+        return new ModuleListResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Enabled,
+            moduleTemplate.Type);
     }
 
-    public static ModuleResponse MapModuleToDto(Module module)
+    public static ModuleResponse MapModuleToDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleResponse(module.Id, module.Name, module.Enabled, module.Type, module.Content,
-            module.EditableValues.Select(MapEntryValueToDto).ToList(), module.SupportedArchitectures.ToList());
+        return new ModuleResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Enabled, moduleTemplate.Type,
+            moduleTemplate.Content,
+            moduleTemplate.EditableValues.Select(MapEntryValueToDto).ToList(),
+            moduleTemplate.SupportedArchitectures.ToList());
     }
 
     public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)

@@ -2,7 +2,7 @@ using PhoeNix.Domain.Entities.Modules;
 
 namespace PhoeNix.Domain.Repositories;
 
-public interface IModuleRepository : IRepository<Module, ModuleId>
+public interface IModuleRepository : IRepository<ModuleTemplate, ModuleId>
 {
-    Task<Module?> GetByNameAsync(string name, CancellationToken token);
+    Task<ModuleTemplate?> GetByNameAsync(string name, CancellationToken token);
 }

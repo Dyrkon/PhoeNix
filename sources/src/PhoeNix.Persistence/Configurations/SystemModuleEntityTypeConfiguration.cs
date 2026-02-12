@@ -18,7 +18,7 @@ public class SystemModuleEntityTypeConfiguration : IApplicationEntityTypeConfigu
             .WithMany(m => m.Modules)
             .HasForeignKey(s => s.SystemId);
 
-        builder.HasOne(m => m.Module)
+        builder.HasOne(m => m.ModuleTemplate)
             .WithMany()
             .HasForeignKey(m => m.ModuleId);
     }

@@ -22,7 +22,8 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         var system = systemResult.Value;
 
         var moduleId = new ModuleId(Guid.NewGuid());
-        var moduleResult = Module.Create(moduleId, "ModuleX", true, ModuleType.System, [Architecture.Aarch64Linux]);
+        var moduleResult =
+            ModuleTemplate.Create(moduleId, "ModuleX", true, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 
@@ -43,9 +44,9 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
 
         var sysModule = fetched.Modules.First();
         sysModule.ModuleId.Should().Be(moduleId);
-        sysModule.Module.Should().NotBeNull();
-        sysModule.Module!.Name.Should().Be("ModuleX");
-        sysModule.Module.Type.Should().Be(ModuleType.System);
+        sysModule.ModuleTemplate.Should().NotBeNull();
+        sysModule.ModuleTemplate!.Name.Should().Be("ModuleX");
+        sysModule.ModuleTemplate.Type.Should().Be(ModuleType.System);
     }
 
     [Fact]
@@ -59,7 +60,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
 
         var moduleId = new ModuleId(Guid.NewGuid());
         var moduleResult =
-            Module.Create(moduleId, "NestedModule", false, ModuleType.System, [Architecture.Aarch64Linux]);
+            ModuleTemplate.Create(moduleId, "NestedModule", false, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
         var module = moduleResult.Value;
 
@@ -80,9 +81,9 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         fetched.Modules.Should().ContainSingle();
 
         var sysModule = fetched.Modules.First();
-        sysModule.Module.Id.Should().Be(moduleId);
-        sysModule.Module.Should().NotBeNull();
-        sysModule.Module!.Name.Should().Be("NestedModule");
-        sysModule.Module.Enabled.Should().BeFalse();
+        sysModule.ModuleTemplate.Id.Should().Be(moduleId);
+        sysModule.ModuleTemplate.Should().NotBeNull();
+        sysModule.ModuleTemplate!.Name.Should().Be("NestedModule");
+        sysModule.ModuleTemplate.Enabled.Should().BeFalse();
     }
 }

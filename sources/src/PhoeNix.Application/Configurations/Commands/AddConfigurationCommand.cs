@@ -65,7 +65,7 @@ internal sealed class AddConfigurationCommandHandler(
             "\"25.11\""
         ).Value;
 
-        var sharedModule = Module.Create(sharedModuleId, "SharedModule", true, ModuleType.Generic,
+        var sharedModule = ModuleTemplate.Create(sharedModuleId, "SharedModule", true, ModuleType.Generic,
                 [Architecture.X86Linux])
             .Tap(m => m.ChangeContent(
                 $"nixpkgs.config.allowUnfree = true;\n" +
@@ -77,7 +77,7 @@ internal sealed class AddConfigurationCommandHandler(
                 [textValue1, textValue2]
             )).Value;
 
-        var systemModule = Module.Create(systemModuleId, "SystemModule", true, ModuleType.System,
+        var systemModule = ModuleTemplate.Create(systemModuleId, "SystemModule", true, ModuleType.System,
                 [Architecture.X86Linux])
             .Tap(m => m.ChangeContent(
                 "boot.loader.grub.enable = true;\n" +
@@ -88,7 +88,7 @@ internal sealed class AddConfigurationCommandHandler(
                 [diskDevice, valIsContainer, valStateVersion]
             )).Value;
 
-        var diskoSystemModule = Module.Create(diskoSystemModuleId, "DiskoSystemModule", true, ModuleType.System,
+        var diskoSystemModule = ModuleTemplate.Create(diskoSystemModuleId, "DiskoSystemModule", true, ModuleType.System,
                 [Architecture.X86Linux])
             .Tap(m => m.ChangeContent(
                 "imports = [ inputs.disko.nixosModules.disko ];\n\n" +

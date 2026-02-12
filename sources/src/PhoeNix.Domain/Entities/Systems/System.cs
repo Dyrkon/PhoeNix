@@ -29,15 +29,15 @@ public class System : AggregateRoot<SystemId>
         return Result.Success();
     }
 
-    public Result AddModule(Module module)
+    public Result AddModule(ModuleTemplate moduleTemplate)
     {
-        if (_modules.Any(m => m.ModuleId == module.Id))
+        if (_modules.Any(m => m.ModuleId == moduleTemplate.Id))
             return Result.Failure(new Error("", "This module has been added to this system already"));
 
-        if (!module.SupportedArchitectures.Contains(Architecture))
+        if (!moduleTemplate.SupportedArchitectures.Contains(Architecture))
             return Result.Failure(new Error("", $"This module doesn't support system architecture {Architecture}"));
 
-        return SystemModule.Create(new SystemModuleId(Guid.NewGuid()), Id, module.Id)
+        return SystemModule.Create(new SystemModuleId(Guid.NewGuid()), Id, moduleTemplate.Id)
             .Tap(m => _modules.Add(m));
     }
 
@@ -57,7 +57,7 @@ public class System : AggregateRoot<SystemId>
 
     public Result<SystemBuildResult> Build()
     {
-        var modules = Modules.Select(m => m.Module.Build());
+        var modules = Modules.Select(m => m.ModuleTemplate.Build());
         if (modules.Any(m => m.IsFailure))
             return Result.Failure<SystemBuildResult>(new Error("", $"Failed to build module/s for system {Name}"));
 

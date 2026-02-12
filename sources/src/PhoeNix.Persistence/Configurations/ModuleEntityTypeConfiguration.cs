@@ -5,9 +5,9 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class ModuleEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Module>
+public class ModuleEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleTemplate>
 {
-    public void Configure(EntityTypeBuilder<Module> builder)
+    public void Configure(EntityTypeBuilder<ModuleTemplate> builder)
     {
         builder.HasKey(m => m.Id);
 

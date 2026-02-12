@@ -16,7 +16,7 @@ public class ModuleRepositoryTests : PersistenceTestsBase
     {
         // Arrange
         var moduleId = new ModuleId(Guid.NewGuid());
-        var module = Module.Create(
+        var module = ModuleTemplate.Create(
             moduleId,
             "MyTestModule",
             true,
@@ -48,7 +48,7 @@ public class ModuleRepositoryTests : PersistenceTestsBase
     [Fact]
     public void Should_Fail_If_Entry_Missing_In_Content()
     {
-        var module = Module.Create(
+        var module = ModuleTemplate.Create(
             new ModuleId(Guid.NewGuid()),
             "InvalidModule",
             true,

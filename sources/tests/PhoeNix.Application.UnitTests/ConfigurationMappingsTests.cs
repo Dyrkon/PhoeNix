@@ -30,7 +30,7 @@ public class ConfigurationMappingsTests
         var id = new ConfigurationId(Guid.NewGuid());
         var config = Configuration.Create(id, "Full Config", "Detailed description").Value;
 
-        var module = Module.Create(new ModuleId(Guid.NewGuid()), "mod", true, ModuleType.System,
+        var module = ModuleTemplate.Create(new ModuleId(Guid.NewGuid()), "mod", true, ModuleType.System,
             [Architecture.X86Linux]).Value;
         var system = PhoeNix.Domain.Entities.Systems.System
             .Create(new SystemId(Guid.NewGuid()), Architecture.X86Linux, "Name").Value;
