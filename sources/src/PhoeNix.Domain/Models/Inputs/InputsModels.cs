@@ -6,5 +6,7 @@ public record InputResponse(
     InputId Id,
     string Source,
     string Name,
-    InputResponse? Follows = null
+    List<FollowInputResponse> Follows
 );
+
+public record FollowInputResponse(string FollowName, string FollowValue);

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Persistence.Configurations.Abstractions;
@@ -17,5 +18,11 @@ internal class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConf
         builder.Property(c => c.Description).HasMaxLength(500);
 
         builder.Property(c => c.Title).HasMaxLength(50);
+
+        builder
+            .HasMany(c => c.Inputs)
+            .WithOne()
+            .HasForeignKey(i => i.ConfigurationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
