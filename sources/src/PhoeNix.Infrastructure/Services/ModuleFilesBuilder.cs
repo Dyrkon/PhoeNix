@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Models.Files;
@@ -6,7 +7,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class ModuleRenderer : IModuleRenderer
+public class ModuleFilesBuilder : IModuleFilesBuilder
 {
     private ConfigurationLayout _configurationLayout = new();
 

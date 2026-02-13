@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Services;

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Services;
 using PhoeNix.Infrastructure.Services;
 
@@ -10,11 +11,12 @@ public static class DependencyInjection
     {
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddSingleton<INixFormatterService, NixFormatterService>();
-        services.AddSingleton<IModuleRenderer, ModuleRenderer>();
-        services.AddSingleton<IConfigurationExportService, ConfigurationExportService>();
+        services.AddSingleton<IModuleFilesBuilder, ModuleFilesBuilder>();
+        services.AddSingleton<IConfigurationFilesBuilder, ConfigurationFilesBuilder>();
         services.AddSingleton<INixTestRunner, NixTestRunner>();
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
+        services.AddSingleton<INixBuildMaterializer, NixBuildMaterializer>();
 
         return services;
     }

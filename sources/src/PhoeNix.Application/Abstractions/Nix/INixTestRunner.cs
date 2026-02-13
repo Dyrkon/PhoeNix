@@ -4,7 +4,7 @@ using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Services;
+namespace PhoeNix.Application.Abstractions.Nix;
 
 public interface INixTestRunner
 {

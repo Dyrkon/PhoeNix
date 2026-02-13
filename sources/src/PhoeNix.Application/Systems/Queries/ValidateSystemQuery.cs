@@ -1,4 +1,5 @@
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
