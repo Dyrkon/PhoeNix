@@ -30,7 +30,8 @@ internal sealed class ConfigurationRepository : RepositoryBase<Configuration, Co
 
     public async Task<Result> RemoveByIdAsync(ConfigurationId id, CancellationToken token)
     {
-        var tmp = await DbContext.Configurations.AddIncludeStatements().SingleOrDefaultAsync(c => c.Id == id, token);
+        var tmp = await DbContext.Configurations.AddIncludeStatements()
+            .SingleOrDefaultAsync(c => c.Id == id, token);
         if (tmp == null)
             return Result.Failure(new Error("", $"Configuration with id {id.Value} was not found"));
         DbContext.Configurations.Remove(tmp);

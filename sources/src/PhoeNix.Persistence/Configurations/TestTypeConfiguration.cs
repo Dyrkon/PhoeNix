@@ -8,10 +8,10 @@ internal class TestTypeConfiguration : IApplicationEntityTypeConfiguration<Test>
 {
     public void Configure(EntityTypeBuilder<Test> builder)
     {
-        builder.HasKey(x => x.Id);
+        builder.HasKey(x => x.TemplateId);
 
-        builder.Property(t => t.Id).HasConversion(
-            testId => testId.Value, value => new TestId(value));
+        builder.Property(t => t.TemplateId).HasConversion(
+            testId => testId.Value, value => new ModuleTemplateId(value));
 
         builder.Property(t => t.Name).HasMaxLength(100);
 

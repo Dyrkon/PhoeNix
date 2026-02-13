@@ -14,5 +14,5 @@ public record SystemResponse(
     SystemId Id,
     string Name,
     Architecture Architecture,
-    List<ModuleListResponse> Modules
+    List<ModuleValueResponse> Modules
 );

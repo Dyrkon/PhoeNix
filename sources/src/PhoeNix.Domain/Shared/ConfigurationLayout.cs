@@ -25,20 +25,20 @@ public class ConfigurationLayout
         return $"{SystemsPath}/{id.ToStringWithPrefix()}";
     }
 
-    public string SharedModuleFolderPath(ModuleId moduleId)
+    public string SharedModuleFolderPath(ModuleTemplateId moduleTemplateId)
     {
-        return $"{SharedModulesPath}/{moduleId.ToStringWithPrefix()}";
+        return $"{SharedModulesPath}/{moduleTemplateId.ToStringWithPrefix()}";
     }
 
-    public string SharedModulePath(ModuleId moduleId, string? moduleName = null)
+    public string SharedModulePath(ModuleTemplateId moduleTemplateId, string? moduleName = null)
     {
         moduleName ??= DefaultNames.ModuleName;
-        return $"{SharedModuleFolderPath(moduleId)}/{moduleName}.nix";
+        return $"{SharedModuleFolderPath(moduleTemplateId)}/{moduleName}.nix";
     }
 
-    public string SharedModuleTestPath(ModuleId moduleId, TestId testId)
+    public string SharedModuleTestPath(ModuleTemplateId moduleTemplateId, TestId testId)
     {
-        return $"{SharedModuleFolderPath(moduleId)}/{testId.ToStringWithPrefix()}.nix";
+        return $"{SharedModuleFolderPath(moduleTemplateId)}/{testId.ToStringWithPrefix()}.nix";
     }
 
     public string SystemModulesFolderPath(SystemId systemId)
@@ -46,19 +46,19 @@ public class ConfigurationLayout
         return $"{SystemsPath}/{systemId.ToStringWithPrefix()}/Modules";
     }
 
-    public string SystemModuleFolderPath(SystemId systemId, ModuleId moduleId)
+    public string SystemModuleFolderPath(SystemId systemId, ModuleTemplateId moduleTemplateId)
     {
-        return $"{SystemModulesFolderPath(systemId)}/{moduleId.ToStringWithPrefix()}";
+        return $"{SystemModulesFolderPath(systemId)}/{moduleTemplateId.ToStringWithPrefix()}";
     }
 
-    public string SystemModulePath(SystemId systemId, ModuleId moduleId, string? moduleName = null)
+    public string SystemModulePath(SystemId systemId, ModuleTemplateId moduleTemplateId, string? moduleName = null)
     {
         moduleName ??= DefaultNames.ModuleName;
-        return $"{SystemModuleFolderPath(systemId, moduleId)}/{moduleName}.nix";
+        return $"{SystemModuleFolderPath(systemId, moduleTemplateId)}/{moduleName}.nix";
     }
 
-    public string SystemModuleTestPath(SystemId systemId, ModuleId moduleId, TestId testId)
+    public string SystemModuleTestPath(SystemId systemId, ModuleTemplateId moduleTemplateId, TestId testId)
     {
-        return $"{SystemModuleFolderPath(systemId, moduleId)}/{testId.ToStringWithPrefix()}.nix";
+        return $"{SystemModuleFolderPath(systemId, moduleTemplateId)}/{testId.ToStringWithPrefix()}.nix";
     }
 }

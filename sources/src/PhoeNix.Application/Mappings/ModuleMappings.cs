@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Models.Modules;
 
@@ -5,22 +6,39 @@ namespace PhoeNix.Application.Mappings;
 
 public static class ModuleMappings
 {
-    public static ModuleListResponse MapModuleToListDto(ModuleTemplate moduleTemplate)
+    public static ModuleTemplateListResponse MapModuleToListDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleListResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Enabled,
-            moduleTemplate.Type);
+        return new ModuleTemplateListResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Type);
     }
 
-    public static ModuleResponse MapModuleToDto(ModuleTemplate moduleTemplate)
+    public static ModuleTemplateResponse MapModuleToDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Enabled, moduleTemplate.Type,
+        return new ModuleTemplateResponse(moduleTemplate.Id, moduleTemplate.Name,
+            moduleTemplate.Type,
             moduleTemplate.Content,
-            moduleTemplate.EditableValues.Select(MapEntryValueToDto).ToList(),
+            moduleTemplate.EditableValueTypes.Select(MapEntryValueDefinitionToDto).ToList(),
             moduleTemplate.SupportedArchitectures.ToList());
+    }
+
+    public static EntryValueDefinitionResponse MapEntryValueDefinitionToDto(EntryValueDefinition entryValue)
+    {
+        return new EntryValueDefinitionResponse(entryValue.Name, entryValue.Placeholder, entryValue.InputType);
+    }
+
+
+    public static ModuleValueResponse MapModuleValueToDto(ModuleValue moduleValue)
+    {
+        return new ModuleValueResponse(
+            moduleValue.Id, moduleValue.Enabled, moduleValue.EditableValues.Select(MapEntryValueToDto).ToList());
     }
 
     public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)
     {
-        return new EntryValueResponse(entryValue.Id, entryValue.Name, entryValue.Placeholder, entryValue.Value);
+        return new EntryValueResponse(entryValue.Name, entryValue.Placeholder, entryValue.Value);
+    }
+
+    public static ModuleValueListResponse MapModuleValueToListDto(ModuleValue moduleValue)
+    {
+        return new ModuleValueListResponse(moduleValue.Id, moduleValue.Enabled);
     }
 }

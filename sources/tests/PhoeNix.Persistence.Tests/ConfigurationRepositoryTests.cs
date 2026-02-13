@@ -21,7 +21,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var configurationId = new ConfigurationId(Guid.NewGuid());
         var configuration = Configuration.Create(configurationId, "Title", "Description").Value;
 
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
         var inputId = new InputId(Guid.NewGuid());
 
@@ -47,7 +47,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         result.Should().NotBeNull();
         result!.Modules.Should().ContainSingle(m => m.Module.Id == moduleId);
         result.Inputs.Should().ContainSingle(i => i.Input.Id == inputId);
-        result.Systems.Should().ContainSingle(s => s.System.Id == systemId);
+        result.Systems.Should().ContainSingle(s => s.System.TemplateId == systemId);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         var configId = new ConfigurationId(Guid.NewGuid());
         var configuration = Configuration.Create(configId, "Search Title", "Unique Description 123").Value;
 
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var module = ModuleTemplate.Create(moduleId, "Foo", true, ModuleType.Generic, [Architecture.X86Linux]).Value;
 
         await PhoeNixDbContextSUT.Modules.AddAsync(module);
@@ -71,7 +71,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(configId);
+        result!.TemplateId.Should().Be(configId);
         result.Modules.Should().ContainSingle(m => m.Module.Id == moduleId);
     }
 
@@ -96,7 +96,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(configId);
+        result!.TemplateId.Should().Be(configId);
         result.Inputs.Should().ContainSingle(i => i.Input.Id == inputId);
     }
 }

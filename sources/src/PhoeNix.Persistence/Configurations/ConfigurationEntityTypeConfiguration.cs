@@ -24,5 +24,15 @@ internal class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConf
             .WithOne()
             .HasForeignKey(i => i.ConfigurationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(c => c.Modules)
+            .WithOne()
+            .HasForeignKey(i => i.ConfigurationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(c => c.SystemSpecifications)
+            .WithOne()
+            .HasForeignKey(i => i.ConfigurationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

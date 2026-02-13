@@ -11,8 +11,8 @@ public class EntryValueEntityTypeConfiguration : IApplicationEntityTypeConfigura
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.ModuleId)
-            .HasConversion(id => id.Value, value => new ModuleId(value))
+        builder.Property(e => e.Id)
+            .HasConversion(id => id.Value, value => new EntryValueId(value))
             .IsRequired();
 
         builder.Property(m => m.Id).HasConversion(

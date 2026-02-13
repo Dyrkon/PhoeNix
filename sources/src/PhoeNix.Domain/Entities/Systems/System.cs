@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
@@ -6,15 +7,16 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Systems;
 
-public class System : AggregateRoot<SystemId>
+public class System : Entity<SystemId>
 {
-    private readonly List<SystemModule> _modules = new();
+    private readonly List<ModuleValue> _modules = new();
+    public ConfigurationId ConfigurationId;
 
     public Architecture Architecture { get; private set; }
 
     public string Name { get; private set; }
 
-    public IReadOnlyList<SystemModule> Modules => _modules;
+    public IReadOnlyList<ModuleValue> Modules => _modules;
 
     private System(SystemId id) : base(id)
     {
@@ -29,23 +31,24 @@ public class System : AggregateRoot<SystemId>
         return Result.Success();
     }
 
-    public Result AddModule(ModuleTemplate moduleTemplate)
+    public Result AddModule(ModuleTemplateId moduleTemplateId, List<Architecture> supportedArchitectures,
+        bool enabled = true)
     {
-        if (_modules.Any(m => m.ModuleId == moduleTemplate.Id))
+        if (_modules.Any(m => m.ModuleTemplateId == moduleTemplateId))
             return Result.Failure(new Error("", "This module has been added to this system already"));
 
-        if (!moduleTemplate.SupportedArchitectures.Contains(Architecture))
+        if (!supportedArchitectures.Contains(Architecture))
             return Result.Failure(new Error("", $"This module doesn't support system architecture {Architecture}"));
 
-        return SystemModule.Create(new SystemModuleId(Guid.NewGuid()), Id, moduleTemplate.Id)
+        return ModuleValue.Create(new ModuleValueId(Guid.NewGuid()), moduleTemplateId, enabled)
             .Tap(m => _modules.Add(m));
     }
 
-    public Result RemoveModule(ModuleId moduleId)
+    public Result RemoveModule(ModuleValueId moduleValueId)
     {
-        var removeHomes = _modules.RemoveAll(m => m.ModuleId == moduleId);
+        var removeHomes = _modules.RemoveAll(m => m.Id == moduleValueId);
         if (removeHomes == 0)
-            return Result.Failure(new Error("", $"There is no module with id {moduleId} in this system"));
+            return Result.Failure(new Error("", $"There is no module with id {moduleValueId} in this system"));
 
         return Result.Success();
     }
@@ -55,9 +58,9 @@ public class System : AggregateRoot<SystemId>
         return new System(id) { Architecture = architecture, Name = name };
     }
 
-    public Result<SystemBuildResult> Build()
+    public Result<SystemBuildResult> Build(List<ModuleTemplate> moduleTemplates)
     {
-        var modules = Modules.Select(m => m.ModuleTemplate.Build());
+        var modules = Modules.Select(m => m.Build(moduleTemplates.First(i => i.Id == m.ModuleTemplateId)));
         if (modules.Any(m => m.IsFailure))
             return Result.Failure<SystemBuildResult>(new Error("", $"Failed to build module/s for system {Name}"));
 
@@ -67,6 +70,7 @@ public class System : AggregateRoot<SystemId>
         var systemContent =
             $"{{ inputs, lib, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ specialArgs = {{ inherit inputs; }}; system = \"{Architecture.ToArchitectureString()}\"; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
 
-        return new SystemBuildResult(Id, Name, Architecture, systemContent, moduleResults, modulesListPlaceholder);
+        return new SystemBuildResult(Id, Name, Architecture, systemContent, moduleResults,
+            modulesListPlaceholder);
     }
 }

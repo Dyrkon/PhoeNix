@@ -27,11 +27,11 @@ internal sealed class AddConfigurationCommandHandler(
         var nixpkgsInputId = new InputId(Guid.NewGuid());
         var testInputId = new InputId(Guid.NewGuid());
 
-        var sharedModuleId = new ModuleId(Guid.NewGuid());
-        var systemModuleId = new ModuleId(Guid.NewGuid());
+        var sharedModuleId = new ModuleTemplateId(Guid.NewGuid());
+        var systemModuleId = new ModuleTemplateId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
 
-        var diskoSystemModuleId = new ModuleId(Guid.NewGuid());
+        var diskoSystemModuleId = new ModuleTemplateId(Guid.NewGuid());
         var vmDiskoSystemId = new SystemId(Guid.NewGuid());
 
         var placeholder1 = "One";
@@ -118,9 +118,9 @@ internal sealed class AddConfigurationCommandHandler(
         var shareModuleTest = Test.Create(new TestId(Guid.NewGuid()), "SharedModuleTest").Value;
         var diskoModuleTest = Test.Create(new TestId(Guid.NewGuid()), "DiskoSystemModuleTest").Value;
 
-        sharedModule.AddModuleTest(shareModuleTest.Id);
-        systemModule.AddModuleTest(sysModuleTest.Id);
-        diskoSystemModule.AddModuleTest(diskoModuleTest.Id);
+        sharedModule.AddModuleTest(shareModuleTest.TemplateId);
+        systemModule.AddModuleTest(sysModuleTest.TemplateId);
+        diskoSystemModule.AddModuleTest(diskoModuleTest.TemplateId);
 
         testRepository.Add(sysModuleTest);
         testRepository.Add(shareModuleTest);
@@ -142,14 +142,13 @@ internal sealed class AddConfigurationCommandHandler(
 
         return Task.FromResult(Configuration
             .Create(configurationId, "ExampleConfiguration", "Example configuration flake")
-            .Tap(
-                configuration => configuration.AddInput("github:NixOS/nixpkgs/nixos-unstable", "nixpkgs")
-                    .Tap(i => configuration.AddInput("github:snowfallorg/flake", "snowfall")
-                        .Tap(iS => configuration.AddInputFollow(iS.Id, i.Name, i.Name))))
+            .Tap(configuration => configuration.AddInput("github:NixOS/nixpkgs/nixos-unstable", "nixpkgs")
+                .Tap(i => configuration.AddInput("github:snowfallorg/flake", "snowfall")
+                    .Tap(iS => configuration.AddInputFollow(iS.Id, i.Name, i.Name))))
             .Tap(configuration => configuration.AddSystem(systemId))
             .Tap(configuration => configuration.AddSystem(vmDiskoSystemId))
             .Tap(configuration => configuration.AddModule(sharedModuleId))
             .Tap(configurationRepository.Add)
-            .Bind(conf => Result.Success(conf.Id.Value.ToString())));
+            .Bind(conf => Result.Success(conf.TemplateId.Value.ToString())));
     }
 }

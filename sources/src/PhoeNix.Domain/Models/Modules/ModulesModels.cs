@@ -1,28 +1,43 @@
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.Models.Modules;
 
-public record ModuleListResponse(
-    ModuleId Id,
+public record ModuleTemplateListResponse(
+    ModuleTemplateId TemplateId,
     string Name,
-    bool Enabled,
     ModuleType Type
 );
 
-public record ModuleResponse(
-    ModuleId Id,
+public record ModuleTemplateResponse(
+    ModuleTemplateId TemplateId,
     string Name,
-    bool Enabled,
     ModuleType Type,
     string Content,
-    List<EntryValueResponse> EntryValues,
+    List<EntryValueDefinitionResponse> EntryValues,
     List<Architecture> SupportedArchitectures
 );
 
 public record EntryValueResponse(
-    EntryValueId Id,
     string Name,
     string Placeholder,
     string Value
+);
+
+public record ModuleValueResponse(
+    ModuleValueId Id,
+    bool Enabled,
+    List<EntryValueResponse> EntryValueDefinitions
+);
+
+public record ModuleValueListResponse(
+    ModuleValueId Id,
+    bool Enabled
+);
+
+public record EntryValueDefinitionResponse(
+    string Name,
+    string Placeholder,
+    UserInputType InputType
 );

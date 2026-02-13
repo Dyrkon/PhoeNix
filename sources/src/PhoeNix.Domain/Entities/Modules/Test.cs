@@ -7,13 +7,15 @@ public class Test : Entity<TestId>
 {
     private readonly List<string> _variableNames = [];
 
+    public ModuleTemplateId TemplateId { get; init; }
+
     private Test(TestId id) : base(id)
     {
     }
 
-    public string Content { get; set; }
+    public string Content { get; private set; }
 
-    public string Name { get; set; }
+    public string Name { get; private set; }
 
     public IReadOnlyList<string> VariableNames => _variableNames;
 

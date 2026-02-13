@@ -19,13 +19,13 @@ public class ModuleMappingsTests
     [Fact]
     public void MapModuleToListDto_Should_Map_Correctly()
     {
-        var id = new ModuleId(Guid.NewGuid());
+        var id = new ModuleTemplateId(Guid.NewGuid());
         var module = ModuleTemplate.Create(id, "Test Module", true, ModuleType.Generic, [Architecture.Aarch64Linux])
             .Value;
 
         var dto = ModuleMappings.MapModuleToListDto(module);
 
-        dto.Id.Should().Be(id);
+        dto.TemplateId.Should().Be(id);
         dto.Name.Should().Be("Test Module");
         dto.Enabled.Should().BeTrue();
         dto.Type.Should().Be(ModuleType.Generic);
@@ -34,7 +34,7 @@ public class ModuleMappingsTests
     [Fact]
     public void MapModuleToDto_Should_Map_All_Fields_Correctly()
     {
-        var id = new ModuleId(Guid.NewGuid());
+        var id = new ModuleTemplateId(Guid.NewGuid());
         var entryId = new EntryValueId(Guid.NewGuid());
         var architecture = Architecture.Aarch64Linux;
 
@@ -46,7 +46,7 @@ public class ModuleMappingsTests
 
         var dto = ModuleMappings.MapModuleToDto(module);
 
-        dto.Id.Should().Be(id);
+        dto.TemplateId.Should().Be(id);
         dto.Name.Should().Be("Init");
         dto.Enabled.Should().BeFalse();
         dto.Type.Should().Be(ModuleType.Generic);

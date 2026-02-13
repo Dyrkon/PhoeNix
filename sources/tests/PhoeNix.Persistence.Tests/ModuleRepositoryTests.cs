@@ -15,7 +15,7 @@ public class ModuleRepositoryTests : PersistenceTestsBase
     public async Task Should_Persist_Module_And_Retrieve_ByName()
     {
         // Arrange
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var module = ModuleTemplate.Create(
             moduleId,
             "MyTestModule",
@@ -38,7 +38,7 @@ public class ModuleRepositoryTests : PersistenceTestsBase
 
         // Assert
         loaded.Should().NotBeNull();
-        loaded!.Id.Should().Be(moduleId);
+        loaded!.TemplateId.Should().Be(moduleId);
         loaded.Name.Should().Be("MyTestModule");
         loaded.Enabled.Should().BeTrue();
         loaded.SupportedArchitectures.Should().ContainSingle().Which.Should().Be(Architecture.Aarch64Linux);
@@ -49,7 +49,7 @@ public class ModuleRepositoryTests : PersistenceTestsBase
     public void Should_Fail_If_Entry_Missing_In_Content()
     {
         var module = ModuleTemplate.Create(
-            new ModuleId(Guid.NewGuid()),
+            new ModuleTemplateId(Guid.NewGuid()),
             "InvalidModule",
             true,
             ModuleType.Generic,

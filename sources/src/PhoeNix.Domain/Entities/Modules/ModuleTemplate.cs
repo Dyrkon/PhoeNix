@@ -1,74 +1,38 @@
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class ModuleTemplate : AggregateRoot<ModuleId>
+public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
 {
     private readonly List<Architecture> _supportedArchitectures = new();
-    private readonly List<EntryValue> _editableValues = new();
     private readonly List<Test> _tests = new();
+    private readonly List<EntryValueDefinition> _editableValueTypes = new();
 
-    private ModuleTemplate(ModuleId id) : base(id)
+    private ModuleTemplate(ModuleTemplateId templateId) : base(templateId)
     {
     }
 
     public string Name { get; private set; }
 
-
     public ModuleType Type { get; private set; }
 
     public string Content { get; private set; }
 
-    public IReadOnlyList<EntryValue> EditableValues => _editableValues;
-
     public IReadOnlyList<Test> Tests => _tests;
+    public IReadOnlyList<EntryValueDefinition> EditableValueTypes => _editableValueTypes;
 
-    public Result ChangeContent(string content, List<EntryValue> entries)
+    public Result ChangeContent(string content, List<EntryValueDefinition> entries)
     {
         foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))
             return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
 
         Content = content;
-        _editableValues.Clear();
-        _editableValues.AddRange(entries);
+        _editableValueTypes.Clear();
+        _editableValueTypes.AddRange(entries);
 
-        return Result.Success();
-    }
-
-    public Result AddEntry(EntryValue entry)
-    {
-        if (_editableValues.Any(v => v.Id == entry.Id))
-            return Result.Failure(new Error("", $"Can't add editable value twice"));
-
-        if (!Content.Contains(entry.Name))
-            return Result.Failure(new Error("", $"Name of the entry {entry.Name} is not present in content"));
-
-        _editableValues.Add(entry);
-
-        return Result.Success();
-    }
-
-    public Result RemoveEntry(EntryValueId entryId)
-    {
-        var removed = _editableValues.RemoveAll(v => v.Id == entryId);
-        return removed == 0 ? Result.Failure(new Error("", $"Entry not present in module")) : Result.Success();
-    }
-
-    public Result Disable()
-    {
-        if (Enabled == false)
-            return Result.Failure(new Error("", $"Module {Name} is already disabled"));
-        Enabled = false;
-        return Result.Success();
-    }
-
-    public Result Enable()
-    {
-        if (Enabled == true)
-            return Result.Failure(new Error("", $"Module {Name} is already enabled"));
-        Enabled = true;
         return Result.Success();
     }
 
@@ -105,24 +69,31 @@ public class ModuleTemplate : AggregateRoot<ModuleId>
         return removed == 0 ? Result.Failure(Error.ValueNotFound) : Result.Success();
     }
 
-    public Result AddModuleTest(TestId testId)
+    public Result AddModuleTest(string name)
     {
-        if (_tests.Any(h => h.TestId == testId))
-            return Result.Failure(new Error("", $"Module {Name} has {testId.Value} already"));
+        if (_tests.Any(h => h.Name == name))
+            return Result.Failure(new Error("", $"Module {name} has with the name {name} already"));
 
-        return ModuleTest.Create(new ModuleTestId(Guid.NewGuid()), Id, testId).Tap(test => _tests.Add(test));
+        return Test.Create(new TestId(Guid.NewGuid()), name);
+    }
+
+    public Result ChangeModuleTest(TestId testId, string newContent, List<string> variableNames)
+    {
+        return _tests.FirstOrDefault(h => h.Id == testId)
+            .EnsureNotNull(new Error("", $"Module test {Id.Value} has not been found in module template {Name}"))
+            .Bind(test => test.ChangeContent(newContent, variableNames));
     }
 
     public Result RemoveModuleTest(TestId id)
     {
-        var removedModules = _tests.RemoveAll(m => m.ModuleId == Id);
+        var removedModules = _tests.RemoveAll(t => t.Id == id);
         if (removedModules == 0)
             return Result.Failure(new Error("", $"There is no module with id {id.Value} in this module"));
 
         return Result.Success();
     }
 
-    public static Result<ModuleTemplate> Create(ModuleId id, string name, bool enabled, ModuleType type,
+    public static Result<ModuleTemplate> Create(ModuleTemplateId templateId, string name, bool enabled, ModuleType type,
         List<Architecture> architectures)
     {
         if (name == string.Empty)
@@ -131,10 +102,9 @@ public class ModuleTemplate : AggregateRoot<ModuleId>
         if (architectures.Count == 0)
             return Result.Failure<ModuleTemplate>(new Error("", "Module has to support at least one architecture"));
 
-        var newModule = new ModuleTemplate(id)
+        var newModule = new ModuleTemplate(templateId)
         {
             Name = name,
-            Enabled = enabled,
             Type = type,
             Content = string.Empty
         };
@@ -143,28 +113,4 @@ public class ModuleTemplate : AggregateRoot<ModuleId>
     }
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
-
-    public Result<ModuleBuildResult> Build(string moduleValuesName = "values")
-    {
-        var inputs = "{ ";
-        var outputContent = Content;
-        foreach (var value in EditableValues)
-        {
-            inputs += $"{value.Name} = {value.Value};";
-            outputContent = outputContent.Replace(value.Name, $"args.{value.Name}");
-        }
-
-        inputs += " }";
-        var config = Type == ModuleType.System ? "config, " : "";
-        var inputsLocationPlaceholder = Guid.NewGuid().ToString();
-        var moduleContent =
-            $"{{ inputs, pkgs, lib, system, {config}... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {outputContent} }}";
-
-        var moduleTests = _tests.Select(t => t.Test.Build()).ToList();
-        if (moduleTests.Any(i => i.IsFailure))
-            return Result.Failure<ModuleBuildResult>(new Error("", $"Failed to build tests for module {Name}."));
-
-        return new ModuleBuildResult(Id, Name, moduleContent, inputs, moduleValuesName, inputsLocationPlaceholder,
-            moduleTests.Select(t => t.Value).ToList());
-    }
 }

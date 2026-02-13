@@ -12,6 +12,6 @@ public static class SystemMappings
     public static SystemResponse MapSystemToDto(Domain.Entities.Systems.System system)
     {
         return new SystemResponse(system.Id, system.Name, system.Architecture,
-            system.Modules.Select(m => ModuleMappings.MapModuleToListDto(m.ModuleTemplate)).ToList());
+            system.Modules.Select(ModuleMappings.MapModuleValueToDto).ToList());
     }
 }

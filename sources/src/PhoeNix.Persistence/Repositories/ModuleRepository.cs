@@ -4,7 +4,7 @@ using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-internal sealed class ModuleRepository : RepositoryBase<ModuleTemplate, ModuleId>, IModuleRepository
+internal sealed class ModuleRepository : RepositoryBase<ModuleTemplate, ModuleTemplateId>, IModuleRepository
 {
     public ModuleRepository(ApplicationDbContext dbContext) : base(dbContext)
     {
@@ -13,18 +13,18 @@ internal sealed class ModuleRepository : RepositoryBase<ModuleTemplate, ModuleId
     public Task<ModuleTemplate?> GetByNameAsync(string name, CancellationToken token)
     {
         return DbContext.Modules
-            .Include(m => m.EditableValues)
+            .Include(m => m.EditableValueTypes)
             .Include(m => m.Tests)
-            .ThenInclude(m => m.Test)
+            .ThenInclude(m => m.VariableNames)
             .SingleOrDefaultAsync(m => m.Name.Contains(name), token);
     }
 
-    public override Task<ModuleTemplate?> GetByIdAsync(ModuleId id, CancellationToken token)
+    public override Task<ModuleTemplate?> GetByIdAsync(ModuleTemplateId templateId, CancellationToken token)
     {
         return DbContext.Modules
-            .Include(m => m.EditableValues)
+            .Include(m => m.EditableValueTypes)
             .Include(m => m.Tests)
-            .ThenInclude(m => m.Test)
-            .SingleOrDefaultAsync(c => c.Id == id, token);
+            .ThenInclude(m => m.VariableNames)
+            .SingleOrDefaultAsync(c => c.Id == templateId, token);
     }
 }

@@ -66,7 +66,7 @@ public class InputTests
         var result = input.Value.ChangeFollows(input3);
 
         result.IsSuccess.Should().BeTrue();
-        input.Value.FollowsId.Should().Be(input3.Id);
+        input.Value.FollowsId.Should().Be(input3.TemplateId);
     }
 
     [Theory]

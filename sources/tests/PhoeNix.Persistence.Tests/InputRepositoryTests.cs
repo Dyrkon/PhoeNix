@@ -25,16 +25,16 @@ public class InputRepositoryTests(ITestOutputHelper output) : PersistenceTestsBa
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         // Act
-        var loadedLeaf = await InputRepository.GetByIdAsync(leaf.Id, CancellationToken.None);
-        var loadedMid = await InputRepository.GetByIdAsync(mid.Id, CancellationToken.None);
-        var loadedRoot = await InputRepository.GetByIdAsync(root.Id, CancellationToken.None);
+        var loadedLeaf = await InputRepository.GetByIdAsync(leaf.TemplateId, CancellationToken.None);
+        var loadedMid = await InputRepository.GetByIdAsync(mid.TemplateId, CancellationToken.None);
+        var loadedRoot = await InputRepository.GetByIdAsync(root.TemplateId, CancellationToken.None);
 
         // Assert
-        loadedLeaf!.Follows!.Id.Should().Be(mid.Id);
-        loadedMid!.Follows!.Id.Should().Be(root.Id);
+        loadedLeaf!.Follows!.Id.Should().Be(mid.TemplateId);
+        loadedMid!.Follows!.Id.Should().Be(root.TemplateId);
 
-        loadedRoot!.Followers.Should().ContainSingle(f => f.Id == mid.Id);
-        loadedMid.Followers.Should().ContainSingle(f => f.Id == leaf.Id);
+        loadedRoot!.Followers.Should().ContainSingle(f => f.Id == mid.TemplateId);
+        loadedMid.Followers.Should().ContainSingle(f => f.Id == leaf.TemplateId);
     }
 
     [Fact]
@@ -54,21 +54,21 @@ public class InputRepositoryTests(ITestOutputHelper output) : PersistenceTestsBa
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         // Act
-        var tracked = await InputRepository.GetByIdAsync(original.Id, CancellationToken.None);
+        var tracked = await InputRepository.GetByIdAsync(original.TemplateId, CancellationToken.None);
         var result = tracked!.ChangeFollows(targetB);
         result.IsSuccess.Should().BeTrue();
 
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         // Assert
-        var reloaded = await InputRepository.GetByIdAsync(original.Id, CancellationToken.None);
-        reloaded!.Follows!.Id.Should().Be(targetB.Id);
+        var reloaded = await InputRepository.GetByIdAsync(original.TemplateId, CancellationToken.None);
+        reloaded!.Follows!.Id.Should().Be(targetB.TemplateId);
 
-        var updatedTargetA = await InputRepository.GetByIdAsync(targetA.Id, CancellationToken.None);
-        updatedTargetA!.Followers.Should().NotContain(f => f.Id == original.Id);
+        var updatedTargetA = await InputRepository.GetByIdAsync(targetA.TemplateId, CancellationToken.None);
+        updatedTargetA!.Followers.Should().NotContain(f => f.Id == original.TemplateId);
 
-        var updatedTargetB = await InputRepository.GetByIdAsync(targetB.Id, CancellationToken.None);
-        updatedTargetB!.Followers.Should().ContainSingle(f => f.Id == original.Id);
+        var updatedTargetB = await InputRepository.GetByIdAsync(targetB.TemplateId, CancellationToken.None);
+        updatedTargetB!.Followers.Should().ContainSingle(f => f.Id == original.TemplateId);
     }
 
     [Fact]
@@ -81,15 +81,14 @@ public class InputRepositoryTests(ITestOutputHelper output) : PersistenceTestsBa
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         // Act
-        var tracked = await InputRepository.GetByIdAsync(input.Id, CancellationToken.None);
+        var tracked = await InputRepository.GetByIdAsync(input.TemplateId, CancellationToken.None);
         var result = tracked!.ChangeFollows(tracked);
-    
+
         // Assert
         result.IsFailure.Should().BeTrue();
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        var reloaded = await InputRepository.GetByIdAsync(input.Id, CancellationToken.None);
+        var reloaded = await InputRepository.GetByIdAsync(input.TemplateId, CancellationToken.None);
         reloaded!.Follows.Should().BeNull();
     }
-
 }

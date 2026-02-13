@@ -28,7 +28,7 @@ public class ModulesModule : CarterModule
     private async Task<IResult> ValidateModule(Guid configurationId, Guid moduleId, int architecture, ISender sender,
         CancellationToken cancellationToken)
     {
-        var query = new ValidateModuleQuery(new ConfigurationId(configurationId), new ModuleId(moduleId),
+        var query = new ValidateModuleQuery(new ConfigurationId(configurationId), new ModuleTemplateId(moduleId),
             (Architecture)architecture);
         var result = await sender.Send(query, cancellationToken);
         return result.AsHttpResult();

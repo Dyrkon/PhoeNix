@@ -17,12 +17,12 @@ public class InputMappingsTests
         var result = InputMappings.MapInputToDto(input);
 
         result.Should().NotBeNull();
-        result.Id.Should().Be(input.Id);
+        result.Id.Should().Be(input.TemplateId);
         result.Source.Should().Be(input.Source);
         result.Name.Should().Be(input.Name);
-        result.Follows.Id.Should().Be(follows.Id);
+        result.Follows.Id.Should().Be(follows.TemplateId);
     }
-    
+
     [Fact]
     public void MapInputToDto_Should_Handle_Null_Follows()
     {
@@ -34,5 +34,4 @@ public class InputMappingsTests
         result.Should().NotBeNull();
         result.Follows.Should().BeNull();
     }
-
 }

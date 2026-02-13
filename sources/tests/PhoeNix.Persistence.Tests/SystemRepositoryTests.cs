@@ -21,7 +21,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         systemResult.IsSuccess.Should().BeTrue();
         var system = systemResult.Value;
 
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var moduleResult =
             ModuleTemplate.Create(moduleId, "ModuleX", true, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
@@ -43,7 +43,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         fetched!.Modules.Should().ContainSingle();
 
         var sysModule = fetched.Modules.First();
-        sysModule.ModuleId.Should().Be(moduleId);
+        sysModule.ModuleTemplateId.Should().Be(moduleId);
         sysModule.ModuleTemplate.Should().NotBeNull();
         sysModule.ModuleTemplate!.Name.Should().Be("ModuleX");
         sysModule.ModuleTemplate.Type.Should().Be(ModuleType.System);
@@ -58,7 +58,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         systemResult.IsSuccess.Should().BeTrue();
         var system = systemResult.Value;
 
-        var moduleId = new ModuleId(Guid.NewGuid());
+        var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var moduleResult =
             ModuleTemplate.Create(moduleId, "NestedModule", false, ModuleType.System, [Architecture.Aarch64Linux]);
         moduleResult.IsSuccess.Should().BeTrue();
@@ -81,7 +81,7 @@ public class SystemRepositoryWithIncludesTests : PersistenceTestsBase
         fetched.Modules.Should().ContainSingle();
 
         var sysModule = fetched.Modules.First();
-        sysModule.ModuleTemplate.Id.Should().Be(moduleId);
+        sysModule.ModuleTemplate.TemplateId.Should().Be(moduleId);
         sysModule.ModuleTemplate.Should().NotBeNull();
         sysModule.ModuleTemplate!.Name.Should().Be("NestedModule");
         sysModule.ModuleTemplate.Enabled.Should().BeFalse();

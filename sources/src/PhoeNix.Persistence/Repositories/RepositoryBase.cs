@@ -4,7 +4,7 @@ using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
-public abstract class RepositoryBase<TEntity, TId> : IRepository<TEntity,TId> 
+public abstract class RepositoryBase<TEntity, TId> : IRepository<TEntity, TId>
     where TId : StronglyTypedId
     where TEntity : Entity<TId>
 {
@@ -22,6 +22,6 @@ public abstract class RepositoryBase<TEntity, TId> : IRepository<TEntity,TId>
 
     public virtual Task<TEntity?> GetByIdAsync(TId id, CancellationToken token)
     {
-        return DbContext.Set<TEntity>().SingleOrDefaultAsync(e => e.Id == id, cancellationToken: token);
+        return DbContext.Set<TEntity>().SingleOrDefaultAsync(e => e.Id == id, token);
     }
 }

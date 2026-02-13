@@ -5,7 +5,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class ModuleEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleTemplate>
+public class ModuleTemplateEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleTemplate>
 {
     public void Configure(EntityTypeBuilder<ModuleTemplate> builder)
     {
@@ -13,11 +13,11 @@ public class ModuleEntityTypeConfiguration : IApplicationEntityTypeConfiguration
 
         builder.Property(m => m.Id).HasConversion(
             id => id.Value,
-            value => new ModuleId(value));
+            value => new ModuleTemplateId(value));
 
-        builder.HasMany(m => m.EditableValues)
+        builder.HasMany(m => m.EditableValueTypes)
             .WithOne()
-            .HasForeignKey(m => m.ModuleId)
+            .HasForeignKey(m => m.ModuleTemplateId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -18,7 +18,7 @@ public class ConfigurationFilesBuilder(
             $"{s.Id.ToStringWithPrefix()} = import ./{confLayout.SystemPath(s.Id, s.Architecture)} {{ inherit inputs sharedModules lib; }};\n");
 
         var sharedModulesList = configurationBuild.CommonModules.Aggregate("",
-            (current, m) => current + $"./{confLayout.SharedModulePath(m.Id)}");
+            (current, m) => current + $"./{confLayout.SharedModulePath(m.TemplateId)}");
 
         var checksPaths = string.Empty;
 
@@ -27,7 +27,7 @@ public class ConfigurationFilesBuilder(
             if (moduleBuildResult.ModuleTests != null)
                 foreach (var moduleTest in moduleBuildResult.ModuleTests)
                     checksPaths +=
-                        $"{moduleTest.Id.ToStringWithPrefix()} = import ./{confLayout.SharedModuleTestPath(moduleBuildResult.Id, moduleTest.Id)} {{ inherit inputs pkgs lib system; }}; ";
+                        $"{moduleTest.Id.ToStringWithPrefix()} = import ./{confLayout.SharedModuleTestPath(moduleBuildResult.TemplateId, moduleTest.Id)} {{ inherit inputs pkgs lib system; }}; ";
 
         foreach (var system in configurationBuild.Systems)
         foreach (var moduleBuildResult in system.Modules)
@@ -35,7 +35,7 @@ public class ConfigurationFilesBuilder(
                 foreach (var moduleTestBuildResult in moduleBuildResult.ModuleTests)
                     checksPaths +=
                         $"{moduleTestBuildResult.Id.ToStringWithPrefix()} = " +
-                        $"import ./{confLayout.SystemModuleTestPath(system.Id, moduleBuildResult.Id, moduleTestBuildResult.Id)} {{ inherit inputs pkgs lib system; }}; ";
+                        $"import ./{confLayout.SystemModuleTestPath(system.Id, moduleBuildResult.TemplateId, moduleTestBuildResult.Id)} {{ inherit inputs pkgs lib system; }}; ";
 
 
         var files = new List<FileBase>

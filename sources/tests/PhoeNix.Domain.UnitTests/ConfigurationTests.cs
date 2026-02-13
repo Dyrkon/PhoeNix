@@ -12,7 +12,7 @@ public class ConfigurationTests
     private readonly ConfigurationId configId = new(Guid.NewGuid());
     private readonly string title = "MyConfig";
     private readonly string description = "Config description";
-    private readonly ModuleId moduleId1 = new(Guid.NewGuid());
+    private readonly ModuleTemplateId _moduleTemplateId1 = new(Guid.NewGuid());
     private readonly SystemId systemId1 = new(Guid.NewGuid());
     private readonly InputId inputId1 = new(Guid.NewGuid());
 
@@ -57,19 +57,19 @@ public class ConfigurationTests
     {
         var config = Configuration.Create(configId, title, description).Value;
 
-        var result = config.AddModule(moduleId1);
+        var result = config.AddModule(_moduleTemplateId1);
 
         result.IsSuccess.Should().BeTrue();
-        config.Modules.Should().ContainSingle(m => m.ModuleId == moduleId1);
+        config.Modules.Should().ContainSingle(m => m.ModuleId == _moduleTemplateId1);
     }
 
     [Fact]
     public void Configuration_Should_Not_Add_Duplicate_Module()
     {
         var config = Configuration.Create(configId, title, description).Value;
-        config.AddModule(moduleId1);
+        config.AddModule(_moduleTemplateId1);
 
-        var result = config.AddModule(moduleId1);
+        var result = config.AddModule(_moduleTemplateId1);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Contain("already");
@@ -79,9 +79,9 @@ public class ConfigurationTests
     public void Configuration_Should_Remove_Module()
     {
         var config = Configuration.Create(configId, title, description).Value;
-        config.AddModule(moduleId1);
+        config.AddModule(_moduleTemplateId1);
 
-        var result = config.RemoveModule(moduleId1);
+        var result = config.RemoveModule(_moduleTemplateId1);
 
         result.IsSuccess.Should().BeTrue();
         config.Modules.Should().BeEmpty();
@@ -92,7 +92,7 @@ public class ConfigurationTests
     {
         var config = Configuration.Create(configId, title, description).Value;
 
-        var result = config.RemoveModule(moduleId1);
+        var result = config.RemoveModule(_moduleTemplateId1);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Contain("There is no module");
@@ -139,7 +139,7 @@ public class ConfigurationTests
         var input = Input.Create(inputId1, "github:nixos", "nixpkgs").Value;
         var config = Configuration.Create(configId, title, description).Value;
 
-        var addResult = config.AddInput(input.Id);
+        var addResult = config.AddInput(input.TemplateId);
         var removeResult = config.RemoveInput(inputId1);
 
         addResult.IsSuccess.Should().BeTrue();
@@ -152,9 +152,9 @@ public class ConfigurationTests
     {
         var input = Input.Create(inputId1, "github:nixos", "nixpkgs").Value;
         var config = Configuration.Create(configId, title, description).Value;
-        config.AddInput(input.Id);
+        config.AddInput(input.TemplateId);
 
-        var result = config.AddInput(input.Id);
+        var result = config.AddInput(input.TemplateId);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -206,7 +206,8 @@ public class ConfigurationTests
         var configurationSystems = systems
             .Select(sys =>
             {
-                var cs = ConfigurationSystem.Create(new ConfigurationSystemId(Guid.NewGuid()), config.Id, sys.Id).Value;
+                var cs = ConfigurationSystem
+                    .Create(new ConfigurationSystemId(Guid.NewGuid()), config.TemplateId, sys.TemplateId).Value;
                 typeof(ConfigurationSystem)
                     .GetProperty(nameof(ConfigurationSystem.System))!
                     .SetValue(cs, sys);
