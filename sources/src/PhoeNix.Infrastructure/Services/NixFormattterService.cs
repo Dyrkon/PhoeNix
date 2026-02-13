@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Domain.Services;

@@ -1,6 +1,6 @@
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Services;
+namespace PhoeNix.Application.Abstractions.Nix;
 
 public interface INixFormatterService
 {

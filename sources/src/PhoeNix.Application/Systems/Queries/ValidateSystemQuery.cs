@@ -1,4 +1,5 @@
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
@@ -12,7 +13,7 @@ namespace PhoeNix.Application.Systems.Queries;
 public record ValidateSystemQuery(ConfigurationId ConfigurationId, SystemId SystemId) : IQuery<SystemTestResponse>;
 
 internal sealed class ValidateSystemQueryHandler(
-    IConfigurationTestRunnerService configurationTestRunnerService,
+    INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
     ISystemRepository systemRepository,
     IFileSystemService fileSystemService)
@@ -35,7 +36,7 @@ internal sealed class ValidateSystemQueryHandler(
                 fileSystemService
                     .GetRootFolder()
                     .Bind(path =>
-                        configurationTestRunnerService.RunSystemTest(
+                        nixTestRunner.RunSystemTest(
                             x.system.Id,
                             x.system.Architecture,
                             $"{path}/{x.config.Id.Value}", cancellationToken)));

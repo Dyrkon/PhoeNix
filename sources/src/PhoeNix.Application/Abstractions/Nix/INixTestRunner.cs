@@ -4,9 +4,9 @@ using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Services;
+namespace PhoeNix.Application.Abstractions.Nix;
 
-public interface IConfigurationTestRunnerService
+public interface INixTestRunner
 {
     public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path,
         CancellationToken cancellationToken);

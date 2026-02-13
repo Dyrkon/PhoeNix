@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Models.Files;

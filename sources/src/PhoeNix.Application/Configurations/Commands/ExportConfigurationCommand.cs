@@ -1,4 +1,5 @@
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
@@ -15,7 +16,7 @@ public record ExportConfigurationCommand(ConfigurationId ConfigurationId) : ICom
 
 internal sealed class ExportConfigurationCommandHandler(
     IConfigurationRepository configurationRepository,
-    IConfigurationBuilderService configurationBuilderService,
+    IConfigurationFilesBuilder configurationFilesBuilder,
     IFileSystemService fileSystemService)
     : ICommandHandler<ExportConfigurationCommand, string>
 {
@@ -24,7 +25,7 @@ internal sealed class ExportConfigurationCommandHandler(
         return await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error("", $"Configuration {command.ConfigurationId} not found!"))
             .Bind(config => config.Build())
-            .Bind(configurationBuilderService.BuildConfiguration)
+            .Bind(configurationFilesBuilder.BuildConfiguration)
             .Bind(cFolder =>
                 fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId, cancellationToken));
     }

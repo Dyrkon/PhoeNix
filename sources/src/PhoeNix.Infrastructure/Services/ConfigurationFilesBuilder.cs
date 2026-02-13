@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Models.Files;
@@ -6,8 +7,8 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class ConfigurationBuilderService(
-    IModuleBuilderService moduleBuilderService) : IConfigurationBuilderService
+public class ConfigurationFilesBuilder(
+    IModuleFilesBuilder moduleFilesBuilder) : IConfigurationFilesBuilder
 {
     public Result<Folder> BuildConfiguration(ConfigurationBuildResult configurationBuild)
     {
@@ -45,9 +46,9 @@ public class ConfigurationBuilderService(
                     .Replace(configurationBuild.SharedModulesPlaceholder, sharedModulesList)
                     .Replace(configurationBuild.ChecksPlaceholder, checksPaths)),
             new Folder(confLayout.SharedModulesPath,
-                configurationBuild.CommonModules.Select(moduleBuilderService.BuildModule)),
+                configurationBuild.CommonModules.Select(moduleFilesBuilder.BuildModule)),
             new Folder(confLayout.SystemsPath,
-                configurationBuild.Systems.Select(moduleBuilderService.BuildSystemModule))
+                configurationBuild.Systems.Select(moduleFilesBuilder.BuildSystemModule))
         };
 
         return new Folder(configurationBuild.Id, files);
