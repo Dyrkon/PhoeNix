@@ -61,12 +61,12 @@ public class Configuration : AggregateRoot<ConfigurationId>
             return Result.Failure(
                 new Error("", $"This module ({moduleValueId}) is not in this ({Title}) configuration"));
 
-        return _modules.First(h => h.ModuleTemplateId == moduleValueId).ChangeValues(entries, content);
+        return _modules.First(h => h.ModuleTemplateId == moduleValueId).ChangeEntry(entries, content);
     }
 
     public Result RemoveModule(ModuleValueId moduleValueId)
     {
-        var removedModules = _modules.RemoveAll(m => m.ModuleTemplateId == moduleValueId);
+        var removedModules = _modules.RemoveAll(m => m.Id == moduleValueId);
         if (removedModules == 0)
             return Result.Failure(new Error("",
                 $"There is no module with id {moduleValueId} in this ({Title}) configuration"));
@@ -115,7 +115,7 @@ public class Configuration : AggregateRoot<ConfigurationId>
             return Result.Failure(new Error("",
                 $"This module ({moduleValueId}) is not in system ({systemId}) in configuration ({Title}) configuration"));
 
-        return module.ChangeValues(entries, content);
+        return module.ChangeEntry(entries, content);
     }
 
     public Result RemoveSystemModule(SystemId systemId, ModuleValueId moduleValueId)

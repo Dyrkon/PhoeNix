@@ -48,11 +48,11 @@ public class NixTestRunner(INixErrorParserService nixErrorParserService, IProces
 
         return processRunner
             .RunProcess("nixos-anywhere", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3),
-                perLineAction: (_, e) =>
+                perLineAction: s =>
                 {
-                    if (e.Data == null) return;
+                    if (s == null) return;
 
-                    var match = regex.Match(e.Data);
+                    var match = regex.Match(s);
                     if (match.Success)
                         duration = match.Groups[1].Value;
                 })

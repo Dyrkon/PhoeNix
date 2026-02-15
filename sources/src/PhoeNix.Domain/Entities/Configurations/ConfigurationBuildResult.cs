@@ -1,4 +1,3 @@
-using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;

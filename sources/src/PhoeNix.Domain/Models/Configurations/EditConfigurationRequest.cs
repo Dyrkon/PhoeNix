@@ -1,8 +1,6 @@
 namespace PhoeNix.Domain.Models.Configurations;
 
-public record EditConfigurationRequest
-{
-    public string Name { get; set; }
-
-    public string Description { get; set; }
-}
+public record EditConfigurationRequest(
+    string? Title,
+    string? Description
+);

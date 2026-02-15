@@ -1,7 +1,7 @@
 namespace PhoeNix.Domain.Entities.Modules;
 
 public record ModuleBuildResult(
-    ModuleTemplateId TemplateId,
+    ModuleTemplateId Id,
     string Name,
     string Module,
     string Inputs,

@@ -14,7 +14,7 @@ public class ProcessRunner : IProcessRunner
         CancellationToken cancellationToken,
         string? workingDirectory = null,
         string? standardInput = null,
-        DataReceivedEventHandler? perLineAction = null,
+        Action<string?>? perLineAction = null,
         TimeSpan? timeOut = null)
     {
         using var process = new Process();
@@ -49,14 +49,14 @@ public class ProcessRunner : IProcessRunner
         {
             if (e.Data is null) return;
             stdout.AppendLine(e.Data);
-            perLineAction?.Invoke(process, e);
+            perLineAction?.Invoke(e.Data);
         };
 
         DataReceivedEventHandler onStdErr = (_, e) =>
         {
             if (e.Data is null) return;
             stderr.AppendLine(e.Data);
-            perLineAction?.Invoke(process, e);
+            perLineAction?.Invoke(e.Data);
         };
 
         process.OutputDataReceived += onStdOut;
@@ -116,6 +116,10 @@ public class ProcessRunner : IProcessRunner
                 /* ignore */
             }
         }
+
+        if (process.ExitCode != 0)
+            return Result.Failure<ProcessResult>(new Error("",
+                $"Process {executableName} failed with exit code {process.ExitCode} after {sw.Elapsed}. Error: {stderr.ToString()}"));
 
         return new ProcessResult(
             process.ExitCode,

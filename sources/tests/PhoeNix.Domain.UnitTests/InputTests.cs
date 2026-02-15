@@ -40,7 +40,6 @@ public class InputTests
         snowfall.IsSuccess.Should().BeTrue();
         snowfall.Value.Name.Should().Be(SnowfallName);
 
-        // Create(..., follows) currently does: AddFollow(follows.Name, follows.Name)
         snowfall.Value.Followers.Should().ContainSingle(f =>
             f.InputId == _inputId2 &&
             f.FollowName == nixpkgs.Name &&

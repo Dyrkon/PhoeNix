@@ -23,15 +23,17 @@ internal sealed class ValidateSystemQueryHandler(
         return await configurationRepository
             .GetByIdAsync(query.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error("", $"Configuration {query.ConfigurationId} not found!"))
-            .Ensure(conf => conf.SystemSpecifications
-                .Any(s => s.Id == query.SystemId), conf => new Error("", ""))
+            .Ensure(conf => conf.SystemSpecifications.Any(s => s.Id == query.SystemId),
+                conf => new Error("", $"Configuration {conf.Title} does not contain system {query.SystemId.Value}"))
             .Bind(x =>
                 fileSystemService
                     .GetRootFolder()
                     .Bind(path =>
-                        nixTestRunner.RunSystemTest(
-                            x.SystemSpecifications.First(s => s.Id == query.SystemId).Id,
-                            x.Architecture,
-                            $"{path}/{x.Id.Value}", cancellationToken)));
+                    {
+                        var system = x.SystemSpecifications.First(s => s.Id == query.SystemId);
+                        return nixTestRunner.RunSystemTest(
+                            system.Id,
+                            system.Architecture, $"{path}/{x.Id.Value}", cancellationToken);
+                    }));
     }
 }

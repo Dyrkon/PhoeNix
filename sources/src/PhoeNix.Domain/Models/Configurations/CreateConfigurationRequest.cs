@@ -1,8 +1,6 @@
 namespace PhoeNix.Domain.Models.Configurations;
 
-public record CreateConfigurationRequest
-{
-    public string Name { get; set; }
-
-    public string Description { get; set; }
-}
+public record CreateConfigurationRequest(
+    string Title,
+    string Description
+);

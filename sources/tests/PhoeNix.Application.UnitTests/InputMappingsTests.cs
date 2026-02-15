@@ -7,57 +7,30 @@ namespace PhoeNix.Application.UnitTests;
 
 public class InputMappingsTests
 {
-    private readonly ConfigurationId _configurationId = new(Guid.NewGuid());
+    private readonly ConfigurationId _configId = new(Guid.NewGuid());
 
     [Fact]
-    public void MapInputToDto_Should_Map_Correctly_When_No_Followers()
+    public void MapInputToDto_Should_Map_Correctly_When_No_Follows()
     {
-        var inputId = new InputId(Guid.NewGuid());
-        var input = Input.Create(inputId, _configurationId, "github:nixos", "nixpkgs").Value;
+        var input = Input.Create(new InputId(Guid.NewGuid()), _configId, "github:nixos", "nixpkgs").Value;
 
         var dto = InputMappings.MapInputToDto(input);
 
-        dto.Should().NotBeNull();
         dto.Id.Should().Be(input.Id);
-        dto.Source.Should().Be(input.Source);
-        dto.Name.Should().Be(input.Name);
-        dto.FollowInputs.Should().NotBeNull();
-        dto.FollowInputs.Should().BeEmpty();
+        dto.Source.Should().Be("github:nixos");
+        dto.Name.Should().Be("nixpkgs");
+        dto.Follows.Should().BeEmpty();
     }
 
     [Fact]
-    public void MapInputToDto_Should_Map_Correctly_When_Has_Followers()
+    public void MapInputToDto_Should_Map_Follows()
     {
-        var follows = Input.Create(new InputId(Guid.NewGuid()), _configurationId, "github:foo", "foo").Value;
-
-        var input = Input.Create(
-            new InputId(Guid.NewGuid()),
-            _configurationId,
-            "github:nixos",
-            "nixpkgs",
-            follows).Value;
+        var input = Input.Create(new InputId(Guid.NewGuid()), _configId, "github:nixos", "nixpkgs").Value;
+        input.AddFollow("flake-utils", "github:numtide/flake-utils").IsSuccess.Should().BeTrue();
 
         var dto = InputMappings.MapInputToDto(input);
 
-        dto.Should().NotBeNull();
-        dto.Id.Should().Be(input.Id);
-        dto.Source.Should().Be(input.Source);
-        dto.Name.Should().Be(input.Name);
-
-        dto.FollowInputs.Should().ContainSingle(f =>
-            f.FollowName == follows.Name &&
-            f.FollowValue == follows.Name);
-    }
-
-    [Fact]
-    public void MapInputsFollowsToDto_Should_Map_List()
-    {
-        var input = Input.Create(new InputId(Guid.NewGuid()), _configurationId, "github:nixos", "nixpkgs").Value;
-        input.AddFollow("flake-utils", "github:numtide/flake-utils");
-
-        var dtoList = InputMappings.MapInputsFollowsToDto(input.Followers.ToList());
-
-        dtoList.Should().ContainSingle(f =>
+        dto.Follows.Should().ContainSingle(f =>
             f.FollowName == "flake-utils" &&
             f.FollowValue == "github:numtide/flake-utils");
     }

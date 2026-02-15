@@ -28,7 +28,7 @@ public class ModuleFilesBuilder : IModuleFilesBuilder
                     .Replace(moduleTest.InputsLocationPlaceholder, inputsLocationFolder)
                     .Replace(moduleTest.TestedModulePathPlaceholder, $"./{DefaultNames.ModuleName}.nix")));
 
-        return new Folder(moduleBuild.TemplateId.ToStringWithPrefix(), files);
+        return new Folder(moduleBuild.Id.ToStringWithPrefix(), files);
     }
 
     public Folder BuildSystemModule(SystemBuildResult systemBuild)
@@ -38,7 +38,7 @@ public class ModuleFilesBuilder : IModuleFilesBuilder
 
         foreach (var module in systemBuild.Modules)
             moduleList +=
-                $"./{_configurationLayout.SystemModulePath(systemBuild.Id, module.TemplateId)
+                $"./{_configurationLayout.SystemModulePath(systemBuild.Id, module.Id)
                     .Replace($"{_configurationLayout.SystemPath(systemBuild.Id)}/", "")} ";
 
 

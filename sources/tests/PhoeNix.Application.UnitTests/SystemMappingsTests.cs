@@ -12,39 +12,16 @@ public class SystemMappingsTests
     public void MapSystemToListDto_Should_Map_Correctly()
     {
         var systemId = new SystemId(Guid.NewGuid());
-        var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "My System").Value;
+        var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "Sys").Value;
 
-        var result = SystemMappings.MapSystemToListDto(system);
+        var mtid = new ModuleTemplateId(Guid.NewGuid());
+        system.AddModule(mtid, new List<Architecture> { Architecture.X86Linux }, true).IsSuccess.Should().BeTrue();
 
-        result.Should().NotBeNull();
-        result.Id.Should().Be(system.TemplateId);
-        result.Name.Should().Be("My System");
-        result.Architecture.Should().Be(Architecture.X86Linux);
-    }
+        var dto = SystemMappings.MapSystemToListDto(system);
 
-    [Fact]
-    public void MapSystemToDto_Should_Map_Full_System_With_Modules()
-    {
-        var systemId = new SystemId(Guid.NewGuid());
-        var moduleId = new ModuleTemplateId(Guid.NewGuid());
-
-        var system = Domain.Entities.Systems.System.Create(systemId, Architecture.Aarch64Linux, "System A").Value;
-        var module = ModuleTemplate.Create(moduleId, "My Module", true, ModuleType.System,
-            [Architecture.Aarch64Linux]).Value;
-
-        var sysModule = SystemModule.Create(new SystemModuleId(Guid.NewGuid()), system.TemplateId, moduleId).Value;
-        sysModule.SetModule(module);
-
-        typeof(Domain.Entities.Systems.System)
-            .GetField("_modules", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .SetValue(system, new List<SystemModule> { sysModule });
-
-        var result = SystemMappings.MapSystemToDto(system);
-
-        result.Should().NotBeNull();
-        result.Id.Should().Be(system.TemplateId);
-        result.Name.Should().Be(system.Name);
-        result.Architecture.Should().Be(system.Architecture);
-        result.Modules.Should().ContainSingle(m => m.TemplateId == module.TemplateId && m.Name == module.Name);
+        dto.Id.Should().Be(systemId);
+        dto.Architecture.Should().Be(Architecture.X86Linux);
+        dto.Name.Should().Be("Sys");
+        dto.Modules.Should().ContainSingle(m => m.Enabled && m.Id == system.Modules.Single().Id);
     }
 }

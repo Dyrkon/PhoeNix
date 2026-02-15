@@ -13,4 +13,10 @@
         <PackageReference Include="MudBlazor" Version="7.*"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Reference Include="Microsoft.AspNetCore.Components.WebAssembly">
+            <HintPath>..\..\..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.components.webassembly\8.0.23\lib\net8.0\Microsoft.AspNetCore.Components.WebAssembly.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
 </Project>

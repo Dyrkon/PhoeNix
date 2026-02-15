@@ -24,6 +24,23 @@ public class NixBuildMaterializer : INixBuildMaterializer
             $"}};");
     }
 
+    private Result<ModuleTestBuildResult> BuildModuleTest(Test test, string moduleValuesName = "values")
+    {
+        var inputsLocationPlaceholder = Guid.NewGuid().ToString();
+        var testedModulePathPlaceholder = Guid.NewGuid().ToString();
+        var outputContent = test.VariableNames.Aggregate(test.Content,
+            (current, variableName) => current.Replace(variableName, $"args.{variableName}"));
+        var moduleTestContent =
+            $"{{ inputs, pkgs, ... }}: let\n inherit (pkgs) lib; \n inherit inputs; \n inherit (lib) runTests; \n " +
+            $"testedModule = import {testedModulePathPlaceholder} {{inherit lib inputs pkgs; }}; \n" +
+            $"testResults = lib.runTests {{ {outputContent} }}; \n" +
+            $" args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \n" +
+            $"in\npkgs.runCommand \"{test.Name}\" {{ failures = builtins.toJSON testResults; }} \'\'\nif [ \"$failures\" = \"[]\" ]; " +
+            $"then\n echo \"All tests passed!\";\n touch $out;\nelse\n printf \'%s\' \"$failures\";\n exit 1\nfi\'\'";
+        return new ModuleTestBuildResult(test.Id, moduleTestContent, test.Name, testedModulePathPlaceholder,
+            inputsLocationPlaceholder);
+    }
+
     private Result<ModuleBuildResult> BuildModule(ModuleTemplate moduleTemplate, ModuleValue moduleValue,
         string moduleValuesName = "values")
     {
@@ -41,7 +58,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
         var moduleContent =
             $"{{ inputs, pkgs, lib, system, {config}... }}: let\n args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix; \nin {{ {outputContent} }}";
 
-        var moduleTests = moduleTemplate.Tests.Select(t => t.Build()).ToList();
+        var moduleTests = moduleTemplate.Tests.Select(t => BuildModuleTest(t)).ToList();
         if (moduleTests.Any(i => i.IsFailure))
             return Result.Failure<ModuleBuildResult>(
                 new Error("", $"Failed to build tests for module {moduleTemplate.Name}."));

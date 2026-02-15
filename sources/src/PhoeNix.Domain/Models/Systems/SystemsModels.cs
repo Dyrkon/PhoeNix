@@ -6,13 +6,7 @@ namespace PhoeNix.Domain.Models.Systems;
 
 public record SystemListResponse(
     SystemId Id,
-    string Name,
-    Architecture Architecture
-);
-
-public record SystemResponse(
-    SystemId Id,
-    string Name,
     Architecture Architecture,
-    List<ModuleValueResponse> Modules
+    string Name,
+    List<ModuleValueListResponse> Modules
 );

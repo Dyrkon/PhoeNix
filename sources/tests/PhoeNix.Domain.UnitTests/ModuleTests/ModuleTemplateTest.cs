@@ -14,7 +14,6 @@ public class ModuleTemplateTests
 
     [Theory]
     [InlineData(ModuleType.Generic)]
-    [InlineData(ModuleType.Home)]
     [InlineData(ModuleType.System)]
     public void ModuleTemplate_Should_Create_Successfully(ModuleType moduleType)
     {
@@ -37,7 +36,6 @@ public class ModuleTemplateTests
 
     [Theory]
     [InlineData(ModuleType.Generic)]
-    [InlineData(ModuleType.Home)]
     [InlineData(ModuleType.System)]
     public void ModuleTemplate_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
     {
@@ -54,7 +52,6 @@ public class ModuleTemplateTests
 
     [Theory]
     [InlineData(ModuleType.Generic)]
-    [InlineData(ModuleType.Home)]
     [InlineData(ModuleType.System)]
     public void ModuleTemplate_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
     {
@@ -222,8 +219,7 @@ public class ModuleTemplateTests
 
         result.IsSuccess.Should().BeTrue();
 
-        // Documents current behavior (and likely a bug): AddModuleTest doesn't _tests.Add(...)
-        module.Tests.Should().BeEmpty();
+        module.Tests.Should().HaveCount(1);
     }
 
     // Helpers

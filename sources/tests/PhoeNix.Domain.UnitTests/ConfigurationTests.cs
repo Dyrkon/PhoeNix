@@ -89,9 +89,7 @@ public class ConfigurationTests
         var config = Configuration.Create(_configId, Title, Description).Value;
         config.AddModule(_moduleTemplateId1, true);
 
-        // Configuration.RemoveModule takes ModuleValueId, but the entity compares by template id in places.
-        // This keeps the test resilient to your ID-wrapper design by converting templateId -> Guid -> ModuleValueId.
-        var moduleValueId = new ModuleValueId((Guid)config.Modules.Single().ModuleTemplateId);
+        var moduleValueId = new ModuleValueId((Guid)config.Modules.Single().Id);
 
         var result = config.RemoveModule(moduleValueId);
 

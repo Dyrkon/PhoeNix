@@ -35,7 +35,7 @@ public class UserMappingsTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(user.TemplateId);
+        result.Id.Should().Be(user.Id);
         result.Description.Should().Be(description);
         result.Name.Should().Be(name);
         result.Group.Should().Be(group);

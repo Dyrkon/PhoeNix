@@ -32,18 +32,14 @@ public class ModuleValue : Entity<ModuleValueId>
         return Result.Success();
     }
 
-    public Result ChangeValues(List<EntryValue> entries, string? content = null)
+    public Result ChangeEntry(List<EntryValue> entries, string? content = null)
     {
         if (content != null)
-        {
             foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))
                 return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
-        }
-        else
-        {
+        else if (_editableValues.Count != 0)
             if (entries.Any(entry => _editableValues.First(i => i.Id == entry.Id).Name != entry.Name))
                 return Result.Failure(new Error("", $"Changing module value names requires module template"));
-        }
 
         _editableValues.Clear();
         _editableValues.AddRange(entries);

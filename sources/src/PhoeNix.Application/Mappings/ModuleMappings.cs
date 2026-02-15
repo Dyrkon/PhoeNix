@@ -1,4 +1,3 @@
-using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Models.Modules;
 
@@ -13,7 +12,9 @@ public static class ModuleMappings
 
     public static ModuleTemplateResponse MapModuleToDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleTemplateResponse(moduleTemplate.Id, moduleTemplate.Name,
+        return new ModuleTemplateResponse(
+            moduleTemplate.Id,
+            moduleTemplate.Name,
             moduleTemplate.Type,
             moduleTemplate.Content,
             moduleTemplate.EditableValueTypes.Select(MapEntryValueDefinitionToDto).ToList(),
@@ -25,11 +26,12 @@ public static class ModuleMappings
         return new EntryValueDefinitionResponse(entryValue.Name, entryValue.Placeholder, entryValue.InputType);
     }
 
-
     public static ModuleValueResponse MapModuleValueToDto(ModuleValue moduleValue)
     {
         return new ModuleValueResponse(
-            moduleValue.Id, moduleValue.Enabled, moduleValue.EditableValues.Select(MapEntryValueToDto).ToList());
+            moduleValue.Id,
+            moduleValue.Enabled,
+            moduleValue.EditableValues.Select(MapEntryValueToDto).ToList());
     }
 
     public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)
