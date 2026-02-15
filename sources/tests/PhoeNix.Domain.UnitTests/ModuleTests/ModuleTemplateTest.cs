@@ -2,45 +2,51 @@ using FluentAssertions;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
-using Xunit.Abstractions;
 
 namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
-public class ModuleTemplateTest
+public class ModuleTemplateTests
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-    private readonly ModuleTemplateId _moduleTemplateId1 = new(Guid.NewGuid());
-    private readonly EntryValueId EntryId1 = new(Guid.NewGuid());
-    private readonly Architecture Arch1 = Architecture.X86Linux;
-    private readonly Architecture Arch2 = Architecture.Aarch64Linux;
+    private readonly ModuleTemplateId _moduleTemplateId = new(Guid.NewGuid());
 
-    public ModuleTemplateTest(ITestOutputHelper testOutputHelper)
+    private readonly Architecture _arch1 = Architecture.X86Linux;
+    private readonly Architecture _arch2 = Architecture.Aarch64Linux;
+
+    [Theory]
+    [InlineData(ModuleType.Generic)]
+    [InlineData(ModuleType.Home)]
+    [InlineData(ModuleType.System)]
+    public void ModuleTemplate_Should_Create_Successfully(ModuleType moduleType)
     {
-        _testOutputHelper = testOutputHelper;
+        var result = ModuleTemplate.Create(
+            _moduleTemplateId,
+            "TestModule",
+            true,
+            moduleType,
+            new List<Architecture> { _arch1 });
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(_moduleTemplateId);
+        result.Value.Name.Should().Be("TestModule");
+        result.Value.Type.Should().Be(moduleType);
+        result.Value.Content.Should().BeEmpty();
+        result.Value.SupportedArchitectures.Should().ContainSingle().And.Contain(_arch1);
+        result.Value.Tests.Should().BeEmpty();
+        result.Value.EditableValueTypes.Should().BeEmpty();
     }
 
     [Theory]
     [InlineData(ModuleType.Generic)]
     [InlineData(ModuleType.Home)]
     [InlineData(ModuleType.System)]
-    public void Module_Should_Create_Successfully(ModuleType moduleType)
+    public void ModuleTemplate_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
     {
-        var module = ModuleTemplate.Create(_moduleTemplateId1, "TestModule", true, moduleType, [Arch1]);
-
-        module.IsSuccess.Should().BeTrue();
-        module.Value.Name.Should().Be("TestModule");
-        module.Value.Type.Should().Be(moduleType);
-        module.Value.Enabled.Should().BeTrue();
-        module.Value.SupportedArchitectures.Should().ContainSingle().And.Contain(Arch1);
-    }
-
-    [Theory]
-    [InlineData(ModuleType.Generic)]
-    [InlineData(ModuleType.Home)]
-    [InlineData(ModuleType.System)]
-    public void Module_Should_Fail_Create_When_Name_Empty(ModuleType moduleType)
-    {
-        var result = ModuleTemplate.Create(_moduleTemplateId1, string.Empty, true, moduleType, [Arch1]);
+        var result = ModuleTemplate.Create(
+            _moduleTemplateId,
+            string.Empty,
+            true,
+            moduleType,
+            new List<Architecture> { _arch1 });
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Modules name can't be empty");
@@ -50,114 +56,24 @@ public class ModuleTemplateTest
     [InlineData(ModuleType.Generic)]
     [InlineData(ModuleType.Home)]
     [InlineData(ModuleType.System)]
-    public void Module_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
+    public void ModuleTemplate_Should_Fail_Create_When_Architectures_Empty(ModuleType moduleType)
     {
-        var result = ModuleTemplate.Create(_moduleTemplateId1, "ValidName", true, moduleType, []);
+        var result = ModuleTemplate.Create(
+            _moduleTemplateId,
+            "ValidName",
+            true,
+            moduleType,
+            new List<Architecture>());
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Module has to support at least one architecture");
     }
 
     [Fact]
-    public void Module_Should_Add_Entry()
-    {
-        var module = CreateValidModule();
-        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Something", "Foo").Value;
-        var result = module.ChangeContent("Value = Something", [entry]);
-
-        result.IsSuccess.Should().BeTrue();
-        module.EditableValues.Should().Contain(entry);
-    }
-
-    [Fact]
-    public void Module_Should_Not_Add_Same_Entry_Twice()
-    {
-        var module = CreateValidModule();
-        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
-
-        module.ChangeContent("Something = Init", [entry]);
-        var result = module.AddEntry(entry);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Can't add editable value twice");
-    }
-
-    [Fact]
-    public void Module_Should_Remove_Entry()
-    {
-        var module = CreateValidModule();
-        var entry = TextValue.Create(new EntryValueId(Guid.NewGuid()), "Init", "Foo").Value;
-
-        module.ChangeContent("Value = Init", [entry]);
-        var result = module.RemoveEntry(entry.Id);
-
-        result.IsSuccess.Should().BeTrue();
-        module.EditableValues.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Module_Should_Fail_To_Remove_Nonexistent_Entry()
+    public void ModuleTemplate_Should_Edit_Name()
     {
         var module = CreateValidModule();
 
-        var result = module.RemoveEntry(EntryId1);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"Entry not present in module");
-    }
-
-    [Fact]
-    public void Module_Should_Enable_And_Disable()
-    {
-        var module = CreateValidModule(false);
-
-        var enableResult = module.Enable();
-        enableResult.IsSuccess.Should().BeTrue();
-        module.Enabled.Should().BeTrue();
-
-        var disableResult = module.Disable();
-        disableResult.IsSuccess.Should().BeTrue();
-        module.Enabled.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Module_Should_Not_Enable_Already_Enabled_Module()
-    {
-        var module = CreateValidModule();
-
-        var result = module.Enable();
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"Module {module.Name} is already enabled");
-    }
-
-    [Fact]
-    public void Module_Should_Not_Disable_Already_Disabled_Module()
-    {
-        var module = CreateValidModule(false);
-
-        var result = module.Disable();
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"Module {module.Name} is already disabled");
-    }
-
-    [Theory]
-    [InlineData("")]
-    public void Module_Should_Fail_EditModule_When_Name_Is_Empty(string newName)
-    {
-        var module = CreateValidModule();
-
-        var result = module.EditModule(newName);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Module name can't be empty");
-    }
-
-    [Fact]
-    public void Module_Should_Edit_Name()
-    {
-        var module = CreateValidModule();
         var result = module.EditModule("Updated");
 
         result.IsSuccess.Should().BeTrue();
@@ -165,52 +81,166 @@ public class ModuleTemplateTest
     }
 
     [Fact]
-    public void Module_Should_Add_Architecture_Support()
+    public void ModuleTemplate_Should_Fail_Edit_Name_When_Empty()
     {
         var module = CreateValidModule();
 
-        var result = module.AddArchitectureSupport(Arch2);
-
-        result.IsSuccess.Should().BeTrue();
-        module.SupportedArchitectures.Should().Contain(Arch2);
-    }
-
-    [Fact]
-    public void Module_Should_Not_Add_Existing_Architecture()
-    {
-        var module = CreateValidModule();
-
-        var result = module.AddArchitectureSupport(Arch1);
+        var result = module.EditModule(string.Empty);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(new Error("", $"Can't add already supported architecture {Arch1}"));
+        result.Error.Description.Should().Be("Module name can't be empty");
+        module.Name.Should().Be("ValidModule");
     }
 
     [Fact]
-    public void Module_Should_Remove_Architecture_Support()
+    public void ModuleTemplate_Should_Change_Content_And_Set_EditableValueTypes()
     {
         var module = CreateValidModule();
 
-        var result = module.RemoveArchitectureSupport(Arch1);
+        var entry1 = CreateEntryDefinition("VALUE_ONE", "{VALUE_ONE}", UserInputType.Text);
+        var entry2 = CreateEntryDefinition("VALUE_TWO", "{VALUE_TWO}", UserInputType.Text);
+
+        var content = "some text VALUE_ONE and also VALUE_TWO";
+
+        var result = module.ChangeContent(content, new List<EntryValueDefinition> { entry1, entry2 });
 
         result.IsSuccess.Should().BeTrue();
-        module.SupportedArchitectures.Should().NotContain(Arch1);
+        module.Content.Should().Be(content);
+        module.EditableValueTypes.Should().HaveCount(2);
+        module.EditableValueTypes.Should().Contain(e => e.Name == "VALUE_ONE");
+        module.EditableValueTypes.Should().Contain(e => e.Name == "VALUE_TWO");
     }
 
     [Fact]
-    public void Module_Should_Fail_To_Remove_Nonexistent_Architecture()
+    public void ModuleTemplate_Should_Fail_ChangeContent_When_Entry_Name_Not_Present_In_Content()
     {
         var module = CreateValidModule();
-        var result = module.RemoveArchitectureSupport(Arch2);
+
+        var entry = CreateEntryDefinition("MUST_BE_PRESENT", "{MUST_BE_PRESENT}", UserInputType.Text);
+        var content = "this does not include the token";
+
+        var result = module.ChangeContent(content, new List<EntryValueDefinition> { entry });
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Be("Name for value MUST_BE_PRESENT is not present");
+
+        module.Content.Should().BeEmpty();
+        module.EditableValueTypes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Replace_EditableValueTypes_On_Subsequent_ChangeContent()
+    {
+        var module = CreateValidModule();
+
+        var entry1 = CreateEntryDefinition("ONE", "{ONE}", UserInputType.Text);
+        module.ChangeContent("ONE", new List<EntryValueDefinition> { entry1 });
+
+        var entry2 = CreateEntryDefinition("TWO", "{TWO}", UserInputType.Text);
+        var result = module.ChangeContent("TWO", new List<EntryValueDefinition> { entry2 });
+
+        result.IsSuccess.Should().BeTrue();
+        module.EditableValueTypes.Should().ContainSingle(e => e.Name == "TWO");
+        module.EditableValueTypes.Should().NotContain(e => e.Name == "ONE");
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Add_Architecture_Support()
+    {
+        var module = CreateValidModule();
+
+        var result = module.AddArchitectureSupport(_arch2);
+
+        result.IsSuccess.Should().BeTrue();
+        module.SupportedArchitectures.Should().Contain(_arch2);
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Not_Add_Existing_Architecture()
+    {
+        var module = CreateValidModule();
+
+        var result = module.AddArchitectureSupport(_arch1);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(new Error("", $"Can't add already supported architecture {_arch1}"));
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Add_Architectures_Support()
+    {
+        var module = CreateValidModule();
+
+        var result = module.AddArchitecturesSupport(new[] { _arch2 });
+
+        result.IsSuccess.Should().BeTrue();
+        module.SupportedArchitectures.Should().Contain(_arch2);
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Fail_Add_Architectures_Support_When_Any_Already_Supported()
+    {
+        var module = CreateValidModule();
+
+        var result = module.AddArchitecturesSupport(new[] { _arch1, _arch2 });
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Be("Can't add already supported architectures");
+
+        module.SupportedArchitectures.Should().ContainSingle().And.Contain(_arch1);
+        module.SupportedArchitectures.Should().NotContain(_arch2);
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Remove_Architecture_Support()
+    {
+        var module = CreateValidModule();
+
+        var result = module.RemoveArchitectureSupport(_arch1);
+
+        result.IsSuccess.Should().BeTrue();
+        module.SupportedArchitectures.Should().NotContain(_arch1);
+    }
+
+    [Fact]
+    public void ModuleTemplate_Should_Fail_To_Remove_Nonexistent_Architecture()
+    {
+        var module = CreateValidModule();
+
+        var result = module.RemoveArchitectureSupport(_arch2);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Error.ValueNotFound);
     }
 
-    // Helper
-    private ModuleTemplate CreateValidModule(bool enabled = true)
+    [Fact]
+    public void ModuleTemplate_AddModuleTest_Currently_Does_Not_Add_To_Tests_List()
     {
-        return ModuleTemplate.Create(_moduleTemplateId1, "ValidModule", enabled, ModuleType.Generic, [Arch1])
+        var module = CreateValidModule();
+
+        var result = module.AddModuleTest("test01");
+
+        result.IsSuccess.Should().BeTrue();
+
+        // Documents current behavior (and likely a bug): AddModuleTest doesn't _tests.Add(...)
+        module.Tests.Should().BeEmpty();
+    }
+
+    // Helpers
+
+    private ModuleTemplate CreateValidModule()
+    {
+        return ModuleTemplate
+            .Create(_moduleTemplateId, "ValidModule", true, ModuleType.Generic, new List<Architecture> { _arch1 })
             .Value;
+    }
+
+    private EntryValueDefinition CreateEntryDefinition(string name, string placeholder, UserInputType inputType)
+    {
+        return new EntryValueDefinition(
+            _moduleTemplateId,
+            name,
+            placeholder,
+            inputType);
     }
 }

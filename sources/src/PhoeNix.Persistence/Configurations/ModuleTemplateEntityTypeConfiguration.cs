@@ -15,7 +15,19 @@ public class ModuleTemplateEntityTypeConfiguration : IApplicationEntityTypeConfi
             id => id.Value,
             value => new ModuleTemplateId(value));
 
-        builder.HasMany(m => m.EditableValueTypes)
+        builder.OwnsMany(m => m.EditableValueTypes, b =>
+        {
+            b.WithOwner().HasForeignKey("ModuleTemplateId");
+            b.Property<Guid>("Id");
+            b.HasKey("Id");
+            b.Property(e => e.ModuleTemplateId)
+                .HasConversion(id => id.Value, value => new ModuleTemplateId(value));
+            b.Property(e => e.Name).HasMaxLength(100);
+            b.Property(e => e.Placeholder).HasMaxLength(100);
+            b.Property(e => e.InputType);
+        });
+
+        builder.HasMany(m => m.Tests)
             .WithOne()
             .HasForeignKey(m => m.ModuleTemplateId)
             .OnDelete(DeleteBehavior.Cascade);

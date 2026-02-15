@@ -10,8 +10,8 @@ internal sealed class UserRepository : RepositoryBase<User, UserId>, IUserReposi
     {
     }
 
-    public Task<User?> GetByNameAsync(string name, CancellationToken token)
+    public async Task<User?> GetByNameAsync(string name, CancellationToken token)
     {
-        return DbContext.Users.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+        return await DbContext.Users.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
     }
 }

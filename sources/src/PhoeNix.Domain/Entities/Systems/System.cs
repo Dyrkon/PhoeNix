@@ -10,7 +10,7 @@ namespace PhoeNix.Domain.Entities.Systems;
 public class System : Entity<SystemId>
 {
     private readonly List<ModuleValue> _modules = new();
-    public ConfigurationId ConfigurationId;
+    public ConfigurationId ConfigurationId { get; private set; }
 
     public Architecture Architecture { get; private set; }
 
@@ -56,21 +56,5 @@ public class System : Entity<SystemId>
     public static Result<System> Create(SystemId id, Architecture architecture, string name)
     {
         return new System(id) { Architecture = architecture, Name = name };
-    }
-
-    public Result<SystemBuildResult> Build(List<ModuleTemplate> moduleTemplates)
-    {
-        var modules = Modules.Select(m => m.Build(moduleTemplates.First(i => i.Id == m.ModuleTemplateId)));
-        if (modules.Any(m => m.IsFailure))
-            return Result.Failure<SystemBuildResult>(new Error("", $"Failed to build module/s for system {Name}"));
-
-        var moduleResults = modules.Select(m => m.Value);
-        var modulesListPlaceholder = Guid.NewGuid().ToString();
-        // TODO Can't use lib.nixosSystem for darwin
-        var systemContent =
-            $"{{ inputs, lib, sharedModules }}:\ninputs.nixpkgs.lib.nixosSystem {{ specialArgs = {{ inherit inputs; }}; system = \"{Architecture.ToArchitectureString()}\"; modules = sharedModules ++ [ {modulesListPlaceholder} ]; }}";
-
-        return new SystemBuildResult(Id, Name, Architecture, systemContent, moduleResults,
-            modulesListPlaceholder);
     }
 }

@@ -16,7 +16,7 @@ public static class DependencyInjection
         services.AddSingleton<INixTestRunner, NixTestRunner>();
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
-        services.AddSingleton<INixBuildMaterializer, NixBuildMaterializer>();
+        services.AddScoped<INixBuildMaterializer, NixBuildMaterializer>();
 
         return services;
     }

@@ -1,10 +1,7 @@
 using FluentAssertions;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
@@ -12,66 +9,49 @@ namespace PhoeNix.Application.UnitTests;
 public class ConfigurationMappingsTests
 {
     [Fact]
-    public void MapFlakeToListDto_Should_Map_Correctly()
+    public void MapConfigurationToListDto_Should_Map_Correctly()
     {
         var id = new ConfigurationId(Guid.NewGuid());
         var config = Configuration.Create(id, "Config A", "Description").Value;
 
         var dto = ConfigurationMappings.MapConfigurationToListDto(config);
 
-        dto.Id.Should().Be(config.TemplateId);
+        dto.Id.Should().Be(config.Id);
         dto.Title.Should().Be("Config A");
         dto.Description.Should().Be("Description");
     }
 
     [Fact]
-    public void MapFlakeToDto_Should_Map_Full_Configuration()
+    public void MapConfigurationToDto_Should_Map_Full_Configuration()
     {
         var id = new ConfigurationId(Guid.NewGuid());
         var config = Configuration.Create(id, "Full Config", "Detailed description").Value;
 
-        var module = ModuleTemplate.Create(new ModuleTemplateId(Guid.NewGuid()), "mod", true, ModuleType.System,
-            [Architecture.X86Linux]).Value;
-        var system = PhoeNix.Domain.Entities.Systems.System
-            .Create(new SystemId(Guid.NewGuid()), Architecture.X86Linux, "Name").Value;
-        var input = Input.Create(new InputId(Guid.NewGuid()), "github:nixos", "nixpkgs").Value;
+        // Input (new signature requires configurationId)
+        var inputResult = config.AddInput("github:nixos", "nixpkgs");
+        inputResult.IsSuccess.Should().BeTrue();
 
-        var userId = new UserId(Guid.NewGuid());
+        // ModuleValue list is created through Configuration.AddModule(moduleTemplateId, enabled)
+        var moduleTemplateId = new ModuleTemplateId(Guid.NewGuid());
+        var addModule = config.AddModule(moduleTemplateId, true);
+        addModule.IsSuccess.Should().BeTrue();
 
-        config.AddInput(input.TemplateId);
-        config.AddModule(module.TemplateId);
-        config.AddSystem(system.TemplateId);
-
-        var cm = ModuleValue
-            .Create(new ModuleValueId(Guid.NewGuid()), config.TemplateId, module.TemplateId).Value;
-        typeof(ModuleValue).GetProperty(nameof(ModuleValue.Module))!.SetValue(cm, module);
-
-        var cs = ConfigurationSystem
-            .Create(new ConfigurationSystemId(Guid.NewGuid()), config.TemplateId, system.TemplateId).Value;
-        cs.SetSystem(system);
-
-        var ci = ConfigurationInput
-            .Create(new ConfigurationInputId(Guid.NewGuid()), config.TemplateId, input.TemplateId).Value;
-        ci.SetInput(input);
-
-        SetPrivateField(config, "_modules", [cm]);
-        SetPrivateField(config, "_systems", [cs]);
-        SetPrivateField(config, "_inputs", [ci]);
+        // System list is created through Configuration.AddSystem(systemId, architecture, name)
+        var systemId = new Domain.Entities.Systems.SystemId(Guid.NewGuid());
+        var addSystem = config.AddSystem(systemId, Architecture.X86Linux, "Name");
+        addSystem.IsSuccess.Should().BeTrue();
 
         var dto = ConfigurationMappings.MapConfigurationToDto(config);
 
+        dto.Id.Should().Be(config.Id);
         dto.Title.Should().Be("Full Config");
-        dto.Inputs.Should().ContainSingle(i => i.Name == input.Name);
-        dto.Modules.Should().ContainSingle(m => m.Name == module.Name);
-        dto.Systems.Should().ContainSingle(s => s.Id == system.TemplateId);
-        dto.SupportedArchitectures.Should().Contain(Architecture.X86Linux);
-    }
+        dto.Description.Should().Be("Detailed description");
 
+        dto.Inputs.Should().ContainSingle(i => i.Name == "nixpkgs" && i.Source == "github:nixos");
+        dto.Modules.Should().ContainSingle(m => m.ModuleTemplateId == moduleTemplateId);
+        dto.Systems.Should().ContainSingle(s => s.Id == systemId && s.Architecture == Architecture.X86Linux);
 
-    private static void SetPrivateField<T>(Configuration config, string fieldName, List<T> value)
-    {
-        typeof(Configuration)
-            .GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .SetValue(config, value);
+        // SupportedArchitectures comes from SupportedSystemArchitectures()
+        dto.SupportedArchitectures.Should().ContainSingle().And.Contain(Architecture.X86Linux);
     }
 }

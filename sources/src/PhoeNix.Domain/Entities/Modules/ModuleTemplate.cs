@@ -11,7 +11,7 @@ public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     private readonly List<Test> _tests = new();
     private readonly List<EntryValueDefinition> _editableValueTypes = new();
 
-    private ModuleTemplate(ModuleTemplateId templateId) : base(templateId)
+    private ModuleTemplate(ModuleTemplateId id) : base(id)
     {
     }
 
@@ -74,8 +74,10 @@ public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         if (_tests.Any(h => h.Name == name))
             return Result.Failure(new Error("", $"Module {name} has with the name {name} already"));
 
-        return Test.Create(new TestId(Guid.NewGuid()), name);
+        return Test.Create(new TestId(Guid.NewGuid()), name)
+            .Tap(t => _tests.Add(t));
     }
+
 
     public Result ChangeModuleTest(TestId testId, string newContent, List<string> variableNames)
     {

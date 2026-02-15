@@ -12,8 +12,7 @@ public interface IApplicationDbContext
     DbSet<Configuration> Configurations { get; }
     DbSet<Domain.Entities.Systems.System> Systems { get; }
     DbSet<User> Users { get; }
-    DbSet<ModuleTemplate> Modules { get; }
+    DbSet<ModuleTemplate> ModuleTemplates { get; }
     DbSet<Test> Tests { get; }
-    DbSet<ConfigurationSystem> ConfigurationSystems { get; }
     DbSet<ModuleValue> ConfigurationModules { get; }
 }

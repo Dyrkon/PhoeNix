@@ -21,7 +21,7 @@ public record ValidateModuleQuery(
 internal sealed class ValidateModuleQueryHandler(
     INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
-    IModuleRepository moduleRepository,
+    IModuleTemplateRepository moduleTemplateRepository,
     IFileSystemService fileSystemService) : IQueryHandler<ValidateModuleQuery, List<ModuleTestResponse>>
 {
     public async Task<Result<List<ModuleTestResponse>>> Handle(ValidateModuleQuery query, CancellationToken ct)
@@ -33,7 +33,7 @@ internal sealed class ValidateModuleQueryHandler(
         if (configResult.IsFailure)
             return Result.Failure<List<ModuleTestResponse>>(configResult.Error);
 
-        var moduleResult = await moduleRepository
+        var moduleResult = await moduleTemplateRepository
             .GetByIdAsync(query.ModuleTemplateId, ct)
             .EnsureNotNull(new Error("ModuleNotFound", $"Module {query.ModuleTemplateId} not found!"));
 

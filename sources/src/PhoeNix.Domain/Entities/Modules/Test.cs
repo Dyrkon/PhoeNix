@@ -7,7 +7,7 @@ public class Test : Entity<TestId>
 {
     private readonly List<string> _variableNames = [];
 
-    public ModuleTemplateId TemplateId { get; init; }
+    public ModuleTemplateId ModuleTemplateId { get; init; }
 
     private Test(TestId id) : base(id)
     {

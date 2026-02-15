@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -10,21 +11,36 @@ public class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfigur
 {
     public void Configure(EntityTypeBuilder<ModuleValue> builder)
     {
-        builder.HasKey(c => c.Id);
+        builder.HasKey(mv => mv.Id);
 
-        builder.Property(c => c.Id).HasConversion(
-            id => id.Value,
-            value => new ModuleValueId(value));
+        builder.Property(mv => mv.Id)
+            .HasConversion(
+                id => id.Value,
+                value => new ModuleValueId(value));
 
-        builder.Property(c => c.ModuleTemplateId).HasConversion(
-            id => id.Value, value => new ModuleTemplateId(value));
+        builder.Property(mv => mv.ModuleTemplateId)
+            .HasConversion(
+                id => id.Value,
+                value => new ModuleTemplateId(value));
 
-        builder.Property(c => c.ConfigurationId).HasConversion(
-            id => id.Value, value => new ConfigurationId(value));
+        builder.Property<ConfigurationId?>("ConfigurationId")
+            .HasConversion(
+                id => id == null ? (Guid?)null : id.Value,
+                value => value == null ? null : new ConfigurationId(value.Value));
 
-        builder.HasMany(m => m.EditableValues)
+        builder.Property<SystemId?>("SystemId")
+            .HasConversion(
+                id => id == null ? (Guid?)null : id.Value,
+                value => value == null ? null : new SystemId(value.Value));
+
+        builder.HasIndex("ConfigurationId");
+        builder.HasIndex("SystemId");
+
+        builder.HasMany(mv => mv.EditableValues)
             .WithOne()
-            .HasForeignKey(m => m.ModuleValueId)
+            .HasForeignKey(e => e.ModuleValueId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(mv => mv.EditableValues).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

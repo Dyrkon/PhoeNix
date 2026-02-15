@@ -6,5 +6,5 @@ namespace PhoeNix.Application.Abstractions.Nix;
 
 public interface IConfigurationFilesBuilder
 {
-    public Result<Folder> BuildConfiguration(ConfigurationBuildResult configurationBuild);
+    public Result<Folder> BuildConfigurationFiles(ConfigurationBuildResult configurationBuild);
 }

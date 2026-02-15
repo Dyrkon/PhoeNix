@@ -7,80 +7,134 @@ namespace PhoeNix.Domain.UnitTests;
 
 public class SystemTests
 {
-    private readonly SystemId systemId = new(Guid.NewGuid());
+    private readonly SystemId _systemId = new(Guid.NewGuid());
+
     private readonly ModuleTemplateId _moduleTemplateId1 = new(Guid.NewGuid());
     private readonly ModuleTemplateId _moduleTemplateId2 = new(Guid.NewGuid());
-    private readonly string name1 = "Some name 1";
-    private readonly string name2 = "Some name 2";
-    private readonly Architecture compatibleArch = Architecture.X86Linux;
-    private readonly Architecture incompatibleArch = Architecture.Aarch64Darwin;
+
+    private const string Name1 = "Some name 1";
+    private const string Name2 = "Some name 2";
+
+    private readonly Architecture _compatibleArch = Architecture.X86Linux;
+    private readonly Architecture _incompatibleArch = Architecture.Aarch64Darwin;
 
     [Fact]
     public void System_Should_Create_Successfully()
     {
-        var result = Entities.Systems.System.Create(systemId, compatibleArch, name1);
+        var result = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Architecture.Should().Be(compatibleArch);
+        result.Value.Id.Should().Be(_systemId);
+        result.Value.Architecture.Should().Be(_compatibleArch);
+        result.Value.Name.Should().Be(Name1);
         result.Value.Modules.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void System_Should_Add_Compatible_Module()
-    {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
-        var module = CreateModuleWithArch(_moduleTemplateId1, compatibleArch);
-
-        var result = system.AddModule(module);
-
-        result.IsSuccess.Should().BeTrue();
-        system.Modules.Should().ContainSingle(m => m.ModuleTemplateId == _moduleTemplateId1);
     }
 
     [Fact]
     public void System_Should_Change_Name()
     {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
 
-        var result = system.ChangeName(name2);
+        var result = system.ChangeName(Name2);
 
         result.IsSuccess.Should().BeTrue();
-        system.Name.Should().Be(name2);
+        system.Name.Should().Be(Name2);
+    }
+
+    [Fact]
+    public void System_Should_Fail_To_Change_Name_When_Empty()
+    {
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
+
+        var result = system.ChangeName(string.Empty);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Be("System name can't be empty");
+        system.Name.Should().Be(Name1);
+    }
+
+    [Fact]
+    public void System_Should_Add_Compatible_Module()
+    {
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
+
+        var result = system.AddModule(
+            _moduleTemplateId1,
+            new List<Architecture> { _compatibleArch },
+            true);
+
+        result.IsSuccess.Should().BeTrue();
+        system.Modules.Should().ContainSingle(m => m.ModuleTemplateId == _moduleTemplateId1);
+
+        var added = system.Modules.Single(m => m.ModuleTemplateId == _moduleTemplateId1);
+        added.Enabled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void System_Should_Add_Module_Disabled_When_Requested()
+    {
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
+
+        var result = system.AddModule(
+            _moduleTemplateId1,
+            new List<Architecture> { _compatibleArch },
+            false);
+
+        result.IsSuccess.Should().BeTrue();
+        system.Modules.Should().ContainSingle(m => m.ModuleTemplateId == _moduleTemplateId1);
+
+        var added = system.Modules.Single(m => m.ModuleTemplateId == _moduleTemplateId1);
+        added.Enabled.Should().BeFalse();
     }
 
     [Fact]
     public void System_Should_Fail_To_Add_Module_Twice()
     {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
-        var module = CreateModuleWithArch(_moduleTemplateId1, compatibleArch);
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
 
-        system.AddModule(module);
-        var result = system.AddModule(module);
+        system.AddModule(
+            _moduleTemplateId1,
+            new List<Architecture> { _compatibleArch },
+            true);
+
+        var result = system.AddModule(
+            _moduleTemplateId1,
+            new List<Architecture> { _compatibleArch },
+            true);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("This module has been added to this system already");
+        system.Modules.Should().ContainSingle(m => m.ModuleTemplateId == _moduleTemplateId1);
     }
 
     [Fact]
     public void System_Should_Fail_To_Add_Incompatible_Module()
     {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
-        var incompatibleModule = CreateModuleWithArch(_moduleTemplateId2, incompatibleArch);
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
 
-        var result = system.AddModule(incompatibleModule);
+        var result = system.AddModule(
+            _moduleTemplateId2,
+            new List<Architecture> { _incompatibleArch },
+            true);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"This module doesn't support system architecture {compatibleArch}");
+        result.Error.Description.Should().Be($"This module doesn't support system architecture {_compatibleArch}");
+        system.Modules.Should().BeEmpty();
     }
 
     [Fact]
-    public void System_Should_Remove_Module()
+    public void System_Should_Remove_Module_By_ModuleValueId()
     {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
-        var module = CreateModuleWithArch(_moduleTemplateId1, compatibleArch);
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
 
-        system.AddModule(module);
-        var result = system.RemoveModule(_moduleTemplateId1);
+        system.AddModule(
+            _moduleTemplateId1,
+            new List<Architecture> { _compatibleArch },
+            true);
+
+        var moduleValueId = system.Modules.Single(m => m.ModuleTemplateId == _moduleTemplateId1).Id;
+
+        var result = system.RemoveModule(moduleValueId);
 
         result.IsSuccess.Should().BeTrue();
         system.Modules.Should().BeEmpty();
@@ -89,17 +143,12 @@ public class SystemTests
     [Fact]
     public void System_Should_Fail_To_Remove_Nonexistent_Module()
     {
-        var system = Entities.Systems.System.Create(systemId, compatibleArch, name1).Value;
+        var system = Entities.Systems.System.Create(_systemId, _compatibleArch, Name1).Value;
 
-        var result = system.RemoveModule(_moduleTemplateId1);
+        var result = system.RemoveModule(new ModuleValueId(Guid.NewGuid()));
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"There is no module with id {_moduleTemplateId1} in this system");
-    }
-
-    // Helper
-    private ModuleTemplate CreateModuleWithArch(ModuleTemplateId templateId, Architecture architecture)
-    {
-        return ModuleTemplate.Create(templateId, "TestModule", true, ModuleType.Generic, [architecture]).Value;
+        result.Error.Description.Should().Contain("There is no module with id");
+        result.Error.Description.Should().Contain("in this system");
     }
 }

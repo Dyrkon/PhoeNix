@@ -1,6 +1,5 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
@@ -13,142 +12,154 @@ namespace PhoeNix.Application.Configurations.Commands;
 public record AddConfigurationCommand(string Name, string Description) : ICommand<string>;
 
 internal sealed class AddConfigurationCommandHandler(
-    IModuleRepository moduleRepository,
-    ISystemRepository systemRepository,
-    ITestRepository testRepository,
-    IConfigurationRepository configurationRepository) : ICommandHandler<AddConfigurationCommand, string>
+    IModuleTemplateRepository moduleTemplateRepository,
+    IConfigurationRepository configurationRepository
+) : ICommandHandler<AddConfigurationCommand, string>
 {
     public Task<Result<string>> Handle(AddConfigurationCommand request, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"Name: {request.Name}, Description: {request.Description}");
-
         var configurationId = new ConfigurationId(new Guid("7e85a62f-ad28-484d-93fd-dc52af305d53"));
-
-        var nixpkgsInputId = new InputId(Guid.NewGuid());
-        var testInputId = new InputId(Guid.NewGuid());
-
-        var sharedModuleId = new ModuleTemplateId(Guid.NewGuid());
-        var systemModuleId = new ModuleTemplateId(Guid.NewGuid());
+        var sharedTemplateId = new ModuleTemplateId(Guid.NewGuid());
+        var systemTemplateId = new ModuleTemplateId(Guid.NewGuid());
+        var diskoTemplateId = new ModuleTemplateId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
+        var vmDiskoSysId = new SystemId(Guid.NewGuid());
 
-        var diskoSystemModuleId = new ModuleTemplateId(Guid.NewGuid());
-        var vmDiskoSystemId = new SystemId(Guid.NewGuid());
+        const string pEnableSteam = "One";
+        const string pOpenFirewall = "Two";
+        const string pIsContainer = "Three";
+        const string pStateVersion = "Four";
+        const string pDiskDevice = "DiskDevice";
+        const string pVmStateVersion = "VmStateVersion";
 
-        var placeholder1 = "One";
-        var placeholder2 = "Two";
-        var placeholder3 = "Three";
-        var placeholder4 = "Four";
+        var sharedDefs = new List<EntryValueDefinition>
+        {
+            new(sharedTemplateId, pEnableSteam, pEnableSteam, UserInputType.Text),
+            new(sharedTemplateId, pOpenFirewall, pOpenFirewall, UserInputType.Text)
+        };
 
-        var textValue1 = TextValue.Create(new EntryValueId(Guid.NewGuid()), placeholder1, "true").Value;
-        var textValue2 = TextValue.Create(new EntryValueId(Guid.NewGuid()), placeholder2, "true").Value;
-        var valIsContainer = TextValue.Create(new EntryValueId(Guid.NewGuid()), placeholder3, "true").Value;
-        var valStateVersion = TextValue.Create(new EntryValueId(Guid.NewGuid()), placeholder4, "\"25.11\"").Value;
+        var systemDefs = new List<EntryValueDefinition>
+        {
+            new(systemTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text),
+            new(systemTemplateId, pIsContainer, pIsContainer, UserInputType.Text),
+            new(systemTemplateId, pStateVersion, pStateVersion, UserInputType.Text)
+        };
 
-        var placeholderDiskDevice = "DiskDevice";
-        var placeholderVmStateVersion = "VmStateVersion";
+        var diskoDefs = new List<EntryValueDefinition>
+        {
+            new(diskoTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text),
+            new(diskoTemplateId, pVmStateVersion, pVmStateVersion, UserInputType.Text)
+        };
 
-        var diskDevice = TextValue.Create(
-            new EntryValueId(Guid.NewGuid()),
-            placeholderDiskDevice,
-            "[\"/foo/bar\"]"
-        ).Value;
-
-        var valDiskDevice = TextValue.Create(
-            new EntryValueId(Guid.NewGuid()),
-            placeholderDiskDevice,
-            "\"/dev/vda\""
-        ).Value;
-
-        var valVmStateVersion = TextValue.Create(
-            new EntryValueId(Guid.NewGuid()),
-            placeholderVmStateVersion,
-            "\"25.11\""
-        ).Value;
-
-        var sharedModule = ModuleTemplate.Create(sharedModuleId, "SharedModule", true, ModuleType.Generic,
+        var sharedTemplate = ModuleTemplate.Create(sharedTemplateId, "SharedModule", true, ModuleType.Generic,
                 [Architecture.X86Linux])
-            .Tap(m => m.ChangeContent(
-                $"nixpkgs.config.allowUnfree = true;\n" +
-                $"programs.steam = {{\n" +
-                $"  enable = {placeholder1};\n" +
-                $"  remotePlay.openFirewall = true;\n" +
-                $"  dedicatedServer.openFirewall = {placeholder2};\n" +
-                $"}};",
-                [textValue1, textValue2]
-            )).Value;
+            .Tap(t => t.ChangeContent(
+                "nixpkgs.config.allowUnfree = true;\n" +
+                "programs.steam = {\n" +
+                $"  enable = {pEnableSteam};\n" +
+                "  remotePlay.openFirewall = true;\n" +
+                $"  dedicatedServer.openFirewall = {pOpenFirewall};\n" +
+                "};",
+                sharedDefs))
+            .Value;
 
-        var systemModule = ModuleTemplate.Create(systemModuleId, "SystemModule", true, ModuleType.System,
+        var systemTemplate = ModuleTemplate.Create(systemTemplateId, "SystemModule", true, ModuleType.System,
                 [Architecture.X86Linux])
-            .Tap(m => m.ChangeContent(
+            .Tap(t => t.ChangeContent(
                 "boot.loader.grub.enable = true;\n" +
-                $"boot.loader.grub.devices = {placeholderDiskDevice};\n" +
-                $"boot.isContainer = {placeholder3};\n" +
-                $"system.stateVersion = {placeholder4};\n" +
-                $"networking.hostName = \"test-container\";",
-                [diskDevice, valIsContainer, valStateVersion]
-            )).Value;
+                $"boot.loader.grub.devices = {pDiskDevice};\n" +
+                $"boot.isContainer = {pIsContainer};\n" +
+                $"system.stateVersion = {pStateVersion};\n" +
+                "networking.hostName = \"test-container\";",
+                systemDefs))
+            .Value;
 
-        var diskoSystemModule = ModuleTemplate.Create(diskoSystemModuleId, "DiskoSystemModule", true, ModuleType.System,
+        var diskoTemplate = ModuleTemplate.Create(diskoTemplateId, "DiskoSystemModule", true, ModuleType.System,
                 [Architecture.X86Linux])
-            .Tap(m => m.ChangeContent(
+            .Tap(t => t.ChangeContent(
                 "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
-                $"system.stateVersion = {placeholderVmStateVersion};\n" +
+                $"system.stateVersion = {pVmStateVersion};\n" +
                 "networking.hostName = \"vm-disko-test\";\n\n" +
                 "disko.devices.disk.main = {\n" +
-                "type = \"disk\";\n" +
-                $"device = {placeholderDiskDevice};\n" +
-                "content = {\n" +
-                "type = \"gpt\";\n" +
-                "partitions = {\n" +
-                "biosBoot = {\n" +
-                "size = \"1M\";\n" +
-                "type = \"EF02\";\n" +
-                "};\n\n" +
-                "root = {\n" +
-                "size = \"100%\";\n" +
-                "content = {\n" +
-                "type = \"filesystem\";\n" +
-                "format = \"ext4\";\n" +
-                "mountpoint = \"/\";\n" +
-                "};\n};\n};\n};\n};",
-                [valDiskDevice, valVmStateVersion]
-            )).Value;
-
-        var sysModuleTest = Test.Create(new TestId(Guid.NewGuid()), "SysModuleTest").Value;
-        var shareModuleTest = Test.Create(new TestId(Guid.NewGuid()), "SharedModuleTest").Value;
-        var diskoModuleTest = Test.Create(new TestId(Guid.NewGuid()), "DiskoSystemModuleTest").Value;
-
-        sharedModule.AddModuleTest(shareModuleTest.TemplateId);
-        systemModule.AddModuleTest(sysModuleTest.TemplateId);
-        diskoSystemModule.AddModuleTest(diskoModuleTest.TemplateId);
-
-        testRepository.Add(sysModuleTest);
-        testRepository.Add(shareModuleTest);
-        testRepository.Add(diskoModuleTest);
-
-        moduleRepository.Add(sharedModule);
-        moduleRepository.Add(systemModule);
-        moduleRepository.Add(diskoSystemModule);
-
-        var system = Domain.Entities.Systems.System.Create(systemId, Architecture.X86Linux, "TestSystem").Value;
-        system.AddModule(systemModule);
-        systemRepository.Add(system);
-
-        var vmDiskoSystem = Domain.Entities.Systems.System
-            .Create(vmDiskoSystemId, Architecture.X86Linux, "VmDiskoSystem")
+                "  type = \"disk\";\n" +
+                $"  device = {pDiskDevice};\n" +
+                "  content = {\n" +
+                "    type = \"gpt\";\n" +
+                "    partitions = {\n" +
+                "      biosBoot = { size = \"1M\"; type = \"EF02\"; };\n" +
+                "      root = {\n" +
+                "        size = \"100%\";\n" +
+                "        content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; };\n" +
+                "      };\n" +
+                "    };\n" +
+                "  };\n" +
+                "};",
+                diskoDefs))
             .Value;
-        vmDiskoSystem.AddModule(diskoSystemModule);
-        systemRepository.Add(vmDiskoSystem);
 
-        return Task.FromResult(Configuration
-            .Create(configurationId, "ExampleConfiguration", "Example configuration flake")
-            .Tap(configuration => configuration.AddInput("github:NixOS/nixpkgs/nixos-unstable", "nixpkgs")
-                .Tap(i => configuration.AddInput("github:snowfallorg/flake", "snowfall")
-                    .Tap(iS => configuration.AddInputFollow(iS.Id, i.Name, i.Name))))
-            .Tap(configuration => configuration.AddSystem(systemId))
-            .Tap(configuration => configuration.AddSystem(vmDiskoSystemId))
-            .Tap(configuration => configuration.AddModule(sharedModuleId))
-            .Tap(configurationRepository.Add)
-            .Bind(conf => Result.Success(conf.TemplateId.Value.ToString())));
+        moduleTemplateRepository.Add(sharedTemplate);
+        moduleTemplateRepository.Add(systemTemplate);
+        moduleTemplateRepository.Add(diskoTemplate);
+
+        var result =
+            Configuration.Create(configurationId, request.Name, request.Description)
+                .Tap(cfg =>
+                    cfg.AddInput("github:NixOS/nixpkgs/nixos-unstable", "nixpkgs")
+                        .Tap(nixpkgs =>
+                            cfg.AddInput("github:snowfallorg/flake", "snowfall")
+                                .Tap(snowfall => cfg.AddInputFollow(snowfall.Id, nixpkgs.Name, nixpkgs.Name))
+                        )
+                )
+                .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "TestSystem"))
+                .Tap(cfg => cfg.AddSystem(vmDiskoSysId, Architecture.X86Linux, "VmDiskoSystem"))
+                .Tap(cfg => cfg.AddModule(sharedTemplateId, true))
+                .Tap(cfg => cfg.AddSystemModule(systemId, systemTemplateId, true))
+                .Tap(cfg => cfg.AddSystemModule(vmDiskoSysId, diskoTemplateId, true))
+                .Tap(cfg =>
+                {
+                    var sharedMv = cfg.Modules.First(m => m.ModuleTemplateId == sharedTemplateId);
+                    sharedMv.ChangeValues(
+                        new List<EntryValue>
+                        {
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "true", pEnableSteam, pEnableSteam)
+                                .Value,
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "true", pOpenFirewall, pOpenFirewall)
+                                .Value
+                        },
+                        sharedTemplate.Content
+                    );
+
+                    var sys = cfg.SystemSpecifications.First(s => s.Id == systemId);
+                    var sysMv = sys.Modules.First(m => m.ModuleTemplateId == systemTemplateId);
+                    sysMv.ChangeValues(
+                        new List<EntryValue>
+                        {
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "[\"/foo/bar\"]", pDiskDevice,
+                                pDiskDevice).Value,
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "true", pIsContainer, pIsContainer)
+                                .Value,
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "\"25.11\"", pStateVersion,
+                                pStateVersion).Value
+                        },
+                        systemTemplate.Content
+                    );
+
+                    var vm = cfg.SystemSpecifications.First(s => s.Id == vmDiskoSysId);
+                    var diskoMv = vm.Modules.First(m => m.ModuleTemplateId == diskoTemplateId);
+                    diskoMv.ChangeValues(
+                        new List<EntryValue>
+                        {
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "\"/dev/vda\"", pDiskDevice, pDiskDevice)
+                                .Value,
+                            TextValue.Create(new EntryValueId(Guid.NewGuid()), "\"25.11\"", pVmStateVersion,
+                                pVmStateVersion).Value
+                        },
+                        diskoTemplate.Content
+                    );
+                })
+                .Tap(configurationRepository.Add)
+                .Bind(cfg => Result.Success(cfg.Id.Value.ToString()));
+
+        return Task.FromResult(result);
     }
 }

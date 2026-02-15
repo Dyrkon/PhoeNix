@@ -92,6 +92,7 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
         var rootPath = GetRootFolder().Value;
         return CheckAndRemoveDirectory(rootPath)
             .Bind(path => WriteFolderStructure(path, configurationFolder))
+            // TODO formatter error not propagated
             .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}", cancellationToken));
     }
 }
