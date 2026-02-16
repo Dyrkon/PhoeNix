@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Modules.Queries;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
@@ -23,13 +24,25 @@ public class ModulesModule : CarterModule
                 ValidateModule)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+        app.MapPost("/create", CreateModuleTemplate)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private async Task<IResult> ValidateModule(Guid configurationId, Guid moduleId, int architecture, ISender sender,
         CancellationToken cancellationToken)
     {
-        var query = new ValidateModuleQuery(new ConfigurationId(configurationId), new ModuleId(moduleId),
+        var query = new ValidateModuleQuery(new ConfigurationId(configurationId), new ModuleTemplateId(moduleId),
             (Architecture)architecture);
+        var result = await sender.Send(query, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> CreateModuleTemplate(string name, bool enabled, ModuleType moduleType,
+        List<Architecture> architectures, ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var query = new AddModuleTemplateCommand(name, enabled, moduleType, architectures);
         var result = await sender.Send(query, cancellationToken);
         return result.AsHttpResult();
     }

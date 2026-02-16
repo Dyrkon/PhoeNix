@@ -5,19 +5,42 @@ namespace PhoeNix.Application.Mappings;
 
 public static class ModuleMappings
 {
-    public static ModuleListResponse MapModuleToListDto(Module module)
+    public static ModuleTemplateListResponse MapModuleToListDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleListResponse(module.Id, module.Name, module.Enabled, module.Type);
+        return new ModuleTemplateListResponse(moduleTemplate.Id, moduleTemplate.Name, moduleTemplate.Type);
     }
 
-    public static ModuleResponse MapModuleToDto(Module module)
+    public static ModuleTemplateResponse MapModuleToDto(ModuleTemplate moduleTemplate)
     {
-        return new ModuleResponse(module.Id, module.Name, module.Enabled, module.Type, module.Content,
-            module.EditableValues.Select(MapEntryValueToDto).ToList(), module.SupportedArchitectures.ToList());
+        return new ModuleTemplateResponse(
+            moduleTemplate.Id,
+            moduleTemplate.Name,
+            moduleTemplate.Type,
+            moduleTemplate.Content,
+            moduleTemplate.EditableValueTypes.Select(MapEntryValueDefinitionToDto).ToList(),
+            moduleTemplate.SupportedArchitectures.ToList());
+    }
+
+    public static EntryValueDefinitionResponse MapEntryValueDefinitionToDto(EntryValueDefinition entryValue)
+    {
+        return new EntryValueDefinitionResponse(entryValue.Name, entryValue.Placeholder, entryValue.InputType);
+    }
+
+    public static ModuleValueResponse MapModuleValueToDto(ModuleValue moduleValue)
+    {
+        return new ModuleValueResponse(
+            moduleValue.Id,
+            moduleValue.Enabled,
+            moduleValue.EditableValues.Select(MapEntryValueToDto).ToList());
     }
 
     public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)
     {
-        return new EntryValueResponse(entryValue.Id, entryValue.Name, entryValue.Placeholder, entryValue.Value);
+        return new EntryValueResponse(entryValue.Name, entryValue.Placeholder, entryValue.Value);
+    }
+
+    public static ModuleValueListResponse MapModuleValueToListDto(ModuleValue moduleValue)
+    {
+        return new ModuleValueListResponse(moduleValue.Id, moduleValue.Enabled);
     }
 }

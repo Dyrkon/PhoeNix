@@ -3,26 +3,40 @@ using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.Models.Modules;
 
-public record ModuleListResponse(
-    ModuleId Id,
+public record ModuleTemplateListResponse(
+    ModuleTemplateId Id,
     string Name,
-    bool Enabled,
     ModuleType Type
 );
 
-public record ModuleResponse(
-    ModuleId Id,
+public record EntryValueDefinitionResponse(
     string Name,
-    bool Enabled,
+    string Placeholder,
+    UserInputType InputType
+);
+
+public record ModuleTemplateResponse(
+    ModuleTemplateId Id,
+    string Name,
     ModuleType Type,
     string Content,
-    List<EntryValueResponse> EntryValues,
+    List<EntryValueDefinitionResponse> EditableValueTypes,
     List<Architecture> SupportedArchitectures
 );
 
 public record EntryValueResponse(
-    EntryValueId Id,
     string Name,
     string Placeholder,
     string Value
+);
+
+public record ModuleValueResponse(
+    ModuleValueId Id,
+    bool Enabled,
+    List<EntryValueResponse> EditableValues
+);
+
+public record ModuleValueListResponse(
+    ModuleValueId Id,
+    bool Enabled
 );

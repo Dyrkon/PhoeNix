@@ -14,32 +14,33 @@ internal sealed class ConfigurationRepository : RepositoryBase<Configuration, Co
     {
     }
 
-    public Task<Configuration?> GetByDescriptionAsync(string description, CancellationToken token)
+    public async Task<Configuration?> GetByDescriptionAsync(string description, CancellationToken token)
     {
-        return DbContext.Configurations
+        return await DbContext.Configurations
             .AddIncludeStatements()
             .SingleOrDefaultAsync(c => c.Description.Contains(description), token);
     }
 
-    public Task<Configuration?> GetByTitleAsync(string title, CancellationToken token)
+    public async Task<Configuration?> GetByTitleAsync(string title, CancellationToken token)
     {
-        return DbContext.Configurations
+        return await DbContext.Configurations
             .AddIncludeStatements()
             .SingleOrDefaultAsync(c => c.Title.Contains(title), token);
     }
 
     public async Task<Result> RemoveByIdAsync(ConfigurationId id, CancellationToken token)
     {
-        var tmp = await DbContext.Configurations.AddIncludeStatements().SingleOrDefaultAsync(c => c.Id == id, token);
+        var tmp = await DbContext.Configurations.AddIncludeStatements()
+            .SingleOrDefaultAsync(c => c.Id == id, token);
         if (tmp == null)
             return Result.Failure(new Error("", $"Configuration with id {id.Value} was not found"));
         DbContext.Configurations.Remove(tmp);
         return Result.Success();
     }
 
-    public override Task<Configuration?> GetByIdAsync(ConfigurationId id, CancellationToken token)
+    public override async Task<Configuration?> GetByIdAsync(ConfigurationId id, CancellationToken token)
     {
-        return DbContext.Configurations
+        return await DbContext.Configurations
             .AddIncludeStatements()
             .SingleOrDefaultAsync(c => c.Id == id, token);
     }

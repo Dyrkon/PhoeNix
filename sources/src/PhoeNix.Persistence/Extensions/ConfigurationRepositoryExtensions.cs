@@ -9,24 +9,11 @@ public static class ConfigurationRepositoryExtensions
     {
         return query
             .Include(c => c.Modules)
-            .ThenInclude(m => m.Module)
             .ThenInclude(m => m.EditableValues)
-            .Include(c => c.Modules)
-            .ThenInclude(m => m.Module)
-            .ThenInclude(m => m.Tests)
-            .ThenInclude(m => m.Test)
             .Include(c => c.Inputs)
             .ThenInclude(i => i.Followers)
-            .Include(c => c.Systems)
-            .ThenInclude(s => s.System)
+            .Include(c => c.SystemSpecifications)
             .ThenInclude(s => s.Modules)
-            .ThenInclude(sm => sm.Module)
-            .ThenInclude(m => m.EditableValues)
-            .Include(c => c.Systems)
-            .ThenInclude(s => s.System)
-            .ThenInclude(s => s.Modules)
-            .ThenInclude(sm => sm.Module)
-            .ThenInclude(s => s.Tests)
-            .ThenInclude(s => s.Test);
+            .ThenInclude(s => s.EditableValues);
     }
 }

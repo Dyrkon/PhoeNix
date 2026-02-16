@@ -1,38 +1,37 @@
 using FluentAssertions;
 using PhoeNix.Application.Mappings;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 
 namespace PhoeNix.Application.UnitTests;
 
 public class InputMappingsTests
 {
+    private readonly ConfigurationId _configId = new(Guid.NewGuid());
+
     [Fact]
-    public void MapInputToDto_Should_Map_Correctly()
+    public void MapInputToDto_Should_Map_Correctly_When_No_Follows()
     {
-        var inputId = new InputId(Guid.NewGuid());
-        var follows = Input.Create(inputId, "github:foo", "foo").Value;
+        var input = Input.Create(new InputId(Guid.NewGuid()), _configId, "github:nixos", "nixpkgs").Value;
 
-        var input = Input.Create(inputId, "github:nixos", "nixpkgs", follows).Value;
+        var dto = InputMappings.MapInputToDto(input);
 
-        var result = InputMappings.MapInputToDto(input);
-
-        result.Should().NotBeNull();
-        result.Id.Should().Be(input.Id);
-        result.Source.Should().Be(input.Source);
-        result.Name.Should().Be(input.Name);
-        result.Follows.Id.Should().Be(follows.Id);
-    }
-    
-    [Fact]
-    public void MapInputToDto_Should_Handle_Null_Follows()
-    {
-        var inputId = new InputId(Guid.NewGuid());
-        var input = Input.Create(inputId, "github:nixos", "nixpkgs").Value;
-
-        var result = InputMappings.MapInputToDto(input);
-
-        result.Should().NotBeNull();
-        result.Follows.Should().BeNull();
+        dto.Id.Should().Be(input.Id);
+        dto.Source.Should().Be("github:nixos");
+        dto.Name.Should().Be("nixpkgs");
+        dto.Follows.Should().BeEmpty();
     }
 
+    [Fact]
+    public void MapInputToDto_Should_Map_Follows()
+    {
+        var input = Input.Create(new InputId(Guid.NewGuid()), _configId, "github:nixos", "nixpkgs").Value;
+        input.AddFollow("flake-utils", "github:numtide/flake-utils").IsSuccess.Should().BeTrue();
+
+        var dto = InputMappings.MapInputToDto(input);
+
+        dto.Follows.Should().ContainSingle(f =>
+            f.FollowName == "flake-utils" &&
+            f.FollowValue == "github:numtide/flake-utils");
+    }
 }

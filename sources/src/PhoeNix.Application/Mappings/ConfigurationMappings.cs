@@ -12,8 +12,8 @@ public static class ConfigurationMappings
             flake.Title,
             flake.Description,
             flake.Inputs.Select(InputMappings.MapInputToDto).ToList(),
-            flake.Modules.Select(m => ModuleMappings.MapModuleToListDto(m.Module)).ToList(),
-            flake.Systems.Select(s => SystemMappings.MapSystemToListDto(s.System)).ToList(),
+            flake.Modules.Select(ModuleMappings.MapModuleValueToDto).ToList(),
+            flake.SystemSpecifications.Select(SystemMappings.MapSystemToListDto).ToList(),
             flake.SupportedSystemArchitectures().Value.ToList());
     }
 

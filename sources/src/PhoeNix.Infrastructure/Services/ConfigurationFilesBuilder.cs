@@ -10,7 +10,7 @@ namespace PhoeNix.Infrastructure.Services;
 public class ConfigurationFilesBuilder(
     IModuleFilesBuilder moduleFilesBuilder) : IConfigurationFilesBuilder
 {
-    public Result<Folder> BuildConfiguration(ConfigurationBuildResult configurationBuild)
+    public Result<Folder> BuildConfigurationFiles(ConfigurationBuildResult configurationBuild)
     {
         var confLayout = new ConfigurationLayout();
         var systemPathsList = configurationBuild.Systems.Aggregate("", (current, s) =>
@@ -46,9 +46,9 @@ public class ConfigurationFilesBuilder(
                     .Replace(configurationBuild.SharedModulesPlaceholder, sharedModulesList)
                     .Replace(configurationBuild.ChecksPlaceholder, checksPaths)),
             new Folder(confLayout.SharedModulesPath,
-                configurationBuild.CommonModules.Select(moduleFilesBuilder.BuildModule)),
+                configurationBuild.CommonModules.Select(moduleFilesBuilder.BuildModule).ToList()),
             new Folder(confLayout.SystemsPath,
-                configurationBuild.Systems.Select(moduleFilesBuilder.BuildSystemModule))
+                configurationBuild.Systems.Select(moduleFilesBuilder.BuildSystemModule).ToList())
         };
 
         return new Folder(configurationBuild.Id, files);

@@ -75,20 +75,6 @@ public class Input : Entity<InputId>
                 .Tap(i => i.AddFollow(follows.Name, follows.Name))
             : newInput;
     }
-
-    private string BuildFollow(FollowInput followInput)
-    {
-        return $"{followInput.FollowName}.follows = \"{followInput.FollowValue}\";";
-    }
-
-    public Result<InputBuildResult> Build()
-    {
-        var follows = Followers.Aggregate("", (current, result) => current + $"{BuildFollow(result)}\n");
-        return new InputBuildResult(
-            $"{Name} = {{ url = \"{Source}\";\n " +
-            $"inputs = {{ {follows} }};" +
-            $"}};");
-    }
 }
 
 public record FollowInput(Guid Id, InputId InputId, string FollowName, string FollowValue);

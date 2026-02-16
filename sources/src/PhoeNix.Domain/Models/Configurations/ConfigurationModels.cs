@@ -17,7 +17,7 @@ public record ConfigurationResponse(
     string Title,
     string Description,
     List<InputResponse> Inputs,
-    List<ModuleListResponse> Modules,
+    List<ModuleValueResponse> Modules,
     List<SystemListResponse> Systems,
     List<Architecture> SupportedArchitectures
 );

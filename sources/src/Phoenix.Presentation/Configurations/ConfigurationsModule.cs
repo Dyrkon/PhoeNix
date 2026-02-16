@@ -41,7 +41,7 @@ public class ConfigurationsModule : CarterModule
         CancellationToken cancellationToken)
     {
         var command =
-            new AddConfigurationCommand(request.Name, request.Description);
+            new AddConfigurationCommand(request.Title, request.Description);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

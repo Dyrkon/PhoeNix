@@ -15,7 +15,6 @@ public record ValidateSystemQuery(ConfigurationId ConfigurationId, SystemId Syst
 internal sealed class ValidateSystemQueryHandler(
     INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
-    ISystemRepository systemRepository,
     IFileSystemService fileSystemService)
     : IQueryHandler<ValidateSystemQuery, SystemTestResponse>
 {
@@ -24,21 +23,17 @@ internal sealed class ValidateSystemQueryHandler(
         return await configurationRepository
             .GetByIdAsync(query.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error("", $"Configuration {query.ConfigurationId} not found!"))
-            .Bind(config =>
-                systemRepository
-                    .GetByIdAsync(query.SystemId, cancellationToken)
-                    .EnsureNotNull(new Error("", $"System {query.SystemId} not found!"))
-                    .Bind(system => Result.Success((config, system))))
-            .Ensure(
-                x => x.config.Systems.Any(s => s.SystemId == x.system.Id),
-                x => new Error("", $"System {query.SystemId} is not in configuration {x.config.Title}"))
+            .Ensure(conf => conf.SystemSpecifications.Any(s => s.Id == query.SystemId),
+                conf => new Error("", $"Configuration {conf.Title} does not contain system {query.SystemId.Value}"))
             .Bind(x =>
                 fileSystemService
                     .GetRootFolder()
                     .Bind(path =>
-                        nixTestRunner.RunSystemTest(
-                            x.system.Id,
-                            x.system.Architecture,
-                            $"{path}/{x.config.Id.Value}", cancellationToken)));
+                    {
+                        var system = x.SystemSpecifications.First(s => s.Id == query.SystemId);
+                        return nixTestRunner.RunSystemTest(
+                            system.Id,
+                            system.Architecture, $"{path}/{x.Id.Value}", cancellationToken);
+                    }));
     }
 }

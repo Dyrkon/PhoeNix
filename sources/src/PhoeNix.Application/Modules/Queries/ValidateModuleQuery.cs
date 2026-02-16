@@ -12,13 +12,16 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Modules.Queries;
 
-public record ValidateModuleQuery(ConfigurationId ConfigurationId, ModuleId ModuleId, Architecture Architecture)
+public record ValidateModuleQuery(
+    ConfigurationId ConfigurationId,
+    ModuleTemplateId ModuleTemplateId,
+    Architecture Architecture)
     : IQuery<List<ModuleTestResponse>>;
 
 internal sealed class ValidateModuleQueryHandler(
     INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
-    IModuleRepository moduleRepository,
+    IModuleTemplateRepository moduleTemplateRepository,
     IFileSystemService fileSystemService) : IQueryHandler<ValidateModuleQuery, List<ModuleTestResponse>>
 {
     public async Task<Result<List<ModuleTestResponse>>> Handle(ValidateModuleQuery query, CancellationToken ct)
@@ -30,9 +33,9 @@ internal sealed class ValidateModuleQueryHandler(
         if (configResult.IsFailure)
             return Result.Failure<List<ModuleTestResponse>>(configResult.Error);
 
-        var moduleResult = await moduleRepository
-            .GetByIdAsync(query.ModuleId, ct)
-            .EnsureNotNull(new Error("ModuleNotFound", $"Module {query.ModuleId} not found!"));
+        var moduleResult = await moduleTemplateRepository
+            .GetByIdAsync(query.ModuleTemplateId, ct)
+            .EnsureNotNull(new Error("ModuleNotFound", $"Module {query.ModuleTemplateId} not found!"));
 
         if (moduleResult.IsFailure)
             return Result.Failure<List<ModuleTestResponse>>(moduleResult.Error);
@@ -40,7 +43,7 @@ internal sealed class ValidateModuleQueryHandler(
         var config = configResult.Value;
         var module = moduleResult.Value;
 
-        if (config.Modules.All(m => m.ModuleId != module.Id))
+        if (config.Modules.All(m => m.ModuleTemplateId != module.Id))
             return Result.Failure<List<ModuleTestResponse>>(new Error(
                 "ModuleNotInConfiguration",
                 $"Module {module.Name} is not in configuration {config.Title}"));
@@ -65,8 +68,8 @@ internal sealed class ValidateModuleQueryHandler(
         foreach (var test in module.Tests)
         {
             var r = nixTestRunner.RunModuleTest(
-                test.TestId,
-                test.Test.Name,
+                test.Id,
+                test.Name,
                 query.Architecture,
                 configPath, ct);
 

@@ -12,9 +12,7 @@ public static class DependencyInjection
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
-        services.AddScoped<IModuleRepository, ModuleRepository>();
-        services.AddScoped<ITestRepository, TestRepository>();
-        services.AddScoped<ISystemRepository, SystemRepository>();
+        services.AddScoped<IModuleTemplateRepository, ModuleTemplateRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 
         return services;

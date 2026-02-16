@@ -37,46 +37,6 @@ namespace PhoeNix.Persistence.Migrations
                     b.ToTable("Configurations");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.ConfigurationModule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ConfigurationId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConfigurationId");
-
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("ConfigurationModules");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.ConfigurationSystem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ConfigurationId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("SystemId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConfigurationId");
-
-                    b.HasIndex("SystemId");
-
-                    b.ToTable("ConfigurationSystems");
-                });
-
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.FollowInput", b =>
                 {
                     b.Property<Guid>("Id")
@@ -133,7 +93,7 @@ namespace PhoeNix.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ModuleId")
+                    b.Property<Guid>("ModuleValueId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -156,7 +116,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ModuleId");
+                    b.HasIndex("ModuleValueId");
 
                     b.ToTable("EntryValues");
 
@@ -165,7 +125,7 @@ namespace PhoeNix.Persistence.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Module", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTemplate", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
@@ -173,9 +133,6 @@ namespace PhoeNix.Persistence.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -186,27 +143,33 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Modules");
+                    b.ToTable("ModuleTemplates");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTest", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleValue", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ModuleId")
+                    b.Property<Guid?>("ConfigurationId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("TestId")
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ModuleTemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SystemId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ModuleId");
+                    b.HasIndex("ConfigurationId");
 
-                    b.HasIndex("TestId");
+                    b.HasIndex("SystemId");
 
-                    b.ToTable("ModuleTests");
+                    b.ToTable("ConfigurationModules");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Test", b =>
@@ -219,12 +182,17 @@ namespace PhoeNix.Persistence.Migrations
                         .HasMaxLength(10000)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("ModuleTemplateId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ModuleTemplateId");
 
                     b.ToTable("Tests");
                 });
@@ -237,6 +205,9 @@ namespace PhoeNix.Persistence.Migrations
                     b.Property<int>("Architecture")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("ConfigurationId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -244,27 +215,9 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConfigurationId");
+
                     b.ToTable("Systems");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.SystemModule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("SystemId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModuleId");
-
-                    b.HasIndex("SystemId");
-
-                    b.ToTable("SystemModules");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Users.User", b =>
@@ -383,44 +336,6 @@ namespace PhoeNix.Persistence.Migrations
                     b.HasDiscriminator().HasValue("Text");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.ConfigurationModule", b =>
-                {
-                    b.HasOne("PhoeNix.Domain.Entities.Configurations.Configuration", "Configuration")
-                        .WithMany("Modules")
-                        .HasForeignKey("ConfigurationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PhoeNix.Domain.Entities.Modules.Module", "Module")
-                        .WithMany()
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Configuration");
-
-                    b.Navigation("Module");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.ConfigurationSystem", b =>
-                {
-                    b.HasOne("PhoeNix.Domain.Entities.Configurations.Configuration", "Configuration")
-                        .WithMany("Systems")
-                        .HasForeignKey("ConfigurationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PhoeNix.Domain.Entities.Systems.System", "System")
-                        .WithMany()
-                        .HasForeignKey("SystemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Configuration");
-
-                    b.Navigation("System");
-                });
-
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.FollowInput", b =>
                 {
                     b.HasOne("PhoeNix.Domain.Entities.Inputs.Input", null)
@@ -441,49 +356,79 @@ namespace PhoeNix.Persistence.Migrations
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.EntryValue", b =>
                 {
-                    b.HasOne("PhoeNix.Domain.Entities.Modules.Module", null)
+                    b.HasOne("PhoeNix.Domain.Entities.Modules.ModuleValue", null)
                         .WithMany("EditableValues")
-                        .HasForeignKey("ModuleId")
+                        .HasForeignKey("ModuleValueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTest", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTemplate", b =>
                 {
-                    b.HasOne("PhoeNix.Domain.Entities.Modules.Module", "Module")
-                        .WithMany("Tests")
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.OwnsMany("PhoeNix.Domain.Entities.Modules.EntryValueDefinition", "EditableValueTypes", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT");
 
-                    b.HasOne("PhoeNix.Domain.Entities.Modules.Test", "Test")
-                        .WithMany()
-                        .HasForeignKey("TestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                            b1.Property<int>("InputType")
+                                .HasColumnType("INTEGER");
 
-                    b.Navigation("Module");
+                            b1.Property<Guid>("ModuleTemplateId")
+                                .HasColumnType("TEXT");
 
-                    b.Navigation("Test");
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Placeholder")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ModuleTemplateId");
+
+                            b1.ToTable("EntryValueDefinition");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ModuleTemplateId");
+                        });
+
+                    b.Navigation("EditableValueTypes");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.SystemModule", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleValue", b =>
                 {
-                    b.HasOne("PhoeNix.Domain.Entities.Modules.Module", "Module")
-                        .WithMany()
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("PhoeNix.Domain.Entities.Configurations.Configuration", null)
+                        .WithMany("Modules")
+                        .HasForeignKey("ConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("PhoeNix.Domain.Entities.Systems.System", "System")
+                    b.HasOne("PhoeNix.Domain.Entities.Systems.System", null)
                         .WithMany("Modules")
                         .HasForeignKey("SystemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Test", b =>
+                {
+                    b.HasOne("PhoeNix.Domain.Entities.Modules.ModuleTemplate", null)
+                        .WithMany("Tests")
+                        .HasForeignKey("ModuleTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("Module");
-
-                    b.Navigation("System");
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>
+                {
+                    b.HasOne("PhoeNix.Domain.Entities.Configurations.Configuration", null)
+                        .WithMany("SystemSpecifications")
+                        .HasForeignKey("ConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.Configuration", b =>
@@ -492,7 +437,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Navigation("Modules");
 
-                    b.Navigation("Systems");
+                    b.Navigation("SystemSpecifications");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.Input", b =>
@@ -500,11 +445,14 @@ namespace PhoeNix.Persistence.Migrations
                     b.Navigation("Followers");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Module", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTemplate", b =>
+                {
+                    b.Navigation("Tests");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleValue", b =>
                 {
                     b.Navigation("EditableValues");
-
-                    b.Navigation("Tests");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>

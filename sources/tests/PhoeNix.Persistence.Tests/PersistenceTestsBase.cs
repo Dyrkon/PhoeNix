@@ -22,13 +22,14 @@ public class PersistenceTestsBase : IAsyncLifetime
     protected ServiceProvider ServiceProvider { get; }
     protected ApplicationDbContext PhoeNixDbContextSUT { get; }
 
-    protected IInputRepository InputRepository => ServiceProvider.GetRequiredService<IInputRepository>();
     protected IUserRepository UserRepository => ServiceProvider.GetRequiredService<IUserRepository>();
-    protected IModuleRepository ModuleRepository => ServiceProvider.GetRequiredService<IModuleRepository>();
-    protected IConfigurationRepository ConfigurationRepository => ServiceProvider.GetRequiredService<IConfigurationRepository>();
-    protected ISystemRepository SystemRepository => ServiceProvider.GetRequiredService<ISystemRepository>();
 
-    
+    protected IModuleTemplateRepository ModuleTemplateRepository =>
+        ServiceProvider.GetRequiredService<IModuleTemplateRepository>();
+
+    protected IConfigurationRepository ConfigurationRepository =>
+        ServiceProvider.GetRequiredService<IConfigurationRepository>();
+
     public async Task InitializeAsync()
     {
         await PhoeNixDbContextSUT.Database.EnsureDeletedAsync();

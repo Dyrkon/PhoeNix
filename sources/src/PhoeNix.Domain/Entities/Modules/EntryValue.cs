@@ -1,3 +1,5 @@
+using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
@@ -12,5 +14,11 @@ public abstract class EntryValue
 
     public string Value { get; protected set; }
 
-    public ModuleId ModuleId { get; private set; }
+    public ModuleValueId ModuleValueId { get; private set; }
 }
+
+public record EntryValueDefinition(
+    ModuleTemplateId ModuleTemplateId,
+    string Name,
+    string Placeholder,
+    UserInputType InputType);

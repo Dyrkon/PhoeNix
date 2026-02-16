@@ -19,7 +19,7 @@ public class UserMappingsTests
         var group = "wheel";
         uint uid = 1024;
         var shell = Shell.Fish;
-        var extraGroups = new List<string>() {"one", "two"};
+        var extraGroups = new List<string> { "one", "two" };
         var user = User.Create(userId, name, description, group, isNormalUser, uid, shell, homePath).Value;
         user.SetName(name);
         user.SetDescription(description);
@@ -28,10 +28,7 @@ public class UserMappingsTests
         user.SetShell(shell);
         user.SetNormalUserStatus(isNormalUser);
         user.SetUid(uid);
-        foreach (var grp in extraGroups)
-        {
-            user.AddExtraGroup(grp);
-        }
+        foreach (var grp in extraGroups) user.AddExtraGroup(grp);
 
         // Act
         var result = UserMappings.MapUserToDto(user);

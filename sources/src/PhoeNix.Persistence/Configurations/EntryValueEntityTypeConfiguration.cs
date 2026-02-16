@@ -11,17 +11,18 @@ public class EntryValueEntityTypeConfiguration : IApplicationEntityTypeConfigura
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.ModuleId)
-            .HasConversion(id => id.Value, value => new ModuleId(value))
+        builder.Property(e => e.Id)
+            .HasConversion(id => id.Value, value => new EntryValueId(value))
             .IsRequired();
-
-        builder.Property(m => m.Id).HasConversion(
-            id => id.Value,
-            value => new EntryValueId(value));
 
         builder.Property(e => e.Name);
         builder.Property(e => e.Placeholder);
         builder.Property(e => e.Value);
+
+        builder.Property(e => e.ModuleValueId)
+            .HasConversion(id => id.Value, value => new ModuleValueId(value))
+            .IsRequired();
+
         builder.Property<string>("TypeDiscriminator").HasColumnName("TypeDiscriminator");
 
         builder.HasDiscriminator<string>("TypeDiscriminator")
