@@ -1,5 +1,5 @@
 {
-  description = "PhoeNix flake (explicit, readable, nixpkgs 25.11, no snowfall)";
+  description = "PhoeNix flake";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";

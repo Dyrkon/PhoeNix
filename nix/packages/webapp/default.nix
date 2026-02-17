@@ -18,7 +18,7 @@ pkgs.buildDotnetModule rec {
 
   buildType = "Release";
   useAppHost = false;
-  selfContainedBuild = true;
+  selfContainedBuild = false; # true causes error with linux runtime
 
   meta.mainProgram = pname;
 }

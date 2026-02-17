@@ -22,7 +22,7 @@ internal sealed class ExportConfigurationCommandHandler(
     {
         var moduleTemplates = await moduleTemplateRepository.GetAllAsync(cancellationToken);
 
-        if (moduleTemplates is null)
+        if (moduleTemplates is null || !moduleTemplates.Any())
             return Result.Failure<string>(new Error("", "Cannot get module templates"));
 
         return await configurationRepository.GetByIdAsync(command.ConfigurationId, cancellationToken)

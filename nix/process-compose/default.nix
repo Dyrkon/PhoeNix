@@ -17,6 +17,13 @@
       default_type  application/octet-stream;
       sendfile        on;
 
+      client_body_temp_path /tmp/phoenix-nginx/client_body;
+      proxy_temp_path       /tmp/phoenix-nginx/proxy;
+      fastcgi_temp_path     /tmp/phoenix-nginx/fastcgi;
+      uwsgi_temp_path       /tmp/phoenix-nginx/uwsgi;
+      scgi_temp_path        /tmp/phoenix-nginx/scgi;
+
+
       access_log ${runDir}/access.log;
 
       upstream webapi { server 127.0.0.1:5001; }
@@ -65,9 +72,19 @@
       nginx:
         command: "${pkgs.writeShellScript "run-nginx" ''
           set -euo pipefail
-          mkdir -p /tmp/phoenix-nginx
-          exec ${pkgs.nginx}/bin/nginx -c ${nginxConf} -g 'daemon off;'
+          runDir=/tmp/phoenix-nginx
+          mkdir -p "$runDir" \
+            "$runDir/client_body" "$runDir/proxy" "$runDir/fastcgi" "$runDir/uwsgi" "$runDir/scgi"
+
+          exec ${pkgs.nginx}/bin/nginx \
+            -c ${nginxConf} \
+            -g "daemon off;"
         ''}"
+        availability:
+          restart: on_failure
+        depends_on:
+          webapp:
+            condition: process_started
   '';
 in {
   configPackage = pkgs.runCommand "phoenix-process-compose" {} ''
