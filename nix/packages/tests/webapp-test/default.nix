@@ -1,61 +1,47 @@
 {
-  lib,
-  inputs,
-  namespace,
   pkgs,
-  stdenv,
-  ...
+  lib,
+  project,
+  csprojSrc,
 }: let
-  fs = pkgs.lib.fileset;
-
-  flake-root = inputs.self.snowfall.config.src;
-  root = lib.path.append flake-root "sources";
-  pname = "PhoeNix.WebAPP.Tests";
-  dotnet-sdk = dotnetCorePackages.sdk_8_0;
-
-  csProjDepsHelper = lib."internal".csprojFileset {
-    inherit dotnet-sdk;
-    inherit root;
-    project = pname;
-    extraProjects = ["PhoeNix.WebAPI" "PhoeNix.WebAPP.Client"];
-  };
-
-  miscFiles = map (i: lib.path.append root i) [
-    ".config"
-    "PhoeNix.sln"
-    "Directory.Build.props"
-  ];
-
-  sourceFiles = fs.unions (csProjDepsHelper.projectPaths ++ miscFiles);
-
-  inherit (pkgs) dotnetCorePackages buildDotnetModule;
+  pw = import ../../../lib/playwright/default.nix {inherit pkgs lib;};
 in
-  buildDotnetModule rec {
-    inherit pname;
-    version = builtins.readFile (lib.path.append flake-root "version");
+  pkgs.buildDotnetModule rec {
+    pname = "webapp-test";
+    version = builtins.readFile project.versionFile;
 
-    src = fs.toSource {
-      inherit root;
-      fileset = sourceFiles;
-    };
+    src = csprojSrc;
+    projectFile = "tests/PhoeNix.WebAPP.Tests/PhoeNix.WebAPP.Tests.csproj";
+    nugetDeps = project.nugetDeps;
 
-    projectFile = "./tests/${pname}/${pname}.csproj"; # path to csproj or sln to build
-    nugetDeps = ../../../deps.nix;
+    dotnet-sdk = project.dotnetSdk;
+    dotnet-runtime = project.dotnetRuntime;
+
     buildType = "Release";
-
-    inherit dotnet-sdk;
-    dotnet-runtime = dotnetCorePackages.aspnetcore_8_0;
-
-    runtimeDeps = [
-      # add any native deps here
-    ];
-
     useAppHost = false;
-    selfContainedBuild = true;
+    selfContainedBuild = false;
 
-    makeWrapperArgs = [
-      "--set DOTNET_CONTENTROOT ${placeholder "out"}/lib/${pname}"
-    ];
+    nativeBuildInputs = [pkgs.playwright-driver pkgs.nodejs];
+    buildInputs = pw.runtimeLibs;
 
-    meta.mainProgram = pname;
+    installPhase = ''mkdir -p $out'';
+
+    doCheck = true;
+    checkPhase = ''
+      runHook preCheck
+      export HOME="$TMPDIR/home"
+      mkdir -p "$HOME"
+
+      ${pw.mkRunSettingsShell}
+
+      dotnet test ${projectFile} \
+        --configuration ${buildType} \
+        --no-restore \
+        --verbosity normal \
+        --settings "$RUNSETTINGS"
+
+      runHook postCheck
+    '';
+
+    dontFixup = true;
   }

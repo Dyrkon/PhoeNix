@@ -1,58 +1,42 @@
 {
-  lib,
-  inputs,
-  namespace,
   pkgs,
-  stdenv,
-  ...
-}: let
-  fs = lib.fileset;
+  lib,
+  project,
+  csprojSrc,
+}:
+pkgs.buildDotnetModule rec {
+  pname = "webapi-test";
+  version = builtins.readFile project.versionFile;
 
-  flake-root = inputs.self.snowfall.config.src;
-  root = lib.path.append flake-root "sources";
-  pname = "PhoeNix.WebAPI.Tests";
-  dotnet-sdk = dotnetCorePackages.sdk_8_0;
+  src = csprojSrc;
 
-  csProjDepsHelper = lib."internal".csprojFileset {
-    inherit dotnet-sdk;
-    inherit root;
-    project = pname;
-  };
+  projectFile = "tests/PhoeNix.WebAPI.Tests/PhoeNix.WebAPI.Tests.csproj";
+  nugetDeps = project.nugetDeps;
 
-  miscFiles = map (i: lib.path.append root i) [
-    ".config"
-    "PhoeNix.sln"
-    "Directory.Build.props"
-  ];
+  dotnet-sdk = project.dotnetSdk;
+  dotnet-runtime = project.dotnetRuntime;
 
-  sourceFiles = fs.unions (csProjDepsHelper.projectPaths ++ miscFiles);
+  buildType = "Release";
+  useAppHost = false;
+  selfContainedBuild = false;
 
-  inherit (pkgs) dotnetCorePackages buildDotnetModule;
-in
-  buildDotnetModule rec {
-    inherit pname;
-    version = builtins.readFile (lib.path.append flake-root "version");
+  installPhase = ''mkdir -p $out'';
 
-    src = fs.toSource {
-      inherit root;
-      fileset = sourceFiles;
-    };
+  doCheck = true;
 
-    projectFile = "./tests/${pname}/${pname}.csproj"; # path to csproj or sln to build
-    nugetDeps = ../../../deps.nix;
+  checkPhase = ''
+    runHook preCheck
+    export HOME="$TMPDIR/home"
+    mkdir -p "$HOME"
 
-    inherit dotnet-sdk;
-    dotnet-runtime = dotnetCorePackages.aspnetcore_8_0;
+    dotnet test ${projectFile} \
+      --configuration ${buildType} \
+      --no-restore \
+      --verbosity normal
 
-    runtimeDeps = [
-      # add any native deps here
-    ];
 
-    useAppHost = false;
+    runHook postCheck
+  '';
 
-    postFixup = ''
-      wrapProgram $out/bin/${meta.mainProgram} --add-flags "--defaultConfigurationPath=$out/lib/${pname}/appsettings.json"
-    '';
-
-    meta.mainProgram = pname;
-  }
+  dontFixup = true;
+}
