@@ -1,31 +1,26 @@
 {
-  lib,
-  inputs,
-  namespace,
   pkgs,
-  mkShell,
-  ...
-}: let
-  inherit (pkgs) stdenv;
-  solution = pkgs.${namespace}.solution;
+  lib,
+  project,
+  runtimeDeps ? [],
+}:
+pkgs.mkShell {
+  packages = [
+    project.dotnetSdk
+    project.dotnetRuntime
 
-  shell = mkShell {
-    packages =
-      solution.runtimeDeps
-      ++ [
-        solution.dotnet-sdk
-        solution.dotnet-runtime
-        pkgs.nixos-anywhere
-        pkgs.alejandra
-        pkgs.nodejs
-        pkgs.powershell
-      ];
-    shellHook = ''
-      export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-      export DOTNET_ROOT=${solution.dotnet-sdk}
-      export LD_LIBRARY_PATH="${solution.dotnet-sdk.icu}/lib:${pkgs.lib.makeLibraryPath solution.runtimeDeps}"
-      unset DOTNET_SKIP_FIRST_TIME_EXPERIENCE
-    '';
-  };
-in
-  shell
+    pkgs.alejandra
+    pkgs.nodejs
+    pkgs.powershell
+    pkgs.nixos-anywhere
+    pkgs.process-compose
+    pkgs.nginx
+  ];
+
+  shellHook = ''
+    export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+    export DOTNET_ROOT=${project.dotnetSdk}
+    export LD_LIBRARY_PATH="${project.dotnetSdk.icu}/lib:${lib.makeLibraryPath runtimeDeps}"
+    unset DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+  '';
+}

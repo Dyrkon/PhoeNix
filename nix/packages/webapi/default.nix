@@ -1,58 +1,24 @@
 {
-  lib,
-  inputs,
-  namespace,
   pkgs,
-  stdenv,
-  ...
-}: let
-  fs = lib.fileset;
-
-  flake-root = inputs.self.snowfall.config.src;
-  root = lib.path.append flake-root "sources";
+  lib,
+  project,
+  csprojSrc,
+}:
+pkgs.buildDotnetModule rec {
   pname = "PhoeNix.WebAPI";
-  dotnet-sdk = dotnetCorePackages.sdk_8_0;
+  version = builtins.readFile project.versionFile;
 
-  csProjDepsHelper = lib."internal".csprojFileset {
-    inherit dotnet-sdk;
-    inherit root;
-    project = pname;
-  };
+  src = csprojSrc;
 
-  miscFiles = map (i: lib.path.append root i) [
-    ".config"
-    "PhoeNix.sln"
-    "Directory.Build.props"
-  ];
+  projectFile = "src/PhoeNix.WebAPI/PhoeNix.WebAPI.csproj";
+  nugetDeps = project.nugetDeps;
 
-  sourceFiles = fs.unions (csProjDepsHelper.projectPaths ++ miscFiles);
+  dotnet-sdk = project.dotnetSdk;
+  dotnet-runtime = project.dotnetRuntime;
 
-  inherit (pkgs) dotnetCorePackages buildDotnetModule;
-in
-  buildDotnetModule rec {
-    inherit pname;
-    version = builtins.readFile (lib.path.append flake-root "version");
+  buildType = "Release";
+  useAppHost = false;
+  selfContainedBuild = true;
 
-    src = fs.toSource {
-      inherit root;
-      fileset = sourceFiles;
-    };
-
-    projectFile = "./src/${pname}/${pname}.csproj"; # path to csproj or sln to build
-    nugetDeps = ../../deps.nix;
-
-    inherit dotnet-sdk;
-    dotnet-runtime = dotnetCorePackages.aspnetcore_8_0;
-
-    runtimeDeps = [
-      # add any native deps here
-    ];
-
-    useAppHost = false;
-
-    postFixup = ''
-      wrapProgram $out/bin/${meta.mainProgram} --add-flags "--defaultConfigurationPath=$out/lib/${pname}/appsettings.json"
-    '';
-
-    meta.mainProgram = pname;
-  }
+  meta.mainProgram = pname;
+}
