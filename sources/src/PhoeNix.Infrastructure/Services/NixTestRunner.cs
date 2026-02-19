@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;

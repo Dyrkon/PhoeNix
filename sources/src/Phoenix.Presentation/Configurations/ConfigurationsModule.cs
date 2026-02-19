@@ -10,22 +10,18 @@ using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Configurations;
 
-public class ConfigurationsModule : CarterModule
+public class ConfigurationsModule : ICarterModule
 {
-    public ConfigurationsModule() : base("/configurations")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-    }
-
-    public override void AddRoutes(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/{configurationId:guid}/build", BuildConfiguration)
+        app.MapGet("/configurations/{configurationId:guid}/build", BuildConfiguration)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPost("/create", CreateConfiguration)
+        app.MapPost("/configurations/create", CreateConfiguration)
             .Produces(StatusCodes.Status200OK);
 
-        app.MapDelete("/{configurationId:guid}/delete", DeleteConfiguration)
+        app.MapDelete("/configurations/{configurationId:guid}/delete", DeleteConfiguration)
             .Produces(StatusCodes.Status200OK);
     }
 

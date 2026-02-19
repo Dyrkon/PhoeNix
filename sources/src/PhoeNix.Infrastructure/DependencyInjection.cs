@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Domain.Services;
 using PhoeNix.Infrastructure.Services;
 
