@@ -1,6 +1,5 @@
+using PhoeNix.Domain.Primitives;
+
 namespace PhoeNix.Domain.Entities.ProvisioningSessions;
 
-public interface ProvisioningSessionId
-{
-    
-}
+public record ProvisioningSessionId(Guid value) : StronglyTypedId(value);

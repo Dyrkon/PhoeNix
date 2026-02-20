@@ -1,6 +1,3 @@
 namespace PhoeNix.Domain.Entities.ProvisioningSessions;
 
-public class BootstrapCredential
-{
-    
-}
+public record BootstrapCredential();

@@ -42,6 +42,7 @@ public class ConfigurationsModule : ICarterModule
         return result.AsHttpResult();
     }
 
+    // TODO Mark deprecated or something instead of deletion
     private async Task<IResult> DeleteConfiguration(Guid configurationId, ISender sender,
         CancellationToken cancellationToken)
     {

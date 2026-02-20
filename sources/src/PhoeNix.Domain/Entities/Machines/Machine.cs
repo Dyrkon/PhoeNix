@@ -8,7 +8,7 @@ namespace PhoeNix.Domain.Entities.Machines;
 
 public class Machine : AggregateRoot<MachineId>
 {
-    public Machine(MachineId id) : base(id)
+    private Machine(MachineId id) : base(id)
     {
     }
 
