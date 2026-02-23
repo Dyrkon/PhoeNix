@@ -1,0 +1,20 @@
+using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Extensions;
+using PhoeNix.Domain.Repositories;
+using PhoeNix.Domain.Shared;
+
+namespace PhoeNix.Application.Users.Commands;
+
+public record AddUserCommand(string Name) : ICommand<UserId>;
+
+internal sealed class AddUserCommandHandler(IUserRepository userRepository) : ICommandHandler<AddUserCommand, UserId>
+{
+    public Task<Result<UserId>> Handle(AddUserCommand request, CancellationToken cancellationToken)
+    {
+        return User
+            .Create(new UserId(Guid.NewGuid()), request.Name)
+            .Tap(userRepository.Add)
+            .Bind(user => Task.FromResult(Result.Success(user.Id)));
+    }
+}

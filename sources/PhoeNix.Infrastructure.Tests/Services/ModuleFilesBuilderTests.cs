@@ -1,7 +1,7 @@
 using FluentAssertions;
+using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Infrastructure.Services;
 

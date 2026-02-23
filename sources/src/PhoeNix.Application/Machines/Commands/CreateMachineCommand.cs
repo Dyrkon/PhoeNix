@@ -6,14 +6,16 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Machines.Commands;
 
-public record CreateMachineCommand(string Title, bool Enabled, string MacAddress) : ICommand;
+public record CreateMachineCommand(string Title, bool Enabled, string MacAddress) : ICommand<string>;
 
-internal sealed class CreateMachineHandler(IMachineRepository machineRepository) : ICommandHandler<CreateMachineCommand>
+internal sealed class CreateMachineHandler(IMachineRepository machineRepository)
+    : ICommandHandler<CreateMachineCommand, string>
 {
-    public Task<Result> Handle(CreateMachineCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateMachineCommand request, CancellationToken cancellationToken)
     {
-        return Machine
+        return await Machine
             .Create(new MachineId(Guid.NewGuid()), request.MacAddress, request.Title, request.Enabled)
-            .Tap(machineRepository.Add);
+            .Tap(machineRepository.Add)
+            .Bind(machine => Task.FromResult(Result.Success(machine.Id.Value.ToString())));
     }
 }

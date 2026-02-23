@@ -12,19 +12,15 @@ using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Modules;
 
-public class ModulesModule : CarterModule
+public class ModulesModule : ICarterModule
 {
-    public ModulesModule() : base("/modules")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-    }
-
-    public override void AddRoutes(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/{configurationId:guid}/module/{moduleId:guid}/architecture/{architecture:int}/validate",
+        app.MapGet("/modules{configurationId:guid}/module/{moduleId:guid}/architecture/{architecture:int}/validate",
                 ValidateModule)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
-        app.MapPost("/create", CreateModuleTemplate)
+        app.MapPost("/modules/create", CreateModuleTemplate)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
     }

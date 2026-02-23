@@ -4,5 +4,5 @@ namespace PhoeNix.Domain.Entities.Machines;
 
 public class HardwareProfile
 {
-    public int SchemaVersion { get; private set; } = 1;
+    public int? SchemaVersion { get; private set; } = 1;
 }

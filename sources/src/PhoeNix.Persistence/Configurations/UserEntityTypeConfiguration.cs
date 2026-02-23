@@ -4,14 +4,12 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class UserEntityTypeConfiguration : IApplicationEntityTypeConfiguration<User>
+internal sealed class UserEntityTypeConfiguration : IApplicationEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.HasKey(u => u.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(u => u.Id).HasConversion(
-            id => id.Value,
-            value => new UserId(value));
+        builder.Property(x => x.Id).HasConversion(id => id.Value, value => new UserId(value));
     }
 }

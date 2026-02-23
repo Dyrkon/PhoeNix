@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using PhoeNix.Application.Abstractions.Processes;
-using PhoeNix.Domain.Models.Processes;
+using PhoeNix.Application.Models.Processes;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;

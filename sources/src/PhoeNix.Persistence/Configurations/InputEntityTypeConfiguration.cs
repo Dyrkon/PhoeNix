@@ -6,7 +6,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class InputEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Input>
+internal class InputEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Input>
 {
     public void Configure(EntityTypeBuilder<Input> builder)
     {

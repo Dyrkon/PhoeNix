@@ -1,4 +1,4 @@
-using PhoeNix.Domain.Models.Processes;
+using PhoeNix.Application.Models.Processes;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Abstractions.Processes;

@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Models.Tests;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 

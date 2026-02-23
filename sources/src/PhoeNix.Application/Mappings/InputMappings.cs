@@ -1,5 +1,5 @@
+using PhoeNix.Application.Models.Inputs;
 using PhoeNix.Domain.Entities.Inputs;
-using PhoeNix.Domain.Models.Inputs;
 
 namespace PhoeNix.Application.Mappings;
 

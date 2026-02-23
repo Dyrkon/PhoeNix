@@ -8,41 +8,41 @@ public class MachineStatus(MachineState machineState)
 {
     public MachineState MachineState { get; private set; } = machineState;
 
-    public DateTime LastContacted { get; private set; }
+    public DateTime? LastContacted { get; private set; }
 
-    public DateTime LastProvisioned { get; private set; }
+    public DateTime? LastProvisioned { get; private set; }
 
-    public DateTime LastOrchestrated { get; private set; }
+    public DateTime? LastOrchestrated { get; private set; }
 
-    public DateTime LastConfigured { get; private set; }
+    public DateTime? LastConfigured { get; private set; }
 
-    public Result ChangeMachineState(MachineState machineState)
+    public Result ChangeMachineState(MachineState machineState, DateTime now)
     {
         switch (machineState)
         {
             case MachineState.Provisioned:
                 if (MachineState != MachineState.Registered)
                     return Result.Failure(new Error("MachineStatusError",
-                        $"Can't got to machine state {MachineState.Provisioned.Humanize()} from state {machineState.Humanize()}"));
-                LastProvisioned = DateTime.Now;
-                LastContacted = DateTime.Now;
+                        $"Can't got to machine state {machineState.Humanize()} from state {MachineState.Provisioned.Humanize()}"));
+                LastProvisioned = now;
+                LastContacted = now;
                 break;
             case MachineState.Orchestrated:
                 if (MachineState != MachineState.Provisioned)
                     return Result.Failure(new Error("MachineStatusError",
                         $"Can't got to machine state {MachineState.Orchestrated.Humanize()} from state {machineState.Humanize()}"));
-                LastOrchestrated = DateTime.Now;
-                LastContacted = DateTime.Now;
+                LastOrchestrated = now;
+                LastContacted = now;
                 break;
             case MachineState.Configured:
                 if (MachineState != MachineState.Orchestrated)
                     return Result.Failure(new Error("MachineStatusError",
                         $"Can't got to machine state {MachineState.Configured.Humanize()} from state {machineState.Humanize()}"));
-                LastConfigured = DateTime.Now;
-                LastContacted = DateTime.Now;
+                LastConfigured = now;
+                LastContacted = now;
                 break;
             case MachineState.Registered:
-                LastContacted = DateTime.Now;
+                LastContacted = now;
                 break;
         }
 

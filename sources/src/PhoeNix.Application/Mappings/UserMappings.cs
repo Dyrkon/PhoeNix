@@ -1,13 +1,14 @@
-using PhoeNix.Domain.Entities.Users;
-using PhoeNix.Domain.Models.Users;
+using PhoeNix.Application.Models.Users;
+using PhoeNix.Domain.Entities.SystemUsers;
 
 namespace PhoeNix.Application.Mappings;
 
 public static class UserMappings
 {
-    public static UserResponse MapUserToDto(User user)
+    public static UserResponse MapUserToDto(SystemUser systemUser)
     {
-        return new UserResponse(user.Id, user.Name, user.Description, user.IsNormalUser, user.HomePath,
-            user.Group, user.Uid, user.Shell, user.ExtraGroups.ToList());
+        return new UserResponse(systemUser.Id, systemUser.Name, systemUser.Description, systemUser.IsNormalUser,
+            systemUser.HomePath,
+            systemUser.Group, systemUser.Uid, systemUser.Shell, systemUser.ExtraGroups.ToList());
     }
 }

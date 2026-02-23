@@ -1,6 +1,6 @@
 using FluentAssertions;
 using PhoeNix.Application.Mappings;
-using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
@@ -11,7 +11,7 @@ public class UserMappingsTests
     public void MapUserToDto_Should_Map_Correctly()
     {
         // Arrange
-        var userId = new UserId(Guid.NewGuid());
+        var userId = new SystemUserId(Guid.NewGuid());
         var name = "Name";
         var description = "Description";
         var isNormalUser = true;
@@ -20,7 +20,7 @@ public class UserMappingsTests
         uint uid = 1024;
         var shell = Shell.Fish;
         var extraGroups = new List<string> { "one", "two" };
-        var user = User.Create(userId, name, description, group, isNormalUser, uid, shell, homePath).Value;
+        var user = SystemUser.Create(userId, name, description, group, isNormalUser, uid, shell, homePath).Value;
         user.SetName(name);
         user.SetDescription(description);
         user.SetGroup(group);

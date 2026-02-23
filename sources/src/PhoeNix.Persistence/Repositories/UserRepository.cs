@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Repositories;
 
@@ -10,8 +11,8 @@ internal sealed class UserRepository : RepositoryBase<User, UserId>, IUserReposi
     {
     }
 
-    public async Task<User?> GetByNameAsync(string name, CancellationToken token)
+    public async Task<SystemUser?> GetByNameAsync(string name, CancellationToken token)
     {
-        return await DbContext.Users.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+        return await DbContext.SystemUsers.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
     }
 }

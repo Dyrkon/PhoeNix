@@ -73,6 +73,10 @@
             inherit pkgs lib project;
           };
 
+          bootstrap = import ./nix/apps/createPxeImage.nix {
+            inherit pkgs lib inputs project;
+          };
+
           up = {
             type = "app";
             program = "${pkgs.writeShellScript "phoenix-up" ''

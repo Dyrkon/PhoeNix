@@ -1,6 +1,7 @@
+using PhoeNix.Domain.Entities.ProvisioningSessions;
+
 namespace PhoeNix.Domain.Repositories;
 
-public interface IProvisioningSessionRepository
+public interface IProvisioningSessionRepository : IRepository<ProvisioningSession, ProvisioningSessionId>
 {
-    
 }

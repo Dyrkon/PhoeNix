@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Machines.Commands;
-using PhoeNix.Domain.Models.Machines;
+using PhoeNix.Application.Models.Machines;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Machines;

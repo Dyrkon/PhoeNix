@@ -7,7 +7,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Machine>
+internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Machine>
 {
     public void Configure(EntityTypeBuilder<Machine> builder)
     {
@@ -67,12 +67,21 @@ public sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeConfi
             owned.HasIndex(s => s.MachineState);
         });
 
-        builder.OwnsOne(i => i.HardwareProfile);
-        builder.OwnsOne(i => i.SoftwareSnapshot);
+        builder.OwnsOne(i => i.HardwareProfile, owned =>
+        {
+            owned.WithOwner();
+            owned.Property(p => p.SchemaVersion).IsRequired(false);
+        });
 
+        builder.OwnsOne(i => i.SoftwareSnapshot, owned =>
+        {
+            owned.WithOwner();
+            owned.Property(s => s.SchemaVersion).IsRequired(false);
+        });
+
+        builder.Navigation(i => i.HardwareProfile).IsRequired(false);
+        builder.Navigation(i => i.SoftwareSnapshot).IsRequired(false);
         builder.Navigation(i => i.MachineStatus).IsRequired();
-        builder.Navigation(i => i.HardwareProfile).IsRequired();
-        builder.Navigation(i => i.SoftwareSnapshot).IsRequired();
     }
 
     private static string NormalizeMac(string input)

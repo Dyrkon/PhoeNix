@@ -1,29 +1,14 @@
 using Carter;
 using Microsoft.EntityFrameworkCore;
-using PhoeNix.Application;
-using PhoeNix.Infrastructure;
 using PhoeNix.Persistence;
-using PhoeNix.WebAPI.OptionSetsup;
+using PhoeNix.WebAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddHealthChecks();
-
-builder.Services.AddCarter();
-
-builder.Services.ConfigureOptions<FileStorageOptionsSetup>();
-
-builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddInfrastructure();
-builder.Services.AddApplication();
+builder.Services.AddWebApiHost(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -40,9 +25,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-
 app.MapHealthChecks("/health");
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapCarter();
 
 app.Run();

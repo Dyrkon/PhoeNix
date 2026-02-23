@@ -18,9 +18,9 @@ public class Machine : AggregateRoot<MachineId>
 
     public PhysicalAddress MacAddress { get; private set; }
 
-    public HardwareProfile HardwareProfile { get; private set; }
+    public HardwareProfile? HardwareProfile { get; private set; }
 
-    public SoftwareSnapshot SoftwareSnapshot { get; private set; }
+    public SoftwareSnapshot? SoftwareSnapshot { get; private set; }
 
     public MachineStatus MachineStatus { get; private set; }
 
@@ -49,14 +49,14 @@ public class Machine : AggregateRoot<MachineId>
         return Result.Success();
     }
 
-    public Result ChangeMachineState(MachineState machineState)
+    public Result ChangeMachineState(MachineState machineState, DateTime now)
     {
-        return MachineStatus.ChangeMachineState(machineState);
+        return MachineStatus.ChangeMachineState(machineState, now);
     }
 
     public static Result<Machine> Create(MachineId machineId, string macAddress, string title, bool enabled)
     {
-        return new Result<Machine>(true, new Error("FailedToCreateMachine", $"Failed to create machine {title}"),
+        return new Result<Machine>(true, Error.None,
                 new Machine(machineId)
                 {
                     Title = title, Enabled = enabled,

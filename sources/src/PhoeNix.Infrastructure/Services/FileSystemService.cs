@@ -3,9 +3,9 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
@@ -15,8 +15,6 @@ namespace PhoeNix.Infrastructure.Services;
 public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INixFormatterService nixFormatterService)
     : IFileSystemService
 {
-    private const string TempFolderName = "phoenix";
-
     private static Result<string> CreateFolder(string path)
     {
         if (Directory.Exists(path))
@@ -81,9 +79,14 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
 
     public Result<string> GetRootFolder()
     {
-        return storageOptions.Value.UseTemp
-            ? Path.Combine(Path.GetTempPath(), TempFolderName)
-            : Path.Combine(storageOptions.Value.RootPath);
+        var options = storageOptions.Value;
+
+        if (options.UseTemp)
+            return Path.Combine(Path.GetTempPath(), "phoenix");
+
+        var rootBase = PathResolver.ResolveToHome(options.RootPath);
+        var fullPath = PathResolver.CombineWithBase(rootBase, options.ConfigurationsPath);
+        return Result.Success(fullPath);
     }
 
     public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,

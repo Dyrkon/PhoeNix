@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Configurations.Commands;
+using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Models.Configurations;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Configurations;
