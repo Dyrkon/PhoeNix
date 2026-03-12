@@ -4,9 +4,9 @@ using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Files;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 

@@ -12,6 +12,7 @@ public interface ISshKeyFileStore
     Result<(string PrivateKeyPath, string PublicKeyPath, string CertificatePath)> GetSessionKeyPaths(
         ProvisioningSessionId sessionId);
 
+    Task<Result<string>> ReadCaPublicKeyAsync(CancellationToken cancellationToken);
     Result<(string CaPrivateKeyPath, string CaPublicKeyPath)> GetCaKeyPaths();
 
     Result DeleteSessionDirectory(ProvisioningSessionId sessionId);

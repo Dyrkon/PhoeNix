@@ -3,8 +3,8 @@ using System.Threading;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Models.Bootstrap;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.ProvisioningSessions;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;

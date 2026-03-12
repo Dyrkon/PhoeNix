@@ -1,0 +1,104 @@
+using System.Text.Json;
+using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Abstractions.Bootstrap;
+using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Models.Bootstrap;
+using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Shared;
+
+namespace PhoeNix.Infrastructure.Services;
+
+public sealed class BootstrapImageBuilder(
+    IProcessRunner processRunner,
+    ISshKeyFileStore sshKeyFileStore)
+    : IBootstrapImageBuilder
+{
+    public async Task<Result<BootstrapImageDescriptor>> BuildAsync(
+        Architecture architecture,
+        CancellationToken cancellationToken)
+    {
+        var caKeyResult = await sshKeyFileStore.ReadCaPublicKeyAsync(cancellationToken);
+        if (caKeyResult.IsFailure)
+            return Result.Failure<BootstrapImageDescriptor>(caKeyResult.Error);
+
+
+        if (architecture != Architecture.X86Linux && architecture != Architecture.Aarch64Linux)
+            return Result.Failure<BootstrapImageDescriptor>(new Error(
+                "BootstrapArchitectureUnsupported",
+                $"Architecture '{architecture}' is not supported by the bootstrap image builder."));
+
+        var args = new List<string>
+        {
+            "run",
+            ".#createPxeImage"
+        };
+
+        args.Add("--impure");
+        args.Add("--argstr");
+        args.Add("phoenixUserCaPublicKey");
+        args.Add(caKeyResult.Value);
+
+        args.Add("--argstr");
+        args.Add("system");
+        args.Add(architecture.ToArchitectureString());
+
+        var result = processRunner.RunProcess(
+            "nix",
+            args,
+            cancellationToken);
+
+        if (result.IsFailure)
+            return Result.Failure<BootstrapImageDescriptor>(new Error(
+                "BootstrapImageBuildFailed",
+                result.Error.Description));
+
+        var json = result.Value.StandardOutput.Trim();
+        if (string.IsNullOrWhiteSpace(json))
+            return Result.Failure<BootstrapImageDescriptor>(new Error(
+                "BootstrapImageBuildFailed",
+                "Nix app did not return any JSON output."));
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<BootstrapImageAppResult>(
+                json,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (parsed is null)
+                return Result.Failure<BootstrapImageDescriptor>(new Error(
+                    "BootstrapImageParseFailed",
+                    "Nix app returned empty or invalid JSON."));
+
+            if (string.IsNullOrWhiteSpace(parsed.Kernel) ||
+                string.IsNullOrWhiteSpace(parsed.RamDisk) ||
+                string.IsNullOrWhiteSpace(parsed.Init) ||
+                string.IsNullOrWhiteSpace(parsed.System))
+                return Result.Failure<BootstrapImageDescriptor>(new Error(
+                    "BootstrapImageParseFailed",
+                    "Nix app JSON is missing one or more required fields: kernel, ramDisk, init, system."));
+
+            return Result.Success(new BootstrapImageDescriptor(
+                parsed.Kernel,
+                parsed.RamDisk,
+                parsed.Init,
+                parsed.System));
+        }
+        catch (JsonException e)
+        {
+            return Result.Failure<BootstrapImageDescriptor>(new Error(
+                "BootstrapImageParseFailed",
+                $"Failed to parse Nix app JSON output: {e.Message}"));
+        }
+    }
+
+    private sealed class BootstrapImageAppResult
+    {
+        public string Kernel { get; init; } = string.Empty;
+        public string RamDisk { get; init; } = string.Empty;
+        public string Init { get; init; } = string.Empty;
+        public string System { get; init; } = string.Empty;
+    }
+}

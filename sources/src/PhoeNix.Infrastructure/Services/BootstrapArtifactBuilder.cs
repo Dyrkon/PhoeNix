@@ -1,22 +1,18 @@
 using System.Text;
-using System.IO;
-using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.Bootstrap;
 using PhoeNix.Domain.Entities.ProvisioningSessions;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
 public sealed class BootstrapArtifactBuilder(
     IProcessRunner processRunner,
-    IOptions<BootstrapArtifactsOptions> options) : IBootArtifactBuilder
+    IBootstrapImageBuilder bootstrapImageBuilder) : IBootArtifactBuilder
 {
     private const string DefaultWorkdir = "phoenix-bootstrap";
-    private readonly BootstrapArtifactsOptions _options = options.Value;
 
     public async Task<Result<BootArtefactDescriptor>> BuildAsync(
         BootstrapBuildRequest request,
@@ -26,12 +22,11 @@ public sealed class BootstrapArtifactBuilder(
         await progress.ReportAsync(new BootstrapBuildProgress(ProvisioningStage.Create, "Preparing bootstrap overlay"),
             cancellationToken);
 
-        var baseImage = _options.BaseImages.FirstOrDefault(i => i.Architecture == request.Architecture);
-        if (baseImage is null)
-            return Result.Failure<BootArtefactDescriptor>(new Error(
-                "BootstrapBaseImageMissing",
-                $"No base boot image registered for {request.Architecture}."));
+        var baseImageResult = await bootstrapImageBuilder.BuildAsync(request.Architecture, cancellationToken);
+        if (baseImageResult.IsFailure)
+            return Result.Failure<BootArtefactDescriptor>(baseImageResult.Error);
 
+        var baseImage = baseImageResult.Value;
         var baseWorkDir = ResolveStagingRoot();
 
         var overlayRoot = Path.Combine(
@@ -52,29 +47,31 @@ public sealed class BootstrapArtifactBuilder(
         if (writeFiles.IsFailure) return Result.Failure<BootArtefactDescriptor>(writeFiles.Error);
 
         var cpio = processRunner.RunProcess(
-            _options.CpioExecutable,
+            "cpio",
             ["-o", "-H", "newc", "-O", overlayCpioPath, "-0"],
             cancellationToken,
             stagingPath,
             BuildManifest(stagingPath));
 
-        if (cpio.IsFailure) return Result.Failure<BootArtefactDescriptor>(cpio.Error with { Code = "BootstrapCpioFailed" });
+        if (cpio.IsFailure)
+            return Result.Failure<BootArtefactDescriptor>(cpio.Error with { Code = "BootstrapCpioFailed" });
 
         var gzip = processRunner.RunProcess(
-            _options.GzipExecutable,
+            "gzip",
             ["-f", overlayCpioPath],
             cancellationToken);
-        if (gzip.IsFailure) return Result.Failure<BootArtefactDescriptor>(gzip.Error with { Code = "BootstrapGzipFailed" });
+        if (gzip.IsFailure)
+            return Result.Failure<BootArtefactDescriptor>(gzip.Error with { Code = "BootstrapGzipFailed" });
 
-        var combine = CombineInitrds(baseImage.InitrdPath, overlayGzipPath, combinedInitrdPath);
+        var combine = CombineInitrds(baseImage.RamDisk, overlayGzipPath, combinedInitrdPath);
         if (combine.IsFailure) return Result.Failure<BootArtefactDescriptor>(combine.Error);
 
         var storePathResult = AddToStore(combinedInitrdPath, cancellationToken);
         if (storePathResult.IsFailure)
             return Result.Failure<BootArtefactDescriptor>(storePathResult.Error);
 
-        var cmdline = BuildCommandLine(baseImage.KernelParams, request);
-        var descriptor = new BootArtefactDescriptor(baseImage.KernelPath, storePathResult.Value, cmdline);
+        var cmdline = BuildCommandLine(baseImage.Kernel, request);
+        var descriptor = new BootArtefactDescriptor(baseImage.Kernel, storePathResult.Value, cmdline);
 
         await progress.ReportAsync(
             new BootstrapBuildProgress(ProvisioningStage.ArtefactsBuilt, "Bootstrap artefact ready"),
@@ -168,7 +165,7 @@ public sealed class BootstrapArtifactBuilder(
     private Result<string> AddToStore(string path, CancellationToken cancellationToken)
     {
         var add = processRunner.RunProcess(
-            _options.NixStoreExecutable,
+            "nix",
             ["--add", path],
             cancellationToken);
 
@@ -203,9 +200,7 @@ public sealed class BootstrapArtifactBuilder(
 
     private string ResolveStagingRoot()
     {
-        var configured = string.IsNullOrWhiteSpace(_options.WorkDirectory)
-            ? DefaultWorkdir
-            : _options.WorkDirectory;
+        var configured = DefaultWorkdir;
 
         if (Path.IsPathRooted(configured))
             return configured;

@@ -4,9 +4,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.ProvisioningSessions;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;

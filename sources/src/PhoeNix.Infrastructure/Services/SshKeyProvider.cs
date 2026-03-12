@@ -3,9 +3,9 @@ using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models;
 using PhoeNix.Application.Models.SshIdentity;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.ProvisioningSessions;
 using PhoeNix.Domain.Models.Authentication;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;

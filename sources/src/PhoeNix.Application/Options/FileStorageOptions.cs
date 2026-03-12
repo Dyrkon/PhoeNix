@@ -1,4 +1,4 @@
-namespace PhoeNix.Domain.Options;
+namespace PhoeNix.Application.Options;
 
 public class FileStorageOptions
 {

@@ -4,11 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using PhoeNix.Application;
-using PhoeNix.Domain.Options;
 using PhoeNix.Infrastructure;
 using PhoeNix.Persistence;
 using Phoenix.Presentation.Extensions;
 using System.Text;
+using PhoeNix.Application.Options;
 
 namespace PhoeNix.WebAPI;
 
@@ -57,11 +57,6 @@ public static class DependencyInjection
         services.AddOptions<JwtCallbackTokenOptions>()
             .BindConfiguration("CallbackToken")
             .Validate(o => !string.IsNullOrWhiteSpace(o.SigningKey), "CallbackToken:SigningKey is required.")
-            .ValidateOnStart();
-
-        services.AddOptions<BootstrapArtifactsOptions>()
-            .BindConfiguration("BootstrapArtifacts")
-            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         services.AddOptions<NetbootHostOptions>()
