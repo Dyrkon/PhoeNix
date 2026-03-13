@@ -26,7 +26,6 @@ public static class DependencyInjection
         services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
         services.AddScoped<ISshKeyProvider, SshKeyProvider>();
         services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
-        services.AddScoped<IBootArtifactBuilder, BootstrapArtifactBuilder>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
 

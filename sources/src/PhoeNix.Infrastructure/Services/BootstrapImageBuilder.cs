@@ -3,6 +3,7 @@ using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.Bootstrap;
+using PhoeNix.Domain.Entities.ProvisioningSessions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
@@ -30,22 +31,21 @@ public sealed class BootstrapImageBuilder(
         var args = new List<string>
         {
             "run",
-            ".#createPxeImage"
+            ".#bootstrap",
+            "--impure"
         };
 
-        args.Add("--impure");
-        args.Add("--argstr");
-        args.Add("phoenixUserCaPublicKey");
-        args.Add(caKeyResult.Value);
-
-        args.Add("--argstr");
-        args.Add("system");
-        args.Add(architecture.ToArchitectureString());
+        var environmentVariables = new Dictionary<string, string>
+        {
+            ["PHOENIX_USER_CA_PUBLIC_KEY"] = caKeyResult.Value,
+            ["PHOENIX_TARGET_SYSTEM"] = architecture.ToArchitectureString()
+        };
 
         var result = processRunner.RunProcess(
             "nix",
             args,
-            cancellationToken);
+            cancellationToken,
+            environmentVariables);
 
         if (result.IsFailure)
             return Result.Failure<BootstrapImageDescriptor>(new Error(
@@ -83,8 +83,7 @@ public sealed class BootstrapImageBuilder(
             return Result.Success(new BootstrapImageDescriptor(
                 parsed.Kernel,
                 parsed.RamDisk,
-                parsed.Init,
-                parsed.System));
+                parsed.Init));
         }
         catch (JsonException e)
         {

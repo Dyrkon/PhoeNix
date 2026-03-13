@@ -21,9 +21,9 @@ internal sealed class ProvisioningSessionEntityTypeConfiguration
 
         builder.OwnsOne(x => x.BootArtefactDescriptor, owned =>
         {
-            owned.Property(p => p.KernelLocation).HasColumnName("KernelLocation");
-            owned.Property(p => p.InitRdLocation).HasColumnName("InitRdLocation");
-            owned.Property(p => p.Cmdline).HasColumnName("CmdLine");
+            owned.Property(p => p.Kernel).HasColumnName("KernelLocation");
+            owned.Property(p => p.RamDisk).HasColumnName("InitRdLocation");
+            owned.Property(p => p.Init).HasColumnName("CmdLine");
         });
 
         builder.OwnsOne(x => x.SshCredential, owned =>
@@ -34,10 +34,12 @@ internal sealed class ProvisioningSessionEntityTypeConfiguration
             owned.Property(p => p.CertificatePublicKey).HasColumnName("SshCertificatePublicKey");
         });
 
-        var targets = builder.OwnsMany<ProvisioningTarget>("_targets", owned =>
+        var targets = builder.OwnsMany(x => x.Targets, owned =>
         {
             owned.ToTable("ProvisioningSessionTargets");
+
             owned.WithOwner().HasForeignKey("ProvisioningSessionId");
+
             owned.Property(t => t.MachineId)
                 .HasColumnName("MachineId")
                 .HasConversion(
@@ -55,12 +57,10 @@ internal sealed class ProvisioningSessionEntityTypeConfiguration
                 token.Property(p => p.ExpiresAtUtc).HasColumnName("CallbackTokenExpiresAtUtc");
                 token.Property(p => p.RevokedAtUtc).HasColumnName("CallbackTokenRevokedAtUtc");
             });
+
             owned.HasKey("ProvisioningSessionId", "MachineId");
             owned.HasIndex("MachineId");
         });
-
-        targets.Navigation("_targets").UsePropertyAccessMode(PropertyAccessMode.Field);
-        builder.Ignore(x => x.Targets);
 
         builder.Navigation(x => x.BootArtefactDescriptor).IsRequired(false);
         builder.Navigation(x => x.SshCredential).IsRequired(false);

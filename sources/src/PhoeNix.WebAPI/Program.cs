@@ -24,7 +24,14 @@ using (var scope = app.Services.CreateScope())
         db.Database.Migrate();
 }
 
-app.UseHttpsRedirection();
+app.UseWhen(
+    context =>
+    {
+        var path = context.Request.Path;
+        return !(path.StartsWithSegments("/v1/boot") || !path.StartsWithSegments("/provisioning/files/"));
+    },
+    appBuilder => { appBuilder.UseHttpsRedirection(); });
+
 app.MapHealthChecks("/health");
 
 app.UseAuthentication();

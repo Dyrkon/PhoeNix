@@ -3,48 +3,117 @@
   lib,
   inputs,
   project,
-  phoenixUserCaPublicKey ? null,
-}:
-let
-  systemArch = pkgs.stdenv.hostPlatform.system;
+}: let
+  phoenixUserCaPublicKey = let
+    value = builtins.getEnv "PHOENIX_USER_CA_PUBLIC_KEY";
+  in
+    if value == ""
+    then throw "PHOENIX_USER_CA_PUBLIC_KEY environment variable is not set."
+    else value;
+
+  targetSystem = let
+    value = builtins.getEnv "PHOENIX_TARGET_SYSTEM";
+  in
+    if value == ""
+    then pkgs.stdenv.hostPlatform.system
+    else value;
 
   systemConfiguration = inputs.nixpkgs.lib.nixosSystem {
-    system = systemArch;
+    system = targetSystem;
     modules = [
-      ({ config, modulesPath, ... }: {
+      ({
+        config,
+        modulesPath,
+        ...
+      }: {
         imports = [
           (modulesPath + "/installer/netboot/netboot-minimal.nix")
         ];
 
-        services.openssh.enable = true;
+        config = {
+          services.openssh.enable = true;
 
-        services.openssh.settings = {
-          TrustedUserCAKeys = "/etc/ssh/phoenix_user_ca.pub";
-          PermitRootLogin = "prohibit-password";
-          PasswordAuthentication = false;
-          KbdInteractiveAuthentication = false;
-          PubkeyAuthentication = true;
+          services.openssh.settings = {
+            TrustedUserCAKeys = "/etc/ssh/phoenix_user_ca.pub";
+            PermitRootLogin = "prohibit-password";
+            PasswordAuthentication = false;
+            KbdInteractiveAuthentication = false;
+            PubkeyAuthentication = true;
 
-          X11Forwarding = false;
-          PermitTunnel = false;
-          AllowAgentForwarding = false;
-          AllowTcpForwarding = true;
+            X11Forwarding = false;
+            PermitTunnel = false;
+            AllowAgentForwarding = false;
+            AllowTcpForwarding = true;
+          };
+
+          environment.etc."ssh/phoenix_user_ca.pub".text = phoenixUserCaPublicKey;
+
+          environment.etc."ssh/authorized_principals/root".text = ''root'';
+
+          users.users.root.openssh.authorizedKeys.keys = lib.mkForce [];
+
+          system.stateVersion = config.system.nixos.release;
+
+          environment.systemPackages = [pkgs.curl];
+
+          systemd.services.phoenix-bootstrap-callback = {
+            description = "Notify PhoeNix that bootstrap environment is ready";
+            wantedBy = ["multi-user.target"];
+            after = ["network-online.target"];
+            wants = ["network-online.target"];
+
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${pkgs.writeShellScript "phoenix-bootstrap-callback" ''
+                      set -euo pipefail
+
+                      cmdline="$(cat /proc/cmdline)"
+
+                      get_arg() {
+                        local key="$1"
+                        for part in $cmdline; do
+                          case "$part" in
+                            "$key"=*)
+                              printf '%s\n' "''${part#"$key"=}"
+                              return 0
+                              ;;
+                          esac
+                        done
+                        return 1
+                      }
+
+                      api_base="$(get_arg phoenix.api-base || true)"
+                      session_id="$(get_arg phoenix.session-id || true)"
+                      machine_id="$(get_arg phoenix.machine-id || true)"
+                      callback_token="$(get_arg phoenix.callback-token || true)"
+
+                      if [ -z "''${api_base:-}" ] || [ -z "''${session_id:-}" ] || [ -z "''${machine_id:-}" ] || [ -z "''${callback_token:-}" ]; then
+                        echo "Missing required phoenix.* kernel parameters" >&2
+                        exit 1
+                      fi
+
+                      payload="$(cat <<EOF
+                {"sessionId":"$session_id","machineId":"$machine_id"}
+                EOF
+                )"
+
+                      exec ${pkgs.curl}/bin/curl \
+                        --fail \
+                        --silent \
+                        --show-error \
+                        --retry 10 \
+                        --retry-delay 3 \
+                        --connect-timeout 5 \
+                        --max-time 20 \
+                        -X POST \
+                        -H "Authorization: Bearer $callback_token" \
+                        -H "Content-Type: application/json" \
+                        -d "$payload" \
+                        "$api_base/provisioning/bootstrap/callback"
+              ''}";
+            };
+          };
         };
-
-        environment.etc."ssh/phoenix_user_ca.pub".text = phoenixUserCaPublicKey;
-
-        environment.etc."ssh/root_authorized_principals".text = ''
-          root
-        '';
-
-        services.openssh.extraConfig = ''
-          Match User root
-            AuthorizedPrincipalsFile /etc/ssh/root_authorized_principals
-        '';
-
-        users.users.root.openssh.authorizedKeys.keys = lib.mkForce [ ];
-
-        config.system.stateVersion = config.system.nixos.release;
       })
     ];
   };
@@ -55,10 +124,10 @@ let
     kernel = "${build.kernel}/bzImage";
     ramDisk = "${build.netbootRamdisk}/initrd";
     init = "${build.toplevel}/init";
-    system = "${systemArch}";
+    system = targetSystem;
+    kernelParams = "init=${build.toplevel}/init loglevel=4";
   };
-in
-{
+in {
   type = "app";
   meta.description = "Create PXE bootstrap image with SSH CA trust";
 

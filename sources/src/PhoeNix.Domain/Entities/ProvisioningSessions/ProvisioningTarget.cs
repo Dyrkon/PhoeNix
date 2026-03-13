@@ -10,29 +10,36 @@ public sealed record ProvisioningTarget
     {
     }
 
-    public MachineId MachineId { get; private set; } = default!;
-    public CallbackToken CallbackToken { get; init; } = default!;
+    public MachineId MachineId { get; private set; }
+    public CallbackToken? CallbackToken { get; private set; }
     public ProvisioningStage Stage { get; private set; }
 
     public ProvisioningTarget WithStage(ProvisioningStage stage)
     {
-        return new ProvisioningTarget(MachineId, CallbackToken, stage);
+        return new ProvisioningTarget { MachineId = MachineId, CallbackToken = CallbackToken, Stage = stage };
     }
 
-    public ProvisioningTarget RevokeCallbackToken(DateTime nowUtc)
+    public Result RevokeCallbackToken(DateTime nowUtc)
     {
-        return new ProvisioningTarget(MachineId, CallbackToken with { RevokedAtUtc = nowUtc }, Stage);
+        if (CallbackToken != null)
+        {
+            CallbackToken = CallbackToken with { RevokedAtUtc = nowUtc };
+            return Result.Success();
+        }
+
+        return Result.Failure(new Error("ProvisioningTargetRevokeFail"));
     }
 
-    private ProvisioningTarget(MachineId machineId, CallbackToken callbackToken, ProvisioningStage stage)
+    public Result AssignToken(CallbackToken callbackToken)
     {
-        MachineId = machineId;
+        if (CallbackToken is not null)
+            return Result.Failure(new Error("ProvisioningTargetTokenAssignedAlready"));
         CallbackToken = callbackToken;
-        Stage = stage;
+        return Result.Success();
     }
 
-    public static Result<ProvisioningTarget> Create(MachineId machineId, CallbackToken callbackToken)
+    public static Result<ProvisioningTarget> Create(MachineId machineId)
     {
-        return Result.Success(new ProvisioningTarget(machineId, callbackToken, ProvisioningStage.Create));
+        return Result.Success(new ProvisioningTarget { MachineId = machineId, Stage = ProvisioningStage.Create });
     }
 }

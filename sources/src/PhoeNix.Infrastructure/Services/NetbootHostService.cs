@@ -1,10 +1,8 @@
 using System.Diagnostics;
-using System.Threading;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Models.Bootstrap;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
@@ -22,22 +20,14 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
         _options = options.Value;
     }
 
-    public Task<Result> StartAsync(
-        ProvisioningSessionId sessionId,
-        BootArtefactDescriptor artefact,
-        CancellationToken cancellationToken)
+    public Task<Result> StartAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(artefact.KernelLocation) || !File.Exists(artefact.InitRdLocation))
-            return Task.FromResult<Result>(Result.Failure(new Error(
-                "NetbootHostMissingArtefacts",
-                "Kernel or initrd path does not exist.")));
-
         lock (_sync)
         {
             if (IsRunningLocked())
                 return Task.FromResult(Result.Success());
 
-            var args = BuildArguments(artefact);
+            var args = BuildArguments();
 
             try
             {
@@ -45,8 +35,8 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
                 {
                     FileName = _options.HostExecutablePath,
                     UseShellExecute = false,
-                    RedirectStandardOutput = false,
-                    RedirectStandardError = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     CreateNoWindow = true
                 };
 
@@ -58,6 +48,21 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
                     return Task.FromResult<Result>(Result.Failure(new Error(
                         "NetbootHostStartFailed",
                         "Failed to start netboot host process.")));
+
+                Thread.Sleep(750);
+                process.Refresh();
+
+                if (process.HasExited)
+                {
+                    var stdout = process.StandardOutput.ReadToEnd();
+                    var stderr = process.StandardError.ReadToEnd();
+                    var exitCode = process.ExitCode;
+                    process.Dispose();
+
+                    return Task.FromResult<Result>(Result.Failure(new Error(
+                        "NetbootHostStartFailed",
+                        $"Pixiecore exited immediately with code {exitCode}. Stdout: {stdout} Stderr: {stderr}")));
+                }
 
                 _process = process;
                 _startedAtUtc = DateTime.UtcNow;
@@ -122,15 +127,12 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
         }
     }
 
-    private List<string> BuildArguments(BootArtefactDescriptor artefact)
+    private List<string> BuildArguments()
     {
-        var args = new List<string>
+        return new List<string>
         {
-            "boot",
-            artefact.KernelLocation,
-            artefact.InitRdLocation,
-            "--cmdline",
-            artefact.Cmdline,
+            "api",
+            _options.ApiBaseUrl.TrimEnd('/'),
             "--port",
             _options.Port.ToString(),
             "--status-port",
@@ -138,8 +140,6 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
             "--dhcp-no-bind",
             "--debug"
         };
-
-        return args;
     }
 
     private void StartMonitor()

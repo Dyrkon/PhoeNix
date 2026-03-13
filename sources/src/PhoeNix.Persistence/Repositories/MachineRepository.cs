@@ -1,3 +1,4 @@
+using System.Net.NetworkInformation;
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Repositories;
@@ -20,6 +21,16 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 m => m.Title.ToLower() == title.Trim().ToLower(),
+                cancellationToken);
+    }
+
+    public Task<Machine?> GetByMacAddressAsync(PhysicalAddress macAddress, CancellationToken cancellationToken)
+    {
+        return DbContext
+            .Set<Machine>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                m => m.MacAddress.Equals(macAddress),
                 cancellationToken);
     }
 }

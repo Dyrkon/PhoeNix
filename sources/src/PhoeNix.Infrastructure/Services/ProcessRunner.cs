@@ -12,6 +12,7 @@ public class ProcessRunner : IProcessRunner
         string executableName,
         List<string> arguments,
         CancellationToken cancellationToken,
+        Dictionary<string, string>? environmentVariables = null,
         string? workingDirectory = null,
         string? standardInput = null,
         Action<string?>? perLineAction = null,
@@ -41,6 +42,10 @@ public class ProcessRunner : IProcessRunner
 
         foreach (var argument in arguments)
             processInfo.ArgumentList.Add(argument);
+
+        if (environmentVariables is not null)
+            foreach (var pair in environmentVariables)
+                processInfo.Environment[pair.Key] = pair.Value;
 
         process.StartInfo = processInfo;
         process.EnableRaisingEvents = true;

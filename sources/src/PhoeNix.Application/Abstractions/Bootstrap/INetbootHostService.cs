@@ -6,10 +6,7 @@ namespace PhoeNix.Application.Abstractions.Bootstrap;
 
 public interface INetbootHostService
 {
-    Task<Result> StartAsync(
-        ProvisioningSessionId sessionId,
-        BootArtefactDescriptor artefact,
-        CancellationToken cancellationToken);
+    Task<Result> StartAsync(CancellationToken cancellationToken);
 
     Task<Result> StopAsync(CancellationToken cancellationToken);
 

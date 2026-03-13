@@ -15,11 +15,11 @@ public class ProvisioningSession : AggregateRoot<ProvisioningSessionId>
     {
     }
 
-    public BootArtefactDescriptor? BootArtefactDescriptor { get; private set; }
+    public BootstrapImageDescriptor? BootArtefactDescriptor { get; private set; }
 
     public SshCredential? SshCredential { get; private set; }
 
-    public IReadOnlyCollection<ProvisioningTarget> Targets => _targets.AsReadOnly();
+    public IReadOnlyCollection<ProvisioningTarget> Targets => _targets;
 
     public bool ReadyForProvisioning(DateTime nowUtc)
     {
@@ -75,25 +75,31 @@ public class ProvisioningSession : AggregateRoot<ProvisioningSessionId>
             return Result.Failure(new Error("ProvisioningSessionIncorrectArtefact",
                 "Ramdisk location has to be a store path."));
 
-        BootArtefactDescriptor = new BootArtefactDescriptor(kernelLocation, initRdLocation, cmdLine);
+        BootArtefactDescriptor = new BootstrapImageDescriptor(kernelLocation, initRdLocation, cmdLine);
         return Result.Success();
     }
 
-    public Result EnrollMachine(MachineId machineId, CallbackToken callbackToken, DateTime nowUtc)
+    public Result EnrollMachine(MachineId machineId, DateTime nowUtc)
     {
-        if (!callbackToken.IsValid(nowUtc))
-            return Result.Failure(new Error(
-                "ProvisioningSessionCallbackTokenInvalid",
-                "Callback token is expired or revoked."
-            ));
-
         if (_targets.Any(t => t.MachineId == machineId))
             return Result.Failure(new Error(
                 "ProvisioningSessionMachineAlreadyEnrolled",
                 $"Machine '{machineId.Value}' is already enrolled in this provisioning session."
             ));
 
-        return ProvisioningTarget.Create(machineId, callbackToken).Tap(machine => _targets.Add(machine));
+        return ProvisioningTarget.Create(machineId).Tap(machine => _targets.Add(machine));
+    }
+
+    public Result AssignMachineCallbackToken(MachineId id, CallbackToken callbackToken)
+    {
+        var index = _targets.FindIndex(t => t.MachineId == id);
+        if (index < 0)
+            return Result.Failure(new Error(
+                "ProvisioningSessionMachineNotEnrolled",
+                $"Machine '{id.Value}' is not enrolled in this provisioning session."
+            ));
+
+        return _targets[index].AssignToken(callbackToken);
     }
 
     public Result RevokeMachineCallbackToken(MachineId machineId, DateTime nowUtc)
@@ -107,19 +113,13 @@ public class ProvisioningSession : AggregateRoot<ProvisioningSessionId>
 
         var target = _targets[index];
 
-        if (target.CallbackToken.RevokedAtUtc is not null)
+        if (target.CallbackToken?.RevokedAtUtc is not null)
             return Result.Failure(new Error(
                 "ProvisioningSessionCallbackTokenAlreadyRevoked",
                 $"Callback token for machine '{machineId.Value}' is already revoked."
             ));
 
-        _targets[index] = target
-            with
-            {
-                CallbackToken = target.CallbackToken with { RevokedAtUtc = nowUtc }
-            };
-
-        return Result.Success();
+        return _targets[index].RevokeCallbackToken(nowUtc);
     }
 
     public Result UpdateMachineStage(MachineId machineId, ProvisioningStage stage)

@@ -81,6 +81,7 @@ public class NixFormatterServiceTests
             string executableName,
             List<string> arguments,
             CancellationToken cancellationToken,
+            Dictionary<string, string>? environmentVariables = null,
             string? workingDirectory = null,
             string? standardInput = null,
             Action<string?>? perLineAction = null,
