@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.Machines;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
@@ -53,7 +53,7 @@ public sealed class JwtCallbackTokenService : ICallbackTokenService
     }
 
     public Result<CallbackToken> Create(
-        ProvisioningSessionId sessionId,
+        SetupSessionId sessionId,
         MachineId machineId,
         DateTime nowUtc,
         TimeSpan ttl)
@@ -139,7 +139,7 @@ public sealed class JwtCallbackTokenService : ICallbackTokenService
                 "Callback token is expired."));
 
         return Result.Success(new CallbackTokenContext(
-            new ProvisioningSessionId(sessionGuid),
+            new SetupSessionId(sessionGuid),
             new MachineId(machineGuid),
             expiresAtUtc
         ));

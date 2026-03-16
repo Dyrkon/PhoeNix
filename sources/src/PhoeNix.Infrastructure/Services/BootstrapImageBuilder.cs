@@ -2,8 +2,7 @@ using System.Text.Json;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Processes;
-using PhoeNix.Application.Models.Bootstrap;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 

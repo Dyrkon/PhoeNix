@@ -18,7 +18,6 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
 
         return DbContext
             .Set<Machine>()
-            .AsNoTracking()
             .SingleOrDefaultAsync(
                 m => m.Title.ToLower() == title.Trim().ToLower(),
                 cancellationToken);
@@ -28,7 +27,6 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
     {
         return DbContext
             .Set<Machine>()
-            .AsNoTracking()
             .SingleOrDefaultAsync(
                 m => m.MacAddress.Equals(macAddress),
                 cancellationToken);

@@ -4,8 +4,7 @@ using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models;
 using PhoeNix.Application.Models.SshIdentity;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
-using PhoeNix.Domain.Models.Authentication;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
@@ -18,7 +17,7 @@ public sealed class SshKeyProvider(
 {
     private readonly SshCaOptions _ca = caOptions.Value;
 
-    public async Task<Result<SshIdentityMaterial>> GetOrCreateAsync(ProvisioningSession session, CancellationToken ct)
+    public async Task<Result<SshIdentityMaterial>> GetOrCreateAsync(SetupSession session, CancellationToken ct)
     {
         var nowUtc = DateTime.UtcNow;
 
@@ -97,7 +96,7 @@ public sealed class SshKeyProvider(
         return Result.Success(new SshIdentityMaterial(privPath, pubPath, certPath, expiresAtUtc));
     }
 
-    public Task<Result> RevokeAsync(ProvisioningSession session, CancellationToken ct)
+    public Task<Result> RevokeAsync(SetupSession session, CancellationToken ct)
     {
         var nowUtc = DateTime.UtcNow;
 
@@ -173,7 +172,7 @@ public sealed class SshKeyProvider(
     private Result SignUserCertificate(
         string caPrivateKeyPath,
         string sessionPublicKeyPath,
-        ProvisioningSessionId sessionId,
+        SetupSessionId sessionId,
         DateTime expiresAtUtc,
         CancellationToken ct)
     {

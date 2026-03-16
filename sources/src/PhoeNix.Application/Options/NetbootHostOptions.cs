@@ -2,8 +2,8 @@ namespace PhoeNix.Application.Options;
 
 public sealed class NetbootHostOptions
 {
-    public string ApiBasePublicUrl { get; init; } = "http://localhost:5083";
-    public string ApiBaseUrl { get; init; } = "http://localhost:5083";
+    public string ApiBasePublicUrl { get; init; } = "http://0.0.0.0:5083";
+    public string ApiBaseUrl { get; init; } = "http://0.0.0.0:5083";
     public string HostExecutablePath { get; init; } = "pixiecore";
 
     public string ListenAddress { get; init; } = "0.0.0.0";

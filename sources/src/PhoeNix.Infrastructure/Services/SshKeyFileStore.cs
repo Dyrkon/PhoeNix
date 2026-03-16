@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -38,7 +38,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
         return CreateDirectoryIfMissing(Path.Combine(_rootPath, Storage.CaFolderName));
     }
 
-    public Result<string> GetOrCreateSessionDirectory(ProvisioningSessionId sessionId)
+    public Result<string> GetOrCreateSessionDirectory(SetupSessionId sessionId)
     {
         return CreateDirectoryIfMissing(Path.Combine(_rootPath, Storage.SessionsFolderName,
             sessionId.Value.ToString()));
@@ -89,7 +89,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
     }
 
     public Result<(string PrivateKeyPath, string PublicKeyPath, string CertificatePath)> GetSessionKeyPaths(
-        ProvisioningSessionId sessionId)
+        SetupSessionId sessionId)
     {
         return GetOrCreateSessionDirectory(sessionId)
             .Map(sessionDir =>
@@ -102,7 +102,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
             });
     }
 
-    public Result DeleteSessionDirectory(ProvisioningSessionId sessionId)
+    public Result DeleteSessionDirectory(SetupSessionId sessionId)
     {
         var dir = Path.Combine(_rootPath, Storage.SessionsFolderName, sessionId.Value.ToString());
         try

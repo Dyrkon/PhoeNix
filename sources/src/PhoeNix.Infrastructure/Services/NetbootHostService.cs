@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Bootstrap;
-using PhoeNix.Application.Models.Bootstrap;
+using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Options;
 using PhoeNix.Domain.Shared;
 

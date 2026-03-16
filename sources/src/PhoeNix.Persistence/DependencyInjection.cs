@@ -15,7 +15,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleTemplateRepository, ModuleTemplateRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMachineRepository, MachineRepository>();
-        services.AddScoped<IProvisioningSessionRepository, ProvisioningSessionRepository>();
+        services.AddScoped<ISetupSessionRepository, SetupSessionRepository>();
 
         return services;
     }

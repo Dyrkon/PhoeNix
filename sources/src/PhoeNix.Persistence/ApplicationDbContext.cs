@@ -4,7 +4,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
@@ -24,7 +24,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ModuleValue> ModuleValue { get; set; }
     public DbSet<Machine> Machines { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<ProvisioningSession> ProvisioningSessions { get; set; }
+    public DbSet<SetupSession> SetupSessions { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

@@ -1,4 +1,4 @@
-using PhoeNix.Application.Models.Bootstrap;
+using PhoeNix.Application.Models.Setup;
 
 namespace PhoeNix.Application.Abstractions.Bootstrap;
 

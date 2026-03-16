@@ -6,7 +6,7 @@ public sealed class JwtCallbackTokenOptions
 
     public string Issuer { get; init; } = "PhoeNix";
 
-    public string Audience { get; init; } = "PhoeNix.ProvisioningCallback";
+    public string Audience { get; init; } = "PhoeNix.SetupCallback";
 
     public TimeSpan AllowedClockSkew { get; init; } = TimeSpan.FromMinutes(2);
 

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Entities.ProvisioningSessions;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
@@ -20,5 +20,5 @@ public interface IApplicationDbContext
     public DbSet<EntryValue> EntryValues { get; }
     public DbSet<Input> Inputs { get; }
     public DbSet<User> Users { get; }
-    public DbSet<ProvisioningSession> ProvisioningSessions { get; }
+    public DbSet<SetupSession> SetupSessions { get; }
 }
