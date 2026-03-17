@@ -39,11 +39,7 @@ internal sealed class CancelSetupSessionCommandHandler(
 
         foreach (var target in session.Targets)
         {
-            var revokeToken = session.RevokeMachineCallbackToken(target.MachineId, nowUtc);
-            if (revokeToken.IsFailure &&
-                revokeToken.Error.Code != "SetupSessionMachineNotEnrolled")
-                return revokeToken.Error;
-
+            session.RevokeMachineCallbackToken(target.MachineId, nowUtc);
             var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled);
             if (stageResult.IsFailure)
                 return stageResult.Error;

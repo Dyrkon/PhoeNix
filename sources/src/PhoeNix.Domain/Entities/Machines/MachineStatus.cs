@@ -34,13 +34,6 @@ public class MachineStatus(MachineState machineState)
                 LastOrchestrated = now;
                 LastContacted = now;
                 break;
-            case MachineState.Configured:
-                if (MachineState != MachineState.Orchestrated)
-                    return Result.Failure(new Error("MachineStatusError",
-                        $"Can't got to machine state {MachineState.Configured.Humanize()} from state {machineState.Humanize()}"));
-                LastConfigured = now;
-                LastContacted = now;
-                break;
             case MachineState.Registered:
                 LastContacted = now;
                 break;

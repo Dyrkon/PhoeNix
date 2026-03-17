@@ -1,29 +1,17 @@
-using System;
-using System.IO;
-
 namespace PhoeNix.Infrastructure.Services;
 
 internal static class PathResolver
 {
-    public static string HomeDirectory()
-    {
-        var home = Environment.GetEnvironmentVariable("HOME");
-        if (!string.IsNullOrWhiteSpace(home)) return home;
-
-        home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return string.IsNullOrWhiteSpace(home) ? "/var/empty" : home;
-    }
-
-    public static string ResolveToHome(string path)
+    public static string ResolveToBase(string basePath, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return HomeDirectory();
+            return basePath;
 
         if (Path.IsPathRooted(path))
             return path;
 
         var trimmed = path.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        return Path.Combine(HomeDirectory(), trimmed);
+        return Path.Combine(basePath, trimmed);
     }
 
     public static string CombineWithBase(string basePath, string relativeOrAbsolute)

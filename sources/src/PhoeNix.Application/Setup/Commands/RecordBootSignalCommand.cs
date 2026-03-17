@@ -18,7 +18,8 @@ public record RecordBootSignalCommand(
 
 internal sealed class RecordBootSignalCommandHandler(
     ISetupSessionRepository setupSessionRepository,
-    ICallbackTokenService callbackTokenService)
+    ICallbackTokenService callbackTokenService,
+    IMachineRepository machineRepository)
     : ICommandHandler<RecordBootSignalCommand>
 {
     public async Task<Result> Handle(RecordBootSignalCommand request, CancellationToken cancellationToken)
@@ -85,6 +86,8 @@ internal sealed class RecordBootSignalCommandHandler(
         if (stageResult.IsFailure)
             return stageResult.Error;
 
-        return Result.Success();
+        return await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
+            .EnsureNotNull(new Error("MachineNotFound", "The machine was not found."))
+            .Bind(machine => machine.ChangeMachineState(MachineState.Registered, nowUtc));
     }
 }

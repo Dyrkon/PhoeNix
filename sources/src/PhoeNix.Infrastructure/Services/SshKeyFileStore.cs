@@ -12,20 +12,24 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 {
     private SshKeyStorageOptions Storage => _storageOptions.Value;
     private SshCaOptions Ca => _caOptions.Value;
+
     private readonly string _rootPath;
     private readonly IOptions<SshKeyStorageOptions> _storageOptions;
     private readonly IOptions<SshCaOptions> _caOptions;
     private readonly IProcessRunner _processRunner;
 
-    public SshKeyFileStore(IOptions<SshKeyStorageOptions> storageOptions,
+    public SshKeyFileStore(
+        IOptions<SshKeyStorageOptions> storageOptions,
         IOptions<SshCaOptions> caOptions,
         IProcessRunner processRunner)
     {
         _storageOptions = storageOptions;
         _caOptions = caOptions;
         _processRunner = processRunner;
-        var rootName = string.IsNullOrWhiteSpace(Storage.RootPathName) ? ".phoenix" : Storage.RootPathName;
-        _rootPath = PathResolver.ResolveToHome(rootName);
+
+        _rootPath = string.IsNullOrWhiteSpace(Storage.RootPath)
+            ? "/var/lib/phoenix"
+            : Storage.RootPath;
     }
 
     public Result<string> GetOrCreateRootDirectory()
@@ -40,8 +44,8 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 
     public Result<string> GetOrCreateSessionDirectory(SetupSessionId sessionId)
     {
-        return CreateDirectoryIfMissing(Path.Combine(_rootPath, Storage.SessionsFolderName,
-            sessionId.Value.ToString()));
+        return CreateDirectoryIfMissing(
+            Path.Combine(_rootPath, Storage.SessionsFolderName, sessionId.Value.ToString()));
     }
 
     public Result<(string CaPrivateKeyPath, string CaPublicKeyPath)> GetCaKeyPaths()
@@ -105,6 +109,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
     public Result DeleteSessionDirectory(SetupSessionId sessionId)
     {
         var dir = Path.Combine(_rootPath, Storage.SessionsFolderName, sessionId.Value.ToString());
+
         try
         {
             if (Directory.Exists(dir))

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Application.Setup.Queries;
 using PhoeNix.Domain.Entities.Machines;
@@ -176,6 +177,4 @@ public sealed class SetupModule : ICarterModule
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
-
-    public sealed record BootstrapCallbackRequest(Guid SessionId, Guid MachineId);
 }
