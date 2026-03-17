@@ -5,7 +5,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class EntryValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<EntryValue>
+internal class EntryValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<EntryValue>
 {
     public void Configure(EntityTypeBuilder<EntryValue> builder)
     {

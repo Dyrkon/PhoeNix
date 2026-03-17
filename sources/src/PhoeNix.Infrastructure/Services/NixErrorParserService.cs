@@ -1,7 +1,7 @@
 using System.Text.Json;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Models.Tests;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 

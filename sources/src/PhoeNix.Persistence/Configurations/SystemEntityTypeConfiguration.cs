@@ -6,7 +6,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class SystemEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Domain.Entities.Systems.System>
+internal class SystemEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Domain.Entities.Systems.System>
 {
     public void Configure(EntityTypeBuilder<Domain.Entities.Systems.System> builder)
     {

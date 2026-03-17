@@ -1,11 +1,11 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Models.Tests;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Models.Tests;
 using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;

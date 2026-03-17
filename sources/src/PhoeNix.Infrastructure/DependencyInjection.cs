@@ -1,5 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Services;
 using PhoeNix.Infrastructure.Services;
 
@@ -9,6 +13,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddOptions<NetbootHostOptions>();
+
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddSingleton<INixFormatterService, NixFormatterService>();
         services.AddSingleton<IModuleFilesBuilder, ModuleFilesBuilder>();
@@ -17,6 +23,11 @@ public static class DependencyInjection
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddScoped<INixBuildMaterializer, NixBuildMaterializer>();
+        services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
+        services.AddScoped<ISshKeyProvider, SshKeyProvider>();
+        services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
+        services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
+        services.AddSingleton<INetbootHostService, NetbootHostService>();
 
         return services;
     }

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
-using PhoeNix.Domain.Models.Processes;
-using PhoeNix.Domain.Services;
+using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Models.Processes;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
@@ -12,6 +12,7 @@ public class ProcessRunner : IProcessRunner
         string executableName,
         List<string> arguments,
         CancellationToken cancellationToken,
+        Dictionary<string, string>? environmentVariables = null,
         string? workingDirectory = null,
         string? standardInput = null,
         Action<string?>? perLineAction = null,
@@ -41,6 +42,10 @@ public class ProcessRunner : IProcessRunner
 
         foreach (var argument in arguments)
             processInfo.ArgumentList.Add(argument);
+
+        if (environmentVariables is not null)
+            foreach (var pair in environmentVariables)
+                processInfo.Environment[pair.Key] = pair.Value;
 
         process.StartInfo = processInfo;
         process.EnableRaisingEvents = true;

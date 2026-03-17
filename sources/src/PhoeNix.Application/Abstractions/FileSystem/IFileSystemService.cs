@@ -1,7 +1,7 @@
+using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Services;

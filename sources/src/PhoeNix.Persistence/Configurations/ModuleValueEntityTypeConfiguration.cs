@@ -7,7 +7,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleValue>
+internal class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleValue>
 {
     public void Configure(EntityTypeBuilder<ModuleValue> builder)
     {

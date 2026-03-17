@@ -1,7 +1,7 @@
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Models.Files;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 

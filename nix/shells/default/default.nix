@@ -15,6 +15,7 @@ pkgs.mkShell {
     pkgs.nixos-anywhere
     pkgs.process-compose
     pkgs.nginx
+    pkgs.pixiecore
   ];
 
   shellHook = ''

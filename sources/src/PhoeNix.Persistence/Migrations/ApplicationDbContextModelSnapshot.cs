@@ -15,7 +15,7 @@ namespace PhoeNix.Persistence.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.16");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.Configuration", b =>
                 {
@@ -86,6 +86,35 @@ namespace PhoeNix.Persistence.Migrations
                     b.HasIndex("ConfigurationId");
 
                     b.ToTable("Inputs");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Machines.Machine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MacAddress")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MacAddress")
+                        .IsUnique();
+
+                    b.HasIndex("Title")
+                        .IsUnique();
+
+                    b.ToTable("Machines");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.EntryValue", b =>
@@ -169,7 +198,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("SystemId");
 
-                    b.ToTable("ConfigurationModules");
+                    b.ToTable("ModuleValue");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Test", b =>
@@ -195,6 +224,54 @@ namespace PhoeNix.Persistence.Migrations
                     b.HasIndex("ModuleTemplateId");
 
                     b.ToTable("Tests");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.SetupSessions.SetupSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SetupSessions");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.SystemUsers.SystemUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HomePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsNormalUser")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Shell")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<uint>("Uid")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemUsers");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>
@@ -225,30 +302,9 @@ namespace PhoeNix.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Group")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("HomePath")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsNormalUser")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Shell")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<uint>("Uid")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -354,6 +410,80 @@ namespace PhoeNix.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Machines.Machine", b =>
+                {
+                    b.OwnsOne("PhoeNix.Domain.Entities.Machines.HardwareProfile", "HardwareProfile", b1 =>
+                        {
+                            b1.Property<Guid>("MachineId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int?>("SchemaVersion")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("MachineId");
+
+                            b1.ToTable("Machines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MachineId");
+                        });
+
+                    b.OwnsOne("PhoeNix.Domain.Entities.Machines.MachineStatus", "MachineStatus", b1 =>
+                        {
+                            b1.Property<Guid>("MachineId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTime?>("LastConfigured")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTime?>("LastContacted")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTime?>("LastOrchestrated")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTime?>("LastProvisioned")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("MachineState")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("MachineId");
+
+                            b1.HasIndex("MachineState");
+
+                            b1.ToTable("Machines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MachineId");
+                        });
+
+                    b.OwnsOne("PhoeNix.Domain.Entities.Machines.SoftwareSnapshot", "SoftwareSnapshot", b1 =>
+                        {
+                            b1.Property<Guid>("MachineId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int?>("SchemaVersion")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("MachineId");
+
+                            b1.ToTable("Machines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MachineId");
+                        });
+
+                    b.Navigation("HardwareProfile");
+
+                    b.Navigation("MachineStatus")
+                        .IsRequired();
+
+                    b.Navigation("SoftwareSnapshot");
+                });
+
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.EntryValue", b =>
                 {
                     b.HasOne("PhoeNix.Domain.Entities.Modules.ModuleValue", null)
@@ -420,6 +550,132 @@ namespace PhoeNix.Persistence.Migrations
                         .HasForeignKey("ModuleTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.SetupSessions.SetupSession", b =>
+                {
+                    b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.BootstrapImageDescriptor", "BootArtefactDescriptor", b1 =>
+                        {
+                            b1.Property<Guid>("SetupSessionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Init")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CmdLine");
+
+                            b1.Property<string>("Kernel")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("KernelLocation");
+
+                            b1.Property<string>("RamDisk")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("InitRdLocation");
+
+                            b1.HasKey("SetupSessionId");
+
+                            b1.ToTable("SetupSessions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SetupSessionId");
+                        });
+
+                    b.OwnsMany("PhoeNix.Domain.Entities.SetupSessions.SetupTarget", "Targets", b1 =>
+                        {
+                            b1.Property<Guid>("SetupSessionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("MachineId")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("MachineId");
+
+                            b1.Property<string>("IpAddress")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("IpAddress");
+
+                            b1.Property<string>("Stage")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("SetupSessionId", "MachineId");
+
+                            b1.HasIndex("MachineId");
+
+                            b1.ToTable("SetupSessionTargets", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("SetupSessionId");
+
+                            b1.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.CallbackToken", "CallbackToken", b2 =>
+                                {
+                                    b2.Property<Guid>("SetupTargetSetupSessionId")
+                                        .HasColumnType("TEXT");
+
+                                    b2.Property<Guid>("SetupTargetMachineId")
+                                        .HasColumnType("TEXT");
+
+                                    b2.Property<DateTime>("ExpiresAtUtc")
+                                        .HasColumnType("TEXT")
+                                        .HasColumnName("CallbackTokenExpiresAtUtc");
+
+                                    b2.Property<DateTime?>("RevokedAtUtc")
+                                        .HasColumnType("TEXT")
+                                        .HasColumnName("CallbackTokenRevokedAtUtc");
+
+                                    b2.Property<string>("Token")
+                                        .IsRequired()
+                                        .HasColumnType("TEXT")
+                                        .HasColumnName("CallbackToken");
+
+                                    b2.HasKey("SetupTargetSetupSessionId", "SetupTargetMachineId");
+
+                                    b2.ToTable("SetupSessionTargets");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("SetupTargetSetupSessionId", "SetupTargetMachineId");
+                                });
+
+                            b1.Navigation("CallbackToken");
+                        });
+
+                    b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.SshCredential", "SshCredential", b1 =>
+                        {
+                            b1.Property<Guid>("SetupSessionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("CertificatePublicKey")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SshCertificatePublicKey");
+
+                            b1.Property<DateTime>("ExpiresAtUtc")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SshKeyExpiresAtUtc");
+
+                            b1.Property<string>("PublicKey")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SshPublicKey");
+
+                            b1.Property<DateTime?>("RevokedAtUtc")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SshKeyRevokedAtUtc");
+
+                            b1.HasKey("SetupSessionId");
+
+                            b1.ToTable("SetupSessions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SetupSessionId");
+                        });
+
+                    b.Navigation("BootArtefactDescriptor");
+
+                    b.Navigation("SshCredential");
+
+                    b.Navigation("Targets");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>

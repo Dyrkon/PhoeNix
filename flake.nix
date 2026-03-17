@@ -38,8 +38,6 @@
           webapi = import ./nix/packages/webapi/default.nix {inherit pkgs lib project csprojSrc;};
           webapp = import ./nix/packages/webapp/default.nix {inherit pkgs lib project csprojSrc;};
 
-          pxe-starter = import ./nix/packages/pxe-starter/default.nix {inherit pkgs lib inputs project;};
-
           default = webapp;
         };
 
@@ -71,6 +69,10 @@
 
           playwright = import ./nix/apps/playwrightWithSettings.nix {
             inherit pkgs lib project;
+          };
+
+          bootstrap = import ./nix/apps/createPxeImage.nix {
+            inherit pkgs lib inputs project;
           };
 
           up = {

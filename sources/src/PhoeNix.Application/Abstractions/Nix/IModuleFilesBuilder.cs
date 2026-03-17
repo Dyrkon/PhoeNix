@@ -1,6 +1,6 @@
+using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Models.Files;
 
 namespace PhoeNix.Application.Abstractions.Nix;
 

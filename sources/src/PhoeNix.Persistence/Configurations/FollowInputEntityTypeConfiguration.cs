@@ -4,7 +4,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-public class FollowInputEntityTypeConfiguration : IApplicationEntityTypeConfiguration<FollowInput>
+internal class FollowInputEntityTypeConfiguration : IApplicationEntityTypeConfiguration<FollowInput>
 {
     public void Configure(EntityTypeBuilder<FollowInput> builder)
     {

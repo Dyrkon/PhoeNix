@@ -1,22 +1,20 @@
 using Microsoft.Extensions.Options;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Modules;
 using System.IO.Abstractions;
 using PhoeNix.Application.Abstractions.Nix;
-using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Application.Models.Files;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Models.Files;
-using PhoeNix.Domain.Options;
 using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INixFormatterService nixFormatterService)
+public class FileSystemService(
+    IOptions<FileStorageOptions> storageOptions,
+    INixFormatterService nixFormatterService)
     : IFileSystemService
 {
-    private const string TempFolderName = "phoenix";
-
     private static Result<string> CreateFolder(string path)
     {
         if (Directory.Exists(path))
@@ -37,7 +35,8 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
     private static Result<string> CheckAndRemoveDirectory(string path)
     {
         var fs = new FileSystem();
-        if (fs.Directory.Exists(path)) fs.Directory.Delete(path, true);
+        if (fs.Directory.Exists(path))
+            fs.Directory.Delete(path, true);
 
         return path;
     }
@@ -71,7 +70,7 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
                 }
                 else
                 {
-                    var result = WriteFile($"{path}/{file.Name}", ((TextFile)file).Content);
+                    var result = WriteFile(Path.Combine(path, file.Name), ((TextFile)file).Content);
                     if (result.IsFailure) return result;
                 }
 
@@ -81,17 +80,28 @@ public class FileSystemService(IOptions<FileStorageOptions> storageOptions, INix
 
     public Result<string> GetRootFolder()
     {
-        return storageOptions.Value.UseTemp
-            ? Path.Combine(Path.GetTempPath(), TempFolderName)
-            : Path.Combine(storageOptions.Value.RootPath);
+        var options = storageOptions.Value;
+
+        if (options.UseTemp)
+            return Result.Success(Path.Combine(Path.GetTempPath(), "phoenix"));
+
+        var rootBase = string.IsNullOrWhiteSpace(options.RootPath)
+            ? "/var/lib/phoenix"
+            : options.RootPath;
+
+        var fullPath = PathResolver.CombineWithBase(rootBase, options.ConfigurationsPath);
+        return Result.Success(fullPath);
     }
 
-    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,
+    public Result<string> WriteConfigurationToFs(
+        Folder configurationFolder,
+        ConfigurationId id,
         CancellationToken cancellationToken)
     {
         var rootPath = GetRootFolder().Value;
+
         return CheckAndRemoveDirectory(rootPath)
-            .Bind(path => WriteFolderStructure(path, configurationFolder))
-            .Bind(path => nixFormatterService.FormatNixFilesInPlace($"{rootPath}/{path}", cancellationToken));
+            .Bind(_ => WriteFolderStructure(rootPath, configurationFolder))
+            .Bind(path => nixFormatterService.FormatNixFilesInPlace(Path.Combine(rootPath, path), cancellationToken));
     }
 }

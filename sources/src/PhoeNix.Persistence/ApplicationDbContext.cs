@@ -2,8 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Data;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
+using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
@@ -17,8 +20,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Test> Tests { get; set; }
     public DbSet<EntryValue> EntryValues { get; set; }
     public DbSet<Domain.Entities.Systems.System> Systems { get; set; }
+    public DbSet<SystemUser> SystemUsers { get; set; }
+    public DbSet<ModuleValue> ModuleValue { get; set; }
+    public DbSet<Machine> Machines { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<ModuleValue> ConfigurationModules { get; set; }
+    public DbSet<SetupSession> SetupSessions { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

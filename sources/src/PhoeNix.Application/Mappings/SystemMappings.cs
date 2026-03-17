@@ -1,5 +1,5 @@
+using PhoeNix.Application.Models.Systems;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Models.Systems;
 
 namespace PhoeNix.Application.Mappings;
 
