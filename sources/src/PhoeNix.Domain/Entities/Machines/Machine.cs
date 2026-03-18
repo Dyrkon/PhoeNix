@@ -18,6 +18,10 @@ public class Machine : AggregateRoot<MachineId>
 
     public PhysicalAddress MacAddress { get; private set; }
 
+    public Architecture Architecture { get; private set; }
+
+    public InstallDiskSelectionPreference InstallDiskSelectionPreference { get; private set; }
+
     public HardwareProfile? HardwareProfile { get; private set; }
 
     public SoftwareSnapshot? SoftwareSnapshot { get; private set; }
@@ -27,16 +31,45 @@ public class Machine : AggregateRoot<MachineId>
     public Result ChangeMacAddress(string addressString)
     {
         if (!PhysicalAddress.TryParse(addressString, out var address))
-            return Result.Failure(new Error("MachineMACError", $"Unable to parse machine MAC address {addressString}"));
+            return Result.Failure(new Error(
+                "MachineMacAddressInvalid",
+                $"Unable to parse machine MAC address '{addressString}'."));
 
         MacAddress = address;
+        return Result.Success();
+    }
+
+    public Result ChangeArchitecture(Architecture architecture)
+    {
+        Architecture = architecture;
+        return Result.Success();
+    }
+
+    public Result ChangeInstallDiskSelectionPreference(InstallDiskSelectionPreference preference)
+    {
+        InstallDiskSelectionPreference = preference;
+        return Result.Success();
+    }
+
+    public Result RecordHardwareProfile(HardwareProfile hardwareProfile)
+    {
+        HardwareProfile = hardwareProfile;
+        return Result.Success();
+    }
+
+    public Result ClearHardwareProfile()
+    {
+        HardwareProfile = null;
         return Result.Success();
     }
 
     public Result Enable()
     {
         if (Enabled)
-            return Result.Failure(new Error("MachineAlreadyEnabled", $"Machine {Title} is enabled already"));
+            return Result.Failure(new Error(
+                "MachineAlreadyEnabled",
+                $"Machine '{Title}' is already enabled."));
+
         Enabled = true;
         return Result.Success();
     }
@@ -44,7 +77,10 @@ public class Machine : AggregateRoot<MachineId>
     public Result Disable()
     {
         if (!Enabled)
-            return Result.Failure(new Error("MachineAlreadyDisabled", $"Machine {Title} is disabled already"));
+            return Result.Failure(new Error(
+                "MachineAlreadyDisabled",
+                $"Machine '{Title}' is already disabled."));
+
         Enabled = false;
         return Result.Success();
     }
@@ -54,12 +90,23 @@ public class Machine : AggregateRoot<MachineId>
         return MachineStatus.ChangeMachineState(machineState, now);
     }
 
-    public static Result<Machine> Create(MachineId machineId, string macAddress, string title, bool enabled)
+    public static Result<Machine> Create(
+        MachineId machineId,
+        string macAddress,
+        string title,
+        bool enabled,
+        Architecture architecture,
+        InstallDiskSelectionPreference installDiskSelectionPreference)
     {
-        return new Result<Machine>(true, Error.None,
+        return new Result<Machine>(
+                true,
+                Error.None,
                 new Machine(machineId)
                 {
-                    Title = title, Enabled = enabled,
+                    Title = title,
+                    Enabled = enabled,
+                    Architecture = architecture,
+                    InstallDiskSelectionPreference = installDiskSelectionPreference,
                     MachineStatus = new MachineStatus(MachineState.Registered)
                 })
             .Tap(machine => machine.ChangeMacAddress(macAddress));

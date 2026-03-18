@@ -146,6 +146,28 @@ public class SetupSession : AggregateRoot<SetupSessionId>
         return target.SetIpAddress(ipAddress);
     }
 
+    public Result AssignSelectedInstallDisk(MachineId machineId, string diskPath)
+    {
+        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
+        if (target is null)
+            return Result.Failure(new Error(
+                "SetupSessionMachineNotEnrolled",
+                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
+
+        return target.AssignSelectedInstallDisk(diskPath);
+    }
+
+    public Result ClearSelectedInstallDisk(MachineId machineId)
+    {
+        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
+        if (target is null)
+            return Result.Failure(new Error(
+                "SetupSessionMachineNotEnrolled",
+                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
+
+        return target.ClearSelectedInstallDisk();
+    }
+
     public static Result<SetupSession> Create(SetupSessionId id, DateTime now)
     {
         return Result.Success(new SetupSession(id) { StartTime = now });
