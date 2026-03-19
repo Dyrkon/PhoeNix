@@ -64,6 +64,11 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<HardwareProbeOptions>()
+            .BindConfiguration("HardwareProbe")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         return services;
     }
 

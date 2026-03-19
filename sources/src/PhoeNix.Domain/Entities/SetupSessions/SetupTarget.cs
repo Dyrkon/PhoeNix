@@ -12,9 +12,14 @@ public sealed class SetupTarget
     }
 
     public MachineId MachineId { get; private set; }
+
     public CallbackToken? CallbackToken { get; private set; }
+
     public SetupStage Stage { get; private set; }
+
     public IPAddress? IpAddress { get; private set; }
+
+    public string? SelectedInstallDiskByIdPath { get; private set; }
 
     public Result SetStage(SetupStage stage)
     {
@@ -28,10 +33,34 @@ public sealed class SetupTarget
         return Result.Success();
     }
 
+    public Result AssignSelectedInstallDisk(string diskPath)
+    {
+        if (string.IsNullOrWhiteSpace(diskPath))
+            return Result.Failure(new Error(
+                "SetupTargetSelectedInstallDiskInvalid",
+                "Selected install disk path cannot be empty."));
+
+        if (!diskPath.StartsWith("/dev/disk/by-id", StringComparison.Ordinal))
+            return Result.Failure(new Error(
+                "SetupTargetSelectedInstallDiskInvalid",
+                $"Selected install disk path '{diskPath}' must be an stable /dev/disk/by-id/... path."));
+
+        SelectedInstallDiskByIdPath = diskPath.Trim();
+        return Result.Success();
+    }
+
+    public Result ClearSelectedInstallDisk()
+    {
+        SelectedInstallDiskByIdPath = null;
+        return Result.Success();
+    }
+
     public Result RevokeCallbackToken(DateTime nowUtc)
     {
         if (CallbackToken is null)
-            return Result.Failure(new Error("SetupTargetRevokeFail"));
+            return Result.Failure(new Error(
+                "SetupTargetCallbackTokenMissing",
+                "No callback token is assigned to the setup target."));
 
         CallbackToken = CallbackToken with { RevokedAtUtc = nowUtc };
         return Result.Success();
@@ -46,7 +75,9 @@ public sealed class SetupTarget
     public Result AssignToken(CallbackToken callbackToken)
     {
         if (CallbackToken is not null)
-            return Result.Failure(new Error("SetupTargetTokenAssignedAlready"));
+            return Result.Failure(new Error(
+                "SetupTargetTokenAlreadyAssigned",
+                "A callback token is already assigned to the setup target."));
 
         CallbackToken = callbackToken;
         return Result.Success();

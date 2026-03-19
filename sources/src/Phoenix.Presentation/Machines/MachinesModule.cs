@@ -20,7 +20,8 @@ public class MachinesModule : ICarterModule
     private async Task<IResult> CreateMachine(CreateMachineRequest request, ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new CreateMachineCommand(request.Title, request.Enabled, request.MacAddress);
+        var command = new CreateMachineCommand(request.Title, request.Enabled, request.MacAddress, request.Architecture,
+            request.InstallDiskSelectionPreference);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

@@ -100,7 +100,7 @@ EOF
 
           users.users.root.openssh.authorizedKeys.keys = lib.mkForce [ ];
 
-          environment.systemPackages = [ pkgs.curl ];
+          environment.systemPackages = [ pkgs.curl pkgs.nixos-facter ];
 
           systemd.services.phoenix-bootstrap-callback = {
             description = "Notify PhoeNix that bootstrap environment is ready";

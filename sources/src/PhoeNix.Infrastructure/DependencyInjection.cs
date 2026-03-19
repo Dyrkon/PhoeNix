@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
+using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
 using PhoeNix.Domain.Services;
 using PhoeNix.Infrastructure.Services;
@@ -27,6 +29,9 @@ public static class DependencyInjection
         services.AddScoped<ISshKeyProvider, SshKeyProvider>();
         services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
+        services.AddScoped<IInstallDiskSelectionPolicy, InstallDiskSelectionPolicy>();
+        services.AddScoped<IHardwareProbeService, SshHardwareProbeService>();
+        services.AddScoped<IHardwareInventoryProjector, HardwareInventoryProjector>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
 
         return services;

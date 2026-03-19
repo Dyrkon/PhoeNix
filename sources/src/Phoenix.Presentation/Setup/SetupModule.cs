@@ -26,6 +26,11 @@ public sealed class SetupModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+        app.MapPost("/setup/session/{sessionId:guid}/machine/{machineId:guid}/probe-hardware", ProbeMachineHardware)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status400BadRequest);
+
         app.MapGet("/v1/boot/{mac}", ProvideMachineBootDetails)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
@@ -69,6 +74,20 @@ public sealed class SetupModule : ICarterModule
         CancellationToken cancellationToken)
     {
         var command = new StartMachineSetupCommand(
+            new SetupSessionId(sessionId),
+            new MachineId(machineId));
+
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> ProbeMachineHardware(
+        Guid sessionId,
+        Guid machineId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new GetMachineHardwareInformationCommand(
             new SetupSessionId(sessionId),
             new MachineId(machineId));
 
@@ -139,7 +158,8 @@ public sealed class SetupModule : ICarterModule
             return Results.Unauthorized();
 
         var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
-        if (remoteIpAddress is null) return Results.BadRequest("Remote IP address could not be determined.");
+        if (remoteIpAddress is null)
+            return Results.BadRequest("Remote IP address could not be determined.");
 
         if (IPAddress.IsLoopback(remoteIpAddress))
             return Results.BadRequest("Loopback remote IP address is not valid for setup bootstrap callback.");
