@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Application.Setup.Queries;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using Phoenix.Presentation.Extensions;
 
@@ -30,6 +32,11 @@ public sealed class SetupModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
+
+        app.MapPost("/setup/machine/{machineId:guid}/orchestrate", OrchestrateMachine)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/v1/boot/{mac}", ProvideMachineBootDetails)
             .Produces(StatusCodes.Status200OK)
@@ -70,12 +77,15 @@ public sealed class SetupModule : ICarterModule
     private static async Task<IResult> StartMachineProvisioning(
         Guid sessionId,
         Guid machineId,
+        StartMachineSetupRequest request,
         ISender sender,
         CancellationToken cancellationToken)
     {
         var command = new StartMachineSetupCommand(
             new SetupSessionId(sessionId),
-            new MachineId(machineId));
+            new MachineId(machineId),
+            new ConfigurationId(request.ConfigurationId),
+            new SystemId(request.SystemId));
 
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
@@ -91,6 +101,16 @@ public sealed class SetupModule : ICarterModule
             new SetupSessionId(sessionId),
             new MachineId(machineId));
 
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> OrchestrateMachine(
+        Guid machineId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new OrchestrateMachineCommand(new MachineId(machineId));
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

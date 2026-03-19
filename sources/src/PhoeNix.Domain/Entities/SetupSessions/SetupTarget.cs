@@ -1,5 +1,7 @@
 using System.Net;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
@@ -7,6 +9,8 @@ namespace PhoeNix.Domain.Entities.SetupSessions;
 
 public sealed class SetupTarget
 {
+    private readonly List<RankedDiskAssignment> _rankedDiskAssignments = [];
+
     private SetupTarget()
     {
     }
@@ -19,7 +23,11 @@ public sealed class SetupTarget
 
     public IPAddress? IpAddress { get; private set; }
 
-    public string? SelectedInstallDiskByIdPath { get; private set; }
+    public IReadOnlyCollection<RankedDiskAssignment> RankedDiskAssignments => _rankedDiskAssignments;
+
+    public SystemId? SelectedSystemId { get; private set; }
+
+    public ConfigurationId? SelectedConfigurationId { get; private set; }
 
     public Result SetStage(SetupStage stage)
     {
@@ -33,25 +41,33 @@ public sealed class SetupTarget
         return Result.Success();
     }
 
-    public Result AssignSelectedInstallDisk(string diskPath)
+    public Result AssignRankedDisks(IReadOnlyList<string> diskByIdPaths)
     {
-        if (string.IsNullOrWhiteSpace(diskPath))
+        if (diskByIdPaths.Count == 0)
             return Result.Failure(new Error(
-                "SetupTargetSelectedInstallDiskInvalid",
-                "Selected install disk path cannot be empty."));
+                "SetupTargetRankedDisksMissing",
+                "At least one ranked disk assignment must be provided."));
 
-        if (!diskPath.StartsWith("/dev/disk/by-id", StringComparison.Ordinal))
-            return Result.Failure(new Error(
-                "SetupTargetSelectedInstallDiskInvalid",
-                $"Selected install disk path '{diskPath}' must be an stable /dev/disk/by-id/... path."));
+        _rankedDiskAssignments.Clear();
 
-        SelectedInstallDiskByIdPath = diskPath.Trim();
+        for (var i = 0; i < diskByIdPaths.Count; i++)
+        {
+            var assignmentResult = RankedDiskAssignment.Create(i, diskByIdPaths[i]);
+            if (assignmentResult.IsFailure)
+            {
+                _rankedDiskAssignments.Clear();
+                return assignmentResult.Error;
+            }
+
+            _rankedDiskAssignments.Add(assignmentResult.Value);
+        }
+
         return Result.Success();
     }
 
-    public Result ClearSelectedInstallDisk()
+    public Result ClearRankedDisks()
     {
-        SelectedInstallDiskByIdPath = null;
+        _rankedDiskAssignments.Clear();
         return Result.Success();
     }
 
@@ -83,11 +99,13 @@ public sealed class SetupTarget
         return Result.Success();
     }
 
-    public static Result<SetupTarget> Create(MachineId machineId)
+    public static Result<SetupTarget> Create(MachineId machineId, SystemId systemId, ConfigurationId configurationId)
     {
         return Result.Success(new SetupTarget
         {
             MachineId = machineId,
+            SelectedSystemId = systemId,
+            SelectedConfigurationId = configurationId,
             Stage = SetupStage.Created
         });
     }

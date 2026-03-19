@@ -42,6 +42,9 @@ internal sealed record GetMachineHardwareInformationCommandHandler(
                 "SetupTargetNotFound",
                 $"Machine '{request.MachineId.Value}' is not enrolled in setup session '{request.SessionId.Value}'."));
 
+        foreach (var disk in target.RankedDiskAssignments)
+            Console.WriteLine($"Orchestration disk: {disk.Index} -> {disk.DiskByIdPath}");
+
         if (target.Stage != SetupStage.Bootstrapped)
             return Result.Failure(new Error(
                 "SetupTargetInvalidStage",
@@ -73,19 +76,31 @@ internal sealed record GetMachineHardwareInformationCommandHandler(
                 "MachineHardwareProfileMissing",
                 "Machine hardware profile was not recorded."));
 
-        var selectedDiskResult = InstallDiskSelectionPolicy.Select(
+        var rankedDisksResult = InstallDiskSelectionPolicy.Rank(
             machine.HardwareProfile.Disks,
             machine.InstallDiskSelectionPreference);
 
-        if (selectedDiskResult.IsFailure)
-            return selectedDiskResult.Error;
+        if (rankedDisksResult.IsFailure)
+            return rankedDisksResult.Error;
 
-        var assignDiskResult = session.AssignSelectedInstallDisk(
+        var rankedDiskPaths = rankedDisksResult.Value
+            .Select(d => d.StableDevicePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Cast<string>()
+            .ToList();
+
+        foreach (var rankedDiskPath in rankedDiskPaths) Console.WriteLine($"Path1: {rankedDiskPath}");
+
+        var assignRankedDisksResult = session.AssignRankedDisks(
             request.MachineId,
-            selectedDiskResult.Value.StableDevicePath!);
+            rankedDiskPaths);
 
-        if (assignDiskResult.IsFailure)
-            return assignDiskResult.Error;
+        if (assignRankedDisksResult.IsFailure)
+            return assignRankedDisksResult.Error;
+
+        foreach (var targetx in session.Targets)
+        foreach (var disk in targetx.RankedDiskAssignments)
+            Console.WriteLine($"Assigned disk: {disk.Index} -> {disk.DiskByIdPath}");
 
         var stageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Probed);
         if (stageResult.IsFailure)

@@ -1,6 +1,5 @@
 using Carter;
-using Microsoft.EntityFrameworkCore;
-using PhoeNix.Persistence;
+using PhoeNix.Persistence.Seeding;
 using PhoeNix.WebAPI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,14 +14,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (app.Environment.IsDevelopment())
-        db.Database.EnsureCreated();
-    else
-        db.Database.Migrate();
-}
+await app.Services.SeedApplicationDataAsync();
 
 app.UseWhen(
     context =>

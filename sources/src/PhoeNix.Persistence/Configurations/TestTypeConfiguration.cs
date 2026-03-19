@@ -1,20 +1,37 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-internal class TestTypeConfiguration : IApplicationEntityTypeConfiguration<Test>
+internal sealed class TestEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Test>
 {
     public void Configure(EntityTypeBuilder<Test> builder)
     {
-        builder.HasKey(x => x.Id);
+        builder.HasKey(t => t.Id);
 
-        builder.Property(t => t.Id).HasConversion(
-            testId => testId.Value, value => new TestId(value));
+        builder.Property(t => t.Id)
+            .HasConversion(
+                id => id.Value,
+                value => new TestId(value))
+            .ValueGeneratedNever();
 
-        builder.Property(t => t.Name).HasMaxLength(100);
+        builder.Property(t => t.ModuleTemplateId)
+            .HasConversion(
+                id => id.Value,
+                value => new ModuleTemplateId(value))
+            .IsRequired();
 
-        builder.Property(t => t.Content).HasMaxLength(10000);
+        builder.Property(t => t.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(t => t.Content)
+            .IsRequired();
+
+        builder.PrimitiveCollection<List<string>>("_variableNames")
+            .ElementType()
+            .HasMaxLength(200);
     }
 }

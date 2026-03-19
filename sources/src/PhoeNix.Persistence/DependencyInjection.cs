@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Data;
 using PhoeNix.Domain.Repositories;
 using PhoeNix.Persistence.Repositories;
+using PhoeNix.Persistence.Seeding;
 
 namespace PhoeNix.Persistence;
 
@@ -49,6 +50,13 @@ public static class DependencyInjection
                 options.UseInMemoryDatabase(dbName))
             .ConfigureDbContext()
             .AddRepositories();
+
+        return services;
+    }
+
+    public static IServiceCollection AddSeeding(this IServiceCollection services)
+    {
+        services.AddScoped<ApplicationDbSeeder>();
 
         return services;
     }

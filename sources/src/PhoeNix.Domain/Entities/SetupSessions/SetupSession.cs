@@ -1,5 +1,7 @@
 using System.Net;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
@@ -76,14 +78,17 @@ public class SetupSession : AggregateRoot<SetupSessionId>
         return Result.Success();
     }
 
-    public Result EnrollMachine(MachineId machineId, DateTime nowUtc)
+    public Result EnrollMachine(MachineId machineId, SystemId systemId, ConfigurationId configurationId,
+        DateTime nowUtc)
     {
         if (_targets.Any(t => t.MachineId == machineId))
             return Result.Failure(new Error(
                 "SetupSessionMachineAlreadyEnrolled",
                 $"Machine '{machineId.Value}' is already enrolled in this setup session."));
 
-        return SetupTarget.Create(machineId).Tap(target => _targets.Add(target));
+        return SetupTarget
+            .Create(machineId, systemId, configurationId)
+            .Tap(target => _targets.Add(target));
     }
 
     public Result AssignMachineCallbackToken(MachineId id, CallbackToken callbackToken)
@@ -146,7 +151,7 @@ public class SetupSession : AggregateRoot<SetupSessionId>
         return target.SetIpAddress(ipAddress);
     }
 
-    public Result AssignSelectedInstallDisk(MachineId machineId, string diskPath)
+    public Result AssignRankedDisks(MachineId machineId, IReadOnlyList<string> diskByIdPaths)
     {
         var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
         if (target is null)
@@ -154,10 +159,10 @@ public class SetupSession : AggregateRoot<SetupSessionId>
                 "SetupSessionMachineNotEnrolled",
                 $"Machine '{machineId.Value}' is not enrolled in this setup session."));
 
-        return target.AssignSelectedInstallDisk(diskPath);
+        return target.AssignRankedDisks(diskByIdPaths);
     }
 
-    public Result ClearSelectedInstallDisk(MachineId machineId)
+    public Result ClearRankedDisks(MachineId machineId)
     {
         var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
         if (target is null)
@@ -165,7 +170,7 @@ public class SetupSession : AggregateRoot<SetupSessionId>
                 "SetupSessionMachineNotEnrolled",
                 $"Machine '{machineId.Value}' is not enrolled in this setup session."));
 
-        return target.ClearSelectedInstallDisk();
+        return target.ClearRankedDisks();
     }
 
     public static Result<SetupSession> Create(SetupSessionId id, DateTime now)

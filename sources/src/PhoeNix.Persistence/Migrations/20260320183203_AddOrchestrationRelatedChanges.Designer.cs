@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PhoeNix.Persistence;
 
@@ -10,9 +11,11 @@ using PhoeNix.Persistence;
 namespace PhoeNix.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260320183203_AddOrchestrationRelatedChanges")]
+    partial class AddOrchestrationRelatedChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -226,6 +229,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
+                        .HasMaxLength(10000)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ModuleTemplateId")
@@ -233,11 +237,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.PrimitiveCollection<string>("_variableNames")
-                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -889,6 +889,7 @@ namespace PhoeNix.Persistence.Migrations
                                         .HasColumnType("TEXT");
 
                                     b2.Property<int>("Index")
+                                        .ValueGeneratedOnAdd()
                                         .HasColumnType("INTEGER")
                                         .HasColumnName("RankIndex");
 

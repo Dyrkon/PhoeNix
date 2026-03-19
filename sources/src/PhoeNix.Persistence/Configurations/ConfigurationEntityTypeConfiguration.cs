@@ -5,7 +5,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-internal class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Configuration>
+internal sealed class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConfiguration<Configuration>
 {
     public void Configure(EntityTypeBuilder<Configuration> builder)
     {
@@ -14,10 +14,16 @@ internal class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConf
         builder.Property(c => c.Id)
             .HasConversion(
                 id => id.Value,
-                value => new ConfigurationId(value));
+                value => new ConfigurationId(value))
+            .ValueGeneratedNever();
 
-        builder.Property(c => c.Description).HasMaxLength(500);
-        builder.Property(c => c.Title).HasMaxLength(50);
+        builder.Property(c => c.Title)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(c => c.Description)
+            .IsRequired()
+            .HasMaxLength(500);
 
         builder.HasMany(c => c.Inputs)
             .WithOne()
@@ -34,8 +40,13 @@ internal class ConfigurationEntityTypeConfiguration : IApplicationEntityTypeConf
             .HasForeignKey(s => s.ConfigurationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(c => c.Inputs).UsePropertyAccessMode(PropertyAccessMode.Field);
-        builder.Navigation(c => c.Modules).UsePropertyAccessMode(PropertyAccessMode.Field);
-        builder.Navigation(c => c.SystemSpecifications).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(c => c.Inputs)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(c => c.Modules)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(c => c.SystemSpecifications)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

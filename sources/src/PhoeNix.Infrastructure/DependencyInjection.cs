@@ -32,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IInstallDiskSelectionPolicy, InstallDiskSelectionPolicy>();
         services.AddScoped<IHardwareProbeService, SshHardwareProbeService>();
         services.AddScoped<IHardwareInventoryProjector, HardwareInventoryProjector>();
+        services.AddScoped<INixosInstaller, NixosAnywhereInstaller>();
+        services.AddScoped<IRuntimeBindingResolver, RuntimeBindingResolver>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
 
         return services;

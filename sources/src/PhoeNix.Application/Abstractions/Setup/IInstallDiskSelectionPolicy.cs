@@ -6,7 +6,7 @@ namespace PhoeNix.Application.Abstractions.Setup;
 
 public interface IInstallDiskSelectionPolicy
 {
-    Result<DiskProfile> Select(
+    Result<IReadOnlyList<DiskProfile>> Rank(
         IReadOnlyCollection<DiskProfile> disks,
         InstallDiskSelectionPreference preference);
 }

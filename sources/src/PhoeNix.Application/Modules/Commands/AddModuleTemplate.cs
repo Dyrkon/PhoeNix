@@ -31,8 +31,8 @@ internal sealed class AddModuleTemplateHandler(
 
         var sharedDefs = new List<EntryValueDefinition>
         {
-            new(sharedTemplateId, pEnableSteam, pEnableSteam, UserInputType.Text),
-            new(sharedTemplateId, pOpenFirewall, pOpenFirewall, UserInputType.Text)
+            new(sharedTemplateId, pEnableSteam, pEnableSteam, UserInputType.Text, EntryBindingKind.UserProvided),
+            new(sharedTemplateId, pOpenFirewall, pOpenFirewall, UserInputType.Text, EntryBindingKind.UserProvided)
         };
 
         var sharedTemplateResult =
@@ -60,9 +60,9 @@ internal sealed class AddModuleTemplateHandler(
 
         var systemDefs = new List<EntryValueDefinition>
         {
-            new(systemTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text),
-            new(systemTemplateId, pIsContainer, pIsContainer, UserInputType.Text),
-            new(systemTemplateId, pStateVersion, pStateVersion, UserInputType.Text)
+            new(systemTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text, EntryBindingKind.UserProvided),
+            new(systemTemplateId, pIsContainer, pIsContainer, UserInputType.Text, EntryBindingKind.UserProvided),
+            new(systemTemplateId, pStateVersion, pStateVersion, UserInputType.Text, EntryBindingKind.UserProvided)
         };
 
         var systemTemplateResult =
@@ -91,8 +91,8 @@ internal sealed class AddModuleTemplateHandler(
 
         var diskoDefs = new List<EntryValueDefinition>
         {
-            new(diskoTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text),
-            new(diskoTemplateId, pVmStateVersion, pVmStateVersion, UserInputType.Text)
+            new(diskoTemplateId, pDiskDevice, pDiskDevice, UserInputType.Text, EntryBindingKind.RankedDiskCandidate, 0),
+            new(diskoTemplateId, pVmStateVersion, pVmStateVersion, UserInputType.Text, EntryBindingKind.UserProvided)
         };
 
         var diskoTemplateResult =

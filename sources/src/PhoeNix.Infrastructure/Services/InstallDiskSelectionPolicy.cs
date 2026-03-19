@@ -7,12 +7,12 @@ namespace PhoeNix.Infrastructure.Services;
 
 public sealed class InstallDiskSelectionPolicy : IInstallDiskSelectionPolicy
 {
-    public Result<DiskProfile> Select(
+    public Result<IReadOnlyList<DiskProfile>> Rank(
         IReadOnlyCollection<DiskProfile> disks,
         InstallDiskSelectionPreference preference)
     {
         if (disks.Count == 0)
-            return Result.Failure<DiskProfile>(new Error(
+            return Result.Failure<IReadOnlyList<DiskProfile>>(new Error(
                 "InstallDiskSelectionNoDisks",
                 "No disks were provided for installation target selection."));
 
@@ -21,7 +21,7 @@ public sealed class InstallDiskSelectionPolicy : IInstallDiskSelectionPolicy
             .ToList();
 
         if (candidates.Count == 0)
-            return Result.Failure<DiskProfile>(new Error(
+            return Result.Failure<IReadOnlyList<DiskProfile>>(new Error(
                 "InstallDiskSelectionNoCandidates",
                 "No selectable installation target disks were found."));
 
@@ -31,37 +31,40 @@ public sealed class InstallDiskSelectionPolicy : IInstallDiskSelectionPolicy
                 candidates
                     .OrderByDescending(GetSizeBytes)
                     .ThenByDescending(GetSpeedScore)
-                    .ThenBy(GetStableIdentity),
+                    .ThenBy(GetStableIdentity)
+                    .ToList(),
 
             InstallDiskSelectionPreference.Fastest =>
                 candidates
                     .OrderByDescending(GetSpeedScore)
                     .ThenByDescending(GetSizeBytes)
-                    .ThenBy(GetStableIdentity),
+                    .ThenBy(GetStableIdentity)
+                    .ToList(),
 
             InstallDiskSelectionPreference.FastestAndBiggest =>
                 candidates
                     .OrderByDescending(GetSpeedScore)
                     .ThenByDescending(GetSizeBytes)
-                    .ThenBy(GetStableIdentity),
+                    .ThenBy(GetStableIdentity)
+                    .ToList(),
 
             InstallDiskSelectionPreference.BiggestAndFastest =>
                 candidates
                     .OrderByDescending(GetSizeBytes)
                     .ThenByDescending(GetSpeedScore)
-                    .ThenBy(GetStableIdentity),
+                    .ThenBy(GetStableIdentity)
+                    .ToList(),
 
             _ => throw new ArgumentOutOfRangeException(nameof(preference), preference, null)
         };
 
-        var selected = ordered.First();
-
-        return Result.Success(selected);
+        return Result.Success<IReadOnlyList<DiskProfile>>(ordered);
     }
 
     private static bool IsSelectable(DiskProfile disk)
     {
         return !string.IsNullOrWhiteSpace(disk.StableDevicePath)
+               && disk.StableDevicePath.StartsWith("/dev/disk/by-id/", StringComparison.Ordinal)
                && GetSizeBytes(disk) > 0;
     }
 

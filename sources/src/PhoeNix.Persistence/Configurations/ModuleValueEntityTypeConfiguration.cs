@@ -7,7 +7,7 @@ using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
 
-internal class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleValue>
+internal sealed class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfiguration<ModuleValue>
 {
     public void Configure(EntityTypeBuilder<ModuleValue> builder)
     {
@@ -16,12 +16,17 @@ internal class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfig
         builder.Property(mv => mv.Id)
             .HasConversion(
                 id => id.Value,
-                value => new ModuleValueId(value));
+                value => new ModuleValueId(value))
+            .ValueGeneratedNever();
 
         builder.Property(mv => mv.ModuleTemplateId)
             .HasConversion(
                 id => id.Value,
-                value => new ModuleTemplateId(value));
+                value => new ModuleTemplateId(value))
+            .IsRequired();
+
+        builder.Property(mv => mv.Enabled)
+            .IsRequired();
 
         builder.Property<ConfigurationId?>("ConfigurationId")
             .HasConversion(
@@ -35,12 +40,14 @@ internal class ModuleValueEntityTypeConfiguration : IApplicationEntityTypeConfig
 
         builder.HasIndex("ConfigurationId");
         builder.HasIndex("SystemId");
+        builder.HasIndex(mv => mv.ModuleTemplateId);
 
         builder.HasMany(mv => mv.EditableValues)
             .WithOne()
             .HasForeignKey(e => e.ModuleValueId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(mv => mv.EditableValues).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(mv => mv.EditableValues)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
