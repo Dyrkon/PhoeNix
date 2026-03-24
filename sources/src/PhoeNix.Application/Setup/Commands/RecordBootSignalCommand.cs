@@ -1,6 +1,8 @@
 using System.Net;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
@@ -62,30 +64,70 @@ internal sealed class RecordBootSignalCommandHandler(
                 $"Machine '{request.MachineId.Value}' is not enrolled in setup session '{request.SessionId.Value}'."));
 
         if (target.Stage != SetupStage.ArtefactsAssigned)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupTargetInvalidStage",
-                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.ArtefactsAssigned}' stage before bootstrap callback can be recorded."));
+                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.ArtefactsAssigned}' stage before bootstrap callback can be recorded.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         if (target.CallbackToken is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMissing",
-                "No callback token is assigned to the setup target."));
+                "No callback token is assigned to the setup target.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         if (!string.Equals(target.CallbackToken.Token, request.CallbackToken, StringComparison.Ordinal))
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMismatch",
-                "Setup callback token does not match the token assigned to the setup target."));
+                "Setup callback token does not match the token assigned to the setup target.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         if (!target.CallbackToken.IsValid(nowUtc))
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenInvalid",
-                "The callback token is expired or revoked."));
+                "The callback token is expired or revoked.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         var recordIpResult = session.RecordMachineIpAddress(request.MachineId, request.MachineIpAddress);
         if (recordIpResult.IsFailure)
-            return recordIpResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                recordIpResult.Error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
 
-        var stageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Bootstrapped);
+        var stageResult = session.UpdateMachineStage(
+            request.MachineId,
+            SetupStage.Bootstrapped,
+            nowUtc);
+
         if (stageResult.IsFailure)
             return stageResult.Error;
 

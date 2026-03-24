@@ -3,6 +3,8 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
@@ -54,9 +56,17 @@ internal sealed class GetBootDecisionQueryHandler(
         var session = sessionResult.Value;
 
         if (session.BootArtefactDescriptor is null)
-            return Result.Failure<PxeBootDetails>(new Error(
+        {
+            var error = new Error(
                 "SetupSessionBootArtefactMissing",
-                "The setup session does not have a boot artefact assigned."));
+                "The setup session does not have a boot artefact assigned.");
+
+            return session.PersistFailure<PxeBootDetails>(
+                machine.Id,
+                error,
+                nameof(GetBootDecisionQueryHandler),
+                nowUtc);
+        }
 
         var target = session.Targets.FirstOrDefault(t => t.MachineId == machine.Id);
         if (target is null)
@@ -64,24 +74,55 @@ internal sealed class GetBootDecisionQueryHandler(
                 "SetupTargetNotFound",
                 "Setup target was not found for the machine."));
 
-        if (target.Stage is not (SetupStage.WaitingForPxe or SetupStage.ArtefactsAssigned))    
-	    return Result.Failure<PxeBootDetails>(new Error(
+        if (target.Stage is not (SetupStage.WaitingForPxe or SetupStage.ArtefactsAssigned))
+        {
+            var error = new Error(
                 "SetupTargetInvalidStage",
-                $"Machine '{machine.Id.Value}' must be in '{SetupStage.WaitingForPxe}' stage before boot details can be provided."));
+                $"Machine '{machine.Id.Value}' must be in '{SetupStage.WaitingForPxe}' or '{SetupStage.ArtefactsAssigned}' stage before boot details can be provided.");
+
+            return session.PersistFailure<PxeBootDetails>(
+                machine.Id,
+                error,
+                nameof(GetBootDecisionQueryHandler),
+                nowUtc);
+        }
 
         if (target.CallbackToken is null)
-            return Result.Failure<PxeBootDetails>(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMissing",
-                "No callback token is assigned to the setup target."));
+                "No callback token is assigned to the setup target.");
+
+            return session.PersistFailure<PxeBootDetails>(
+                machine.Id,
+                error,
+                nameof(GetBootDecisionQueryHandler),
+                nowUtc);
+        }
 
         if (!target.CallbackToken.IsValid(nowUtc))
-            return Result.Failure<PxeBootDetails>(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenInvalid",
-                "The callback token is expired or revoked."));
+                "The callback token is expired or revoked.");
 
-        var stageResult = session.UpdateMachineStage(machine.Id, SetupStage.ArtefactsAssigned);
-        if (stageResult.IsFailure)
-            return Result.Failure<PxeBootDetails>(stageResult.Error);
+            return session.PersistFailure<PxeBootDetails>(
+                machine.Id,
+                error,
+                nameof(GetBootDecisionQueryHandler),
+                nowUtc);
+        }
+
+        if (target.Stage == SetupStage.WaitingForPxe)
+        {
+            var stageResult = session.UpdateMachineStage(
+                machine.Id,
+                SetupStage.ArtefactsAssigned,
+                nowUtc);
+
+            if (stageResult.IsFailure)
+                return Result.Failure<PxeBootDetails>(stageResult.Error);
+        }
 
         var cmdline = BuildCommandLine(
             session.BootArtefactDescriptor,

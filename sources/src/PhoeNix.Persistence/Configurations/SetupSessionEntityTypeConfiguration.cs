@@ -70,6 +70,24 @@ internal sealed class SetupSessionEntityTypeConfiguration
                 .HasConversion<string>()
                 .IsRequired();
 
+            owned.Property(t => t.LastTransitionAtUtc)
+                .HasColumnName("LastTransitionAtUtc");
+
+            owned.Property(t => t.LastErrorCode)
+                .HasColumnName("LastErrorCode")
+                .HasMaxLength(100);
+
+            owned.Property(t => t.LastErrorDescription)
+                .HasColumnName("LastErrorDescription")
+                .HasMaxLength(2000);
+
+            owned.Property(t => t.LastErrorSource)
+                .HasColumnName("LastErrorSource")
+                .HasMaxLength(200);
+
+            owned.Property(t => t.LastErrorAtUtc)
+                .HasColumnName("LastErrorAtUtc");
+
             owned.Property(t => t.IpAddress)
                 .HasColumnName("IpAddress")
                 .HasConversion(
@@ -105,6 +123,9 @@ internal sealed class SetupSessionEntityTypeConfiguration
                 token.Property(p => p.RevokedAtUtc)
                     .HasColumnName("CallbackTokenRevokedAtUtc");
             });
+
+            owned.Navigation(t => t.CallbackToken)
+                .IsRequired(false);
 
             owned.OwnsMany(t => t.RankedDiskAssignments, disk =>
             {

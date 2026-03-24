@@ -1,6 +1,9 @@
+using System.Net;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Repositories;
@@ -8,7 +11,9 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
 
-public record FinalizeMachineSetupCommand(string Token) : ICommand;
+public record FinalizeMachineSetupCommand(
+    string Token,
+    IPAddress MachineIpAddress) : ICommand;
 
 internal sealed class FinalizeMachineSetupCommandHandler(
     ISetupSessionRepository setupSessionRepository,
@@ -57,20 +62,79 @@ internal sealed class FinalizeMachineSetupCommandHandler(
                 $"Machine '{machine.Id.Value}' is not enrolled in setup session '{session.Id.Value}'."));
 
         if (target.Stage != SetupStage.Orchestrated)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupTargetInvalidStage",
-                $"Machine '{machine.Id.Value}' must be in '{SetupStage.Orchestrated}' stage before finalization can be recorded."));
+                $"Machine '{machine.Id.Value}' must be in '{SetupStage.Orchestrated}' stage before finalization can be recorded.");
+
+            return session.PersistFailure(
+                machine.Id,
+                error,
+                nameof(FinalizeMachineSetupCommandHandler),
+                nowUtc);
+        }
 
         if (target.CallbackToken is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMissing",
-                "No callback token is assigned to the setup target."));
+                "No callback token is assigned to the setup target.");
+
+            return session.PersistFailure(
+                machine.Id,
+                error,
+                nameof(FinalizeMachineSetupCommandHandler),
+                nowUtc);
+        }
+
+        if (target.SelectedConfigurationId is null)
+        {
+            var error = new Error(
+                "SetupConfigurationMissing",
+                "No selected configuration is assigned to the setup target.");
+
+            return session.PersistFailure(
+                machine.Id,
+                error,
+                nameof(FinalizeMachineSetupCommandHandler),
+                nowUtc);
+        }
+
+        if (target.SelectedSystemId is null)
+        {
+            var error = new Error(
+                "SetupSystemMissing",
+                "No selected system is assigned to the setup target.");
+
+            return session.PersistFailure(
+                machine.Id,
+                error,
+                nameof(FinalizeMachineSetupCommandHandler),
+                nowUtc);
+        }
+
+        var provisioningSnapshotResult = machine.RecordProvisioningSnapshot(
+            target.SelectedConfigurationId,
+            target.SelectedSystemId,
+            request.MachineIpAddress,
+            nowUtc);
+
+        if (provisioningSnapshotResult.IsFailure)
+            return provisioningSnapshotResult.Error;
 
         var revokeTokenResult = session.RevokeMachineCallbackToken(machine.Id, nowUtc);
         if (revokeTokenResult.IsFailure)
-            return revokeTokenResult.Error;
+            return session.PersistFailure(
+                machine.Id,
+                revokeTokenResult.Error,
+                nameof(FinalizeMachineSetupCommandHandler),
+                nowUtc);
 
-        var stageResult = session.UpdateMachineStage(machine.Id, SetupStage.Finished);
+        var stageResult = session.UpdateMachineStage(
+            machine.Id,
+            SetupStage.Finished,
+            nowUtc);
+
         if (stageResult.IsFailure)
             return stageResult.Error;
 

@@ -4,6 +4,8 @@ using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
@@ -31,6 +33,8 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
         ApplyConfigurationToMachineCommand request,
         CancellationToken cancellationToken)
     {
+        var nowUtc = DateTime.UtcNow;
+
         var sessionResult = await sessionRepository
             .GetWithEnrolledMachineAsync(request.MachineId, cancellationToken)
             .EnsureNotNull(new Error(
@@ -44,30 +48,70 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
         var target = session.Targets.First(t => t.MachineId == request.MachineId);
 
         if (target.Stage != SetupStage.Probed)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupTargetInvalidStage",
-                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.Probed}' stage before configuration can be applied."));
+                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.Probed}' stage before configuration can be applied.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         if (target.SelectedConfigurationId is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "MachineConfigurationMissing",
-                $"Configuration is not assigned to machine '{request.MachineId.Value}'."));
+                $"Configuration is not assigned to machine '{request.MachineId.Value}'.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         if (target.SelectedSystemId is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "MachineSystemMissing",
-                $"System is not assigned to machine '{request.MachineId.Value}'."));
+                $"System is not assigned to machine '{request.MachineId.Value}'.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         if (target.CallbackToken is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMissing",
-                "No callback token is assigned to the setup target."));
+                "No callback token is assigned to the setup target.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         var moduleTemplates = await moduleTemplateRepository.GetAllAsync(cancellationToken);
         if (moduleTemplates is null || !moduleTemplates.Any())
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "ModuleTemplatesNotFound",
-                "Cannot get module templates."));
+                "Cannot get module templates.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         var configurationResult = await configurationRepository
             .GetByIdAsync(target.SelectedConfigurationId, cancellationToken)
@@ -76,15 +120,27 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 $"Configuration '{target.SelectedConfigurationId.Value}' was not found."));
 
         if (configurationResult.IsFailure)
-            return configurationResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                configurationResult.Error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
 
         var configuration = configurationResult.Value;
 
         var systemExists = configuration.SystemSpecifications.Any(s => s.Id == target.SelectedSystemId);
         if (!systemExists)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SelectedSystemNotInConfiguration",
-                $"System '{target.SelectedSystemId.Value}' is not part of configuration '{configuration.Id.Value}'."));
+                $"System '{target.SelectedSystemId.Value}' is not part of configuration '{configuration.Id.Value}'.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         var finalizeUrl = $"{setupCallbackOptions.Value.ApiBasePublicUrl.TrimEnd('/')}/setup/finalize";
 
@@ -99,7 +155,11 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
             target);
 
         if (boundConfigurationResult.IsFailure)
-            return boundConfigurationResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                boundConfigurationResult.Error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
 
         var installResult = await nixBuildMaterializer
             .MaterializeConfiguration(
@@ -120,14 +180,16 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 cancellationToken));
 
         if (installResult.IsFailure)
-        {
-            var failedStageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Failed);
-            if (failedStageResult.IsFailure)
-                return failedStageResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                installResult.Error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc,
+                SetupStage.Failed);
 
-            return installResult.Error;
-        }
-
-        return session.UpdateMachineStage(request.MachineId, SetupStage.Orchestrated);
+        return session.UpdateMachineStage(
+            request.MachineId,
+            SetupStage.Orchestrated,
+            nowUtc);
     }
 }

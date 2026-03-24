@@ -117,7 +117,7 @@ internal sealed class StartMachineSetupHandler(
         if (assignTokenResult.IsFailure)
             return assignTokenResult.Error;
 
-        return session.UpdateMachineStage(machine.Id, SetupStage.WaitingForPxe);
+        return session.UpdateMachineStage(machine.Id, SetupStage.WaitingForPxe, nowUtc);
     }
 
     private static bool IsActive(SetupStage stage)

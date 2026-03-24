@@ -25,7 +25,7 @@ public sealed class RuntimeBindingResolver(
             target.RankedDiskAssignments.Count);
 
         foreach (var disk in target.RankedDiskAssignments.OrderBy(d => d.Index))
-            logger.LogInformation(
+            logger.LogDebug(
                 "Runtime binding source disk: index={Index}, path={DiskPath}",
                 disk.Index,
                 disk.DiskByIdPath);
@@ -39,12 +39,21 @@ public sealed class RuntimeBindingResolver(
 
             var sharedBindingResult = ApplyBindingsToModule(module, template, target, "shared");
             if (sharedBindingResult.IsFailure)
+            {
+                logger.LogWarning(
+                    "Runtime binding failed for machine {MachineId} in template {TemplateName}: {ErrorCode} {ErrorDescription}",
+                    target.MachineId.Value,
+                    template.Name,
+                    sharedBindingResult.Error.Code,
+                    sharedBindingResult.Error.Description);
+
                 return Result.Failure<Configuration>(sharedBindingResult.Error);
+            }
         }
 
         foreach (var system in configuration.SystemSpecifications)
         {
-            logger.LogInformation(
+            logger.LogDebug(
                 "Applying bindings to system {SystemId} / {SystemName}",
                 system.Id.Value,
                 system.Name);
@@ -58,9 +67,22 @@ public sealed class RuntimeBindingResolver(
 
                 var systemBindingResult = ApplyBindingsToModule(module, template, target, $"system:{system.Name}");
                 if (systemBindingResult.IsFailure)
+                {
+                    logger.LogWarning(
+                        "Runtime binding failed for machine {MachineId} in template {TemplateName}: {ErrorCode} {ErrorDescription}",
+                        target.MachineId.Value,
+                        template.Name,
+                        systemBindingResult.Error.Code,
+                        systemBindingResult.Error.Description);
+
                     return Result.Failure<Configuration>(systemBindingResult.Error);
+                }
             }
         }
+
+        logger.LogInformation(
+            "Runtime bindings applied for machine {MachineId}",
+            target.MachineId.Value);
 
         return Result.Success(configuration);
     }
@@ -71,7 +93,7 @@ public sealed class RuntimeBindingResolver(
         SetupTarget target,
         string scope)
     {
-        logger.LogInformation(
+        logger.LogDebug(
             "Inspecting {Scope} module {TemplateName} ({TemplateId})",
             scope,
             template.Name,
@@ -88,13 +110,12 @@ public sealed class RuntimeBindingResolver(
                     "EntryDefinitionNotFound",
                     $"Entry definition '{entry.Name}' was not found in template '{template.Name}'."));
 
-            logger.LogInformation(
-                "Entry {EntryName} in template {TemplateName}: bindingKind={BindingKind}, bindingIndex={BindingIndex}, currentValue={CurrentValue}",
+            logger.LogDebug(
+                "Entry {EntryName} in template {TemplateName}: bindingKind={BindingKind}, bindingIndex={BindingIndex}",
                 entry.Name,
                 template.Name,
                 definition.BindingKind,
-                definition.BindingIndex,
-                entry.Value);
+                definition.BindingIndex);
 
             if (definition.BindingKind == EntryBindingKind.RankedDiskCandidate)
             {
@@ -111,20 +132,18 @@ public sealed class RuntimeBindingResolver(
                         "DiskBindingOutOfRange",
                         $"No disk found for index {definition.BindingIndex.Value} in template '{template.Name}'."));
 
-                logger.LogInformation(
-                    "Applying ranked disk binding for entry {EntryName}: {OldValue} -> \"{DiskPath}\"",
+                logger.LogDebug(
+                    "Applying ranked disk binding for entry {EntryName}: {DiskPath}",
                     entry.Name,
-                    entry.Value,
                     disk.DiskByIdPath);
 
                 entry.SetValue($"\"{disk.DiskByIdPath}\"");
             }
 
-            logger.LogInformation(
-                "Resolved entry {EntryName} in template {TemplateName} to value {ResolvedValue}",
+            logger.LogDebug(
+                "Resolved entry {EntryName} in template {TemplateName}",
                 entry.Name,
-                template.Name,
-                entry.Value);
+                template.Name);
 
             newEntries.Add(entry);
         }

@@ -79,7 +79,10 @@ public class SetupSession : AggregateRoot<SetupSessionId>
         return Result.Success();
     }
 
-    public Result EnrollMachine(MachineId machineId, SystemId systemId, ConfigurationId configurationId,
+    public Result EnrollMachine(
+        MachineId machineId,
+        SystemId systemId,
+        ConfigurationId configurationId,
         DateTime nowUtc)
     {
         if (_targets.Any(t => t.MachineId == machineId))
@@ -88,8 +91,62 @@ public class SetupSession : AggregateRoot<SetupSessionId>
                 $"Machine '{machineId.Value}' is already enrolled in this setup session."));
 
         return SetupTarget
-            .Create(machineId, systemId, configurationId)
+            .Create(machineId, systemId, configurationId, nowUtc)
             .Tap(target => _targets.Add(target));
+    }
+
+    public Result UpdateMachineStage(
+        MachineId machineId,
+        SetupStage stage,
+        DateTime nowUtc,
+        bool clearFailure = true)
+    {
+        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
+        if (target is null)
+            return Result.Failure(new Error(
+                "SetupSessionMachineNotEnrolled",
+                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
+
+        var previousStage = target.Stage;
+
+        var result = target.SetStage(stage, nowUtc, clearFailure);
+        if (result.IsFailure)
+            return result;
+
+        if (previousStage != stage)
+            RaiseDomainEvent(new SetupTargetStageChangedDomainEvent(
+                Id,
+                machineId,
+                previousStage,
+                stage));
+
+        return Result.Success();
+    }
+
+    public Result RecordMachineFailure(
+        MachineId machineId,
+        Error error,
+        string source,
+        DateTime nowUtc)
+    {
+        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
+        if (target is null)
+            return Result.Failure(new Error(
+                "SetupSessionMachineNotEnrolled",
+                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
+
+        return target.RecordFailure(error, source, nowUtc);
+    }
+
+    public Result ClearMachineFailure(MachineId machineId)
+    {
+        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
+        if (target is null)
+            return Result.Failure(new Error(
+                "SetupSessionMachineNotEnrolled",
+                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
+
+        return target.ClearFailure();
     }
 
     public Result AssignMachineCallbackToken(MachineId id, CallbackToken callbackToken)
@@ -128,32 +185,6 @@ public class SetupSession : AggregateRoot<SetupSessionId>
                 $"Callback token for machine '{machineId.Value}' is already revoked."));
 
         return target.RevokeCallbackToken(nowUtc);
-    }
-
-    public Result UpdateMachineStage(MachineId machineId, SetupStage stage)
-    {
-        var target = _targets.FirstOrDefault(t => t.MachineId == machineId);
-        if (target is null)
-            return Result.Failure(new Error(
-                "SetupSessionMachineNotEnrolled",
-                $"Machine '{machineId.Value}' is not enrolled in this setup session."));
-
-        var previousStage = target.Stage;
-
-        var result = target.SetStage(stage);
-        if (result.IsFailure)
-            return result;
-
-        if (previousStage != stage)
-        {
-            RaiseDomainEvent(new SetupTargetStageChangedDomainEvent(
-                Id,
-                machineId,
-                previousStage,
-                stage));
-        }
-
-        return Result.Success();
     }
 
     public Result RecordMachineIpAddress(MachineId machineId, IPAddress ipAddress)

@@ -21,6 +21,16 @@ public sealed class SetupTarget
 
     public SetupStage Stage { get; private set; }
 
+    public DateTime? LastTransitionAtUtc { get; private set; }
+
+    public string? LastErrorCode { get; private set; }
+
+    public string? LastErrorDescription { get; private set; }
+
+    public string? LastErrorSource { get; private set; }
+
+    public DateTime? LastErrorAtUtc { get; private set; }
+
     public IPAddress? IpAddress { get; private set; }
 
     public IReadOnlyCollection<RankedDiskAssignment> RankedDiskAssignments => _rankedDiskAssignments;
@@ -29,9 +39,40 @@ public sealed class SetupTarget
 
     public ConfigurationId? SelectedConfigurationId { get; private set; }
 
-    public Result SetStage(SetupStage stage)
+    public Result SetStage(
+        SetupStage stage,
+        DateTime nowUtc,
+        bool clearFailure = true)
     {
         Stage = stage;
+        LastTransitionAtUtc = nowUtc;
+
+        if (clearFailure)
+            ClearFailure();
+
+        return Result.Success();
+    }
+
+    public Result RecordFailure(
+        Error error,
+        string source,
+        DateTime nowUtc)
+    {
+        LastErrorCode = error.Code;
+        LastErrorDescription = error.Description;
+        LastErrorSource = source;
+        LastErrorAtUtc = nowUtc;
+
+        return Result.Success();
+    }
+
+    public Result ClearFailure()
+    {
+        LastErrorCode = null;
+        LastErrorDescription = null;
+        LastErrorSource = null;
+        LastErrorAtUtc = null;
+
         return Result.Success();
     }
 
@@ -99,14 +140,19 @@ public sealed class SetupTarget
         return Result.Success();
     }
 
-    public static Result<SetupTarget> Create(MachineId machineId, SystemId systemId, ConfigurationId configurationId)
+    public static Result<SetupTarget> Create(
+        MachineId machineId,
+        SystemId systemId,
+        ConfigurationId configurationId,
+        DateTime nowUtc)
     {
         return Result.Success(new SetupTarget
         {
             MachineId = machineId,
             SelectedSystemId = systemId,
             SelectedConfigurationId = configurationId,
-            Stage = SetupStage.Created
+            Stage = SetupStage.Created,
+            LastTransitionAtUtc = nowUtc
         });
     }
 }

@@ -1,6 +1,9 @@
+using Microsoft.Extensions.Logging;
 using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Setup;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
@@ -15,22 +18,27 @@ public record GetMachineHardwareInformationCommand(
     SetupSessionId SessionId,
     MachineId MachineId) : ICommand;
 
-internal sealed record GetMachineHardwareInformationCommandHandler(
-    IHardwareProbeService HardwareProbeService,
-    IHardwareInventoryProjector HardwareInventoryProjector,
-    IInstallDiskSelectionPolicy InstallDiskSelectionPolicy,
-    IMachineRepository MachineRepository,
-    ISetupSessionRepository SessionRepository)
+internal sealed class GetMachineHardwareInformationCommandHandler(
+    IHardwareProbeService hardwareProbeService,
+    IHardwareInventoryProjector hardwareInventoryProjector,
+    IInstallDiskSelectionPolicy installDiskSelectionPolicy,
+    IMachineRepository machineRepository,
+    ISetupSessionRepository sessionRepository,
+    ILogger<GetMachineHardwareInformationCommandHandler> logger)
     : ICommandHandler<GetMachineHardwareInformationCommand>
 {
     public async Task<Result> Handle(
         GetMachineHardwareInformationCommand request,
         CancellationToken cancellationToken)
     {
-        var sessionResult = await SessionRepository.GetByIdAsync(request.SessionId, cancellationToken).EnsureNotNull(
-            new Error(
+        var nowUtc = DateTime.UtcNow;
+
+        var sessionResult = await sessionRepository
+            .GetByIdAsync(request.SessionId, cancellationToken)
+            .EnsureNotNull(new Error(
                 "SetupSessionNotFound",
                 $"Setup session '{request.SessionId.Value}' was not found."));
+
         if (sessionResult.IsFailure)
             return sessionResult.Error;
 
@@ -43,45 +51,83 @@ internal sealed record GetMachineHardwareInformationCommandHandler(
                 $"Machine '{request.MachineId.Value}' is not enrolled in setup session '{request.SessionId.Value}'."));
 
         foreach (var disk in target.RankedDiskAssignments)
-            Console.WriteLine($"Orchestration disk: {disk.Index} -> {disk.DiskByIdPath}");
+            logger.LogDebug(
+                "Existing ranked disk assignment for machine {MachineId}: {Index} -> {DiskByIdPath}",
+                request.MachineId.Value,
+                disk.Index,
+                disk.DiskByIdPath);
 
         if (target.Stage != SetupStage.Bootstrapped)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupTargetInvalidStage",
-                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.Bootstrapped}' stage before hardware probing."));
+                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.Bootstrapped}' stage before hardware probing.");
 
-        var machineResult = await MachineRepository.GetByIdAsync(request.MachineId, cancellationToken).EnsureNotNull(
-            new Error(
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
+        }
+
+        var machineResult = await machineRepository
+            .GetByIdAsync(request.MachineId, cancellationToken)
+            .EnsureNotNull(new Error(
                 "MachineNotFound",
                 $"Machine '{request.MachineId.Value}' was not found."));
+
         if (machineResult.IsFailure)
             return machineResult.Error;
 
         var machine = machineResult.Value;
 
-        var probeResult = await HardwareProbeService.ProbeAsync(session, request.MachineId, cancellationToken);
+        var probeResult = await hardwareProbeService.ProbeAsync(session, request.MachineId, cancellationToken);
         if (probeResult.IsFailure)
-            return probeResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                probeResult.Error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
 
-        var hardwareProfileResult = HardwareInventoryProjector.Project(probeResult.Value);
+        var hardwareProfileResult = hardwareInventoryProjector.Project(probeResult.Value);
         if (hardwareProfileResult.IsFailure)
-            return hardwareProfileResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                hardwareProfileResult.Error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
 
         var recordHardwareResult = machine.RecordHardwareProfile(hardwareProfileResult.Value);
         if (recordHardwareResult.IsFailure)
-            return recordHardwareResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                recordHardwareResult.Error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
 
         if (machine.HardwareProfile is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "MachineHardwareProfileMissing",
-                "Machine hardware profile was not recorded."));
+                "Machine hardware profile was not recorded.");
 
-        var rankedDisksResult = InstallDiskSelectionPolicy.Rank(
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
+        }
+
+        var rankedDisksResult = installDiskSelectionPolicy.Rank(
             machine.HardwareProfile.Disks,
             machine.InstallDiskSelectionPreference);
 
         if (rankedDisksResult.IsFailure)
-            return rankedDisksResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                rankedDisksResult.Error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
 
         var rankedDiskPaths = rankedDisksResult.Value
             .Select(d => d.StableDevicePath)
@@ -89,15 +135,26 @@ internal sealed record GetMachineHardwareInformationCommandHandler(
             .Cast<string>()
             .ToList();
 
-        foreach (var rankedDiskPath in rankedDiskPaths) Console.WriteLine($"Path1: {rankedDiskPath}");
+        foreach (var rankedDiskPath in rankedDiskPaths)
+            logger.LogDebug(
+                "Ranked install disk candidate for machine {MachineId}: {DiskByIdPath}",
+                request.MachineId.Value,
+                rankedDiskPath);
 
         var assignRankedDisksResult = session.AssignRankedDisks(
             request.MachineId,
             rankedDiskPaths);
 
         if (assignRankedDisksResult.IsFailure)
-            return assignRankedDisksResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                assignRankedDisksResult.Error,
+                nameof(GetMachineHardwareInformationCommandHandler),
+                nowUtc);
 
-        return session.UpdateMachineStage(request.MachineId, SetupStage.Probed);
+        return session.UpdateMachineStage(
+            request.MachineId,
+            SetupStage.Probed,
+            nowUtc);
     }
 }

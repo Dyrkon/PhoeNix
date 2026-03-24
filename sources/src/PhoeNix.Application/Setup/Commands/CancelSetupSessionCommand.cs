@@ -49,7 +49,7 @@ internal sealed class CancelSetupSessionCommandHandler(
             if (target.Stage is SetupStage.Finished or SetupStage.Cancelled)
                 continue;
 
-            var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled);
+            var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled, nowUtc);
             if (stageResult.IsFailure)
                 return stageResult.Error;
         }

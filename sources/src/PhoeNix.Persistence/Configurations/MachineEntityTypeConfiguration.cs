@@ -1,7 +1,10 @@
+using System.Net;
 using System.Net.NetworkInformation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
@@ -222,8 +225,35 @@ internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeCon
             });
         });
 
+        builder.OwnsOne(i => i.ProvisioningSnapshot, provisioning =>
+        {
+            provisioning.WithOwner();
+
+            provisioning.Property(p => p.ConfigurationId)
+                .HasColumnName("ProvisionedConfigurationId")
+                .HasConversion(
+                    id => id.Value,
+                    value => new ConfigurationId(value));
+
+            provisioning.Property(p => p.SystemId)
+                .HasColumnName("ProvisionedSystemId")
+                .HasConversion(
+                    id => id.Value,
+                    value => new SystemId(value));
+
+            provisioning.Property(p => p.LastKnownIpAddress)
+                .HasColumnName("ProvisionedIpAddress")
+                .HasConversion(
+                    ip => ip.ToString(),
+                    value => IPAddress.Parse(value));
+
+            provisioning.Property(p => p.ProvisionedAtUtc)
+                .HasColumnName("ProvisionedAtUtc");
+        });
+
         builder.OwnsOne(i => i.SoftwareSnapshot, software => { software.WithOwner(); });
 
+        builder.Navigation(i => i.ProvisioningSnapshot).IsRequired(false);
         builder.Navigation(i => i.HardwareProfile).IsRequired(false);
         builder.Navigation(i => i.SoftwareSnapshot).IsRequired(false);
         builder.Navigation(i => i.MachineStatus).IsRequired();

@@ -52,7 +52,7 @@ public sealed class SetupModule : ICarterModule
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/setup/session/{sessionId:guid}/machine/{machineId:guid}/status", GetMachineSetupStatus)
-            .Produces<SetupStage>(StatusCodes.Status200OK)
+            .Produces<SetupStatusResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/setup/session/{sessionId:guid}/cancel", CancelSetupSession)
@@ -181,7 +181,17 @@ public sealed class SetupModule : ICarterModule
         if (string.IsNullOrWhiteSpace(token))
             return Results.Unauthorized();
 
-        var result = await sender.Send(new FinalizeMachineSetupCommand(token), cancellationToken);
+        var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
+        if (remoteIpAddress is null)
+            return Results.BadRequest("Remote IP address could not be determined.");
+
+        if (IPAddress.IsLoopback(remoteIpAddress))
+            return Results.BadRequest("Loopback remote IP address is not valid for setup finalization callback.");
+
+        var result = await sender.Send(
+            new FinalizeMachineSetupCommand(token, remoteIpAddress),
+            cancellationToken);
+
         return result.AsHttpResult();
     }
 
