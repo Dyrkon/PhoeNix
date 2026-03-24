@@ -74,6 +74,8 @@ public class NixBuildMaterializer : INixBuildMaterializer
             "    serviceConfig = {\n" +
             "      Type = \"oneshot\";\n" +
             "      ExecStart = callbackScript;\n" +
+            "      Restart = \"on-failure\";\n" +
+            "      RestartSec = \"10s\";\n" +
             "    };\n" +
             "  };\n" +
             "}";

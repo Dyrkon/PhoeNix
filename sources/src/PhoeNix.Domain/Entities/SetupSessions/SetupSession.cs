@@ -3,6 +3,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Events;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
 using PhoeNix.Domain.Shared;
@@ -137,7 +138,22 @@ public class SetupSession : AggregateRoot<SetupSessionId>
                 "SetupSessionMachineNotEnrolled",
                 $"Machine '{machineId.Value}' is not enrolled in this setup session."));
 
-        return target.SetStage(stage);
+        var previousStage = target.Stage;
+
+        var result = target.SetStage(stage);
+        if (result.IsFailure)
+            return result;
+
+        if (previousStage != stage)
+        {
+            RaiseDomainEvent(new SetupTargetStageChangedDomainEvent(
+                Id,
+                machineId,
+                previousStage,
+                stage));
+        }
+
+        return Result.Success();
     }
 
     public Result RecordMachineIpAddress(MachineId machineId, IPAddress ipAddress)

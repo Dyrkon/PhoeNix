@@ -98,14 +98,6 @@ internal sealed record GetMachineHardwareInformationCommandHandler(
         if (assignRankedDisksResult.IsFailure)
             return assignRankedDisksResult.Error;
 
-        foreach (var targetx in session.Targets)
-        foreach (var disk in targetx.RankedDiskAssignments)
-            Console.WriteLine($"Assigned disk: {disk.Index} -> {disk.DiskByIdPath}");
-
-        var stageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Probed);
-        if (stageResult.IsFailure)
-            return stageResult.Error;
-
-        return Result.Success();
+        return session.UpdateMachineStage(request.MachineId, SetupStage.Probed);
     }
 }

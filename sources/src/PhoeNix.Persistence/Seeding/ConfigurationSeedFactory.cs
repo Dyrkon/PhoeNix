@@ -22,7 +22,6 @@ internal static class ConfigurationSeedFactory
             .Tap(cfg => cfg.AddSystem(SeedIds.ExampleSystem, Architecture.X86Linux, "demo-install-target"))
             .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.MinimalBaseTemplate, true))
             .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.DiskoEfiExt4Template, true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.CallbackTemplate, true))
             .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.PrometheusTemplate, true))
             .Tap(cfg => SetSeededValues(cfg, options));
     }
@@ -59,21 +58,6 @@ internal static class ConfigurationSeedFactory
                 ToNixString("/dev/disk/by-id/REPLACED_AT_RUNTIME"),
                 SeedPlaceholders.InstallDisk,
                 SeedPlaceholders.InstallDisk).Value
-        ]);
-
-        var callbackModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.CallbackTemplate);
-        callbackModule.ChangeEntry(
-        [
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
-                ToNixString(BuildBootstrapCallbackUrl(options.PublicBaseUrl)),
-                SeedPlaceholders.CallbackUrl,
-                SeedPlaceholders.CallbackUrl).Value,
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
-                ToNixString("REPLACED_AT_RUNTIME"),
-                SeedPlaceholders.CallbackToken,
-                SeedPlaceholders.CallbackToken).Value
         ]);
 
         var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);

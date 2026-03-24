@@ -24,13 +24,18 @@ internal sealed class GetBootDecisionQueryHandler(
         GetBootDecisionCommand request,
         CancellationToken cancellationToken)
     {
+        var nowUtc = DateTime.UtcNow;
+
         if (!PhysicalAddress.TryParse(request.MacAddress, out var address))
-            return Result.Failure<PxeBootDetails>(new Error("MachineMACError",
-                $"Unable to parse machine MAC address {request.MacAddress}"));
+            return Result.Failure<PxeBootDetails>(new Error(
+                "MachineMacInvalid",
+                $"Unable to parse machine MAC address '{request.MacAddress}'."));
 
         var machineResult = await machineRepository
             .GetByMacAddressAsync(address, cancellationToken)
-            .EnsureNotNull(new Error("MachineNotFound", "Machine with the provided MAC address was not found."));
+            .EnsureNotNull(new Error(
+                "MachineNotFound",
+                "Machine with the provided MAC address was not found."));
 
         if (machineResult.IsFailure)
             return Result.Failure<PxeBootDetails>(machineResult.Error);
@@ -39,7 +44,8 @@ internal sealed class GetBootDecisionQueryHandler(
 
         var sessionResult = await setupSessionRepository
             .GetWithEnrolledMachineAsync(machine.Id, cancellationToken)
-            .EnsureNotNull(new Error("SetupSessionNotFound",
+            .EnsureNotNull(new Error(
+                "SetupSessionNotFound",
                 "No active setup session was found for the machine."));
 
         if (sessionResult.IsFailure)
@@ -48,7 +54,9 @@ internal sealed class GetBootDecisionQueryHandler(
         var session = sessionResult.Value;
 
         if (session.BootArtefactDescriptor is null)
-            return Result.Failure<PxeBootDetails>(new Error("SessionNoBootArtefact"));
+            return Result.Failure<PxeBootDetails>(new Error(
+                "SetupSessionBootArtefactMissing",
+                "The setup session does not have a boot artefact assigned."));
 
         var target = session.Targets.FirstOrDefault(t => t.MachineId == machine.Id);
         if (target is null)
@@ -56,11 +64,31 @@ internal sealed class GetBootDecisionQueryHandler(
                 "SetupTargetNotFound",
                 "Setup target was not found for the machine."));
 
-        var cmdline = BuildCommandLine(session.BootArtefactDescriptor!, session.Id, machine.Id,
-            netbootOptions.Value.ApiBasePublicUrl,
-            target.CallbackToken?.Token ?? "");
+        if (target.Stage is not (SetupStage.WaitingForPxe or SetupStage.ArtefactsAssigned))    
+	    return Result.Failure<PxeBootDetails>(new Error(
+                "SetupTargetInvalidStage",
+                $"Machine '{machine.Id.Value}' must be in '{SetupStage.WaitingForPxe}' stage before boot details can be provided."));
 
-        session.UpdateMachineStage(machine.Id, SetupStage.ArtefactsAssigned);
+        if (target.CallbackToken is null)
+            return Result.Failure<PxeBootDetails>(new Error(
+                "SetupCallbackTokenMissing",
+                "No callback token is assigned to the setup target."));
+
+        if (!target.CallbackToken.IsValid(nowUtc))
+            return Result.Failure<PxeBootDetails>(new Error(
+                "SetupCallbackTokenInvalid",
+                "The callback token is expired or revoked."));
+
+        var stageResult = session.UpdateMachineStage(machine.Id, SetupStage.ArtefactsAssigned);
+        if (stageResult.IsFailure)
+            return Result.Failure<PxeBootDetails>(stageResult.Error);
+
+        var cmdline = BuildCommandLine(
+            session.BootArtefactDescriptor,
+            session.Id,
+            machine.Id,
+            netbootOptions.Value.ApiBasePublicUrl,
+            target.CallbackToken.Token);
 
         return Result.Success(new PxeBootDetails(
             $"/setup/files/{session.Id.Value:D}/kernel",

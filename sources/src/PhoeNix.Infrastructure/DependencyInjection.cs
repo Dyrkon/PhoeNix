@@ -1,8 +1,10 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
@@ -34,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IHardwareInventoryProjector, HardwareInventoryProjector>();
         services.AddScoped<INixosInstaller, NixosAnywhereInstaller>();
         services.AddScoped<IRuntimeBindingResolver, RuntimeBindingResolver>();
+        services.AddScoped<ISetupWorkflowDecider, SetupWorkflowDecider>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
 
         return services;

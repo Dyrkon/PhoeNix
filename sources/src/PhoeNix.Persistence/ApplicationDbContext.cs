@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Data;
+using PhoeNix.Application.Models.Outbox;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Machines;
@@ -11,6 +12,8 @@ using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence;
+
+using Outbox;
 
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
@@ -25,6 +28,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Machine> Machines { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<SetupSession> SetupSessions { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -33,17 +37,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly,
-            type =>
-            {
-                var result = type.IsAssignableTo(typeof(IApplicationEntityTypeConfiguration));
-                return result;
-            }
-        );
+            type => type.IsAssignableTo(typeof(IApplicationEntityTypeConfiguration)));
 
         base.OnModelCreating(modelBuilder);
-    }
-
-    public void SeedDb()
-    {
     }
 }

@@ -48,23 +48,20 @@ internal sealed class StartMachineSetupHandler(
         if (machineResult.IsFailure)
             return machineResult.Error;
 
-        var session = sessionResult.Value;
-        var machine = machineResult.Value;
-
         var configurationResult = await configurationRepository
             .GetByIdAsync(request.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error(
                 "ConfigurationNotFound",
-                $"Configuration '{request.ConfigurationId.ToString()}' was not found."));
+                $"Configuration '{request.ConfigurationId.Value}' was not found."));
 
         if (configurationResult.IsFailure)
             return configurationResult.Error;
 
+        var session = sessionResult.Value;
+        var machine = machineResult.Value;
         var configuration = configurationResult.Value;
 
-        var systemExists = configuration.SystemSpecifications
-            .Any(s => s.Id == request.SystemId);
-
+        var systemExists = configuration.SystemSpecifications.Any(s => s.Id == request.SystemId);
         if (!systemExists)
             return Result.Failure(new Error(
                 "SystemNotInConfiguration",
@@ -72,9 +69,19 @@ internal sealed class StartMachineSetupHandler(
 
         var target = session.Targets.FirstOrDefault(t => t.MachineId == machine.Id);
 
+        if (target is not null && IsActive(target.Stage))
+            return Result.Failure(new Error(
+                "SetupAlreadyInProgress",
+                $"Machine '{machine.Id.Value}' is already in active setup stage '{target.Stage}'."));
+
         if (target is null)
         {
-            var enrollResult = session.EnrollMachine(machine.Id, request.SystemId, request.ConfigurationId, nowUtc);
+            var enrollResult = session.EnrollMachine(
+                machine.Id,
+                request.SystemId,
+                request.ConfigurationId,
+                nowUtc);
+
             if (enrollResult.IsFailure)
                 return enrollResult.Error;
 
@@ -82,25 +89,43 @@ internal sealed class StartMachineSetupHandler(
         }
         else
         {
-            if (target.SelectedSystemId != request.SystemId)
+            if (target.SelectedSystemId != request.SystemId ||
+                target.SelectedConfigurationId != request.ConfigurationId)
                 return Result.Failure(new Error(
-                    "SystemMismatch",
-                    "System cannot be changed for already enrolled machine."));
+                    "SetupTargetSelectionMismatch",
+                    "Configuration or system cannot be changed for an existing setup target."));
         }
 
-        session.ClearCallbackToken(machine.Id);
-        session.ClearRankedDisks(machine.Id);
+        if (target.CallbackToken is not null)
+        {
+            var clearTokenResult = session.ClearCallbackToken(machine.Id);
+            if (clearTokenResult.IsFailure)
+                return clearTokenResult.Error;
+        }
 
-        var tokenResult = callbackTokenService.Create(
-                session.Id,
-                machine.Id,
-                nowUtc,
-                TimeSpan.FromMinutes(10))
+        if (target.RankedDiskAssignments.Any())
+        {
+            var clearRankedDisksResult = session.ClearRankedDisks(machine.Id);
+            if (clearRankedDisksResult.IsFailure)
+                return clearRankedDisksResult.Error;
+        }
+
+        var assignTokenResult = callbackTokenService
+            .Create(session.Id, machine.Id, nowUtc, TimeSpan.FromHours(2))
             .Bind(token => session.AssignMachineCallbackToken(machine.Id, token));
 
-        if (tokenResult.IsFailure)
-            return tokenResult.Error;
+        if (assignTokenResult.IsFailure)
+            return assignTokenResult.Error;
 
         return session.UpdateMachineStage(machine.Id, SetupStage.WaitingForPxe);
+    }
+
+    private static bool IsActive(SetupStage stage)
+    {
+        return stage is SetupStage.WaitingForPxe
+            or SetupStage.ArtefactsAssigned
+            or SetupStage.Bootstrapped
+            or SetupStage.Probed
+            or SetupStage.Orchestrated;
     }
 }

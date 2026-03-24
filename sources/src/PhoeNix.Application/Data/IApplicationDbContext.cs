@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PhoeNix.Application.Models.Outbox;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
@@ -21,4 +22,5 @@ public interface IApplicationDbContext
     public DbSet<Input> Inputs { get; }
     public DbSet<User> Users { get; }
     public DbSet<SetupSession> SetupSessions { get; }
+    public DbSet<OutboxMessage> OutboxMessages { get; }
 }

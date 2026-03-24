@@ -13,7 +13,6 @@ internal static class ModuleTemplateSeedFactory
         {
             CreateMinimalBaseTemplate(),
             CreateDiskoTemplate(),
-            CreateCallbackTemplate(),
             CreatePrometheusTemplate()
         };
 
@@ -136,70 +135,6 @@ internal static class ModuleTemplateSeedFactory
                 var testContent =
                     "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
                 t.ChangeModuleTest(test.Id, testContent, [SeedPlaceholders.InstallDisk]);
-            });
-    }
-
-    private static Result<ModuleTemplate> CreateCallbackTemplate()
-    {
-        var definitions = new List<EntryValueDefinition>
-        {
-            new(
-                SeedIds.CallbackTemplate,
-                SeedPlaceholders.CallbackUrl,
-                SeedPlaceholders.CallbackUrl,
-                UserInputType.Text,
-                EntryBindingKind.UserProvided),
-            new(
-                SeedIds.CallbackTemplate,
-                SeedPlaceholders.CallbackToken,
-                SeedPlaceholders.CallbackToken,
-                UserInputType.Text,
-                EntryBindingKind.UserProvided)
-        };
-
-        var content =
-            "systemd.tmpfiles.rules = [\n" +
-            "  \"d /var/lib/phoenix 0755 root root -\"\n" +
-            "  \"d /var/lib/phoenix/callback 0755 root root -\"\n" +
-            "];\n" +
-            "\n" +
-            "systemd.services.phoenix-ready-callback = {\n" +
-            "  description = \"Notify PhoeNix that machine is ready\";\n" +
-            "  wantedBy = [ \"multi-user.target\" ];\n" +
-            "  after = [ \"network-online.target\" ];\n" +
-            "  wants = [ \"network-online.target\" ];\n" +
-            "  serviceConfig = {\n" +
-            "    Type = \"oneshot\";\n" +
-            "    ExecStart = let\n" +
-            "      callbackScript = pkgs.writeShellScript \"phoenix-ready-callback\" ''\n" +
-            "        set -euo pipefail\n" +
-            $"        {pkgsCurl()} --fail --silent --show-error \\\n" +
-            "          -X POST \\\n" +
-            $"          -H \"Authorization: Bearer ${{{SeedPlaceholders.CallbackToken}}}\" \\\n" +
-            $"          ${{{SeedPlaceholders.CallbackUrl}}}\n" +
-            "      '';\n" +
-            "    in callbackScript;\n" +
-            "  };\n" +
-            "};";
-
-        return ModuleTemplate.Create(
-                SeedIds.CallbackTemplate,
-                "PhoenixReadyCallback",
-                true,
-                ModuleType.System,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("callback-values-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "callback-values-test");
-                var testContent =
-                    "callbackUrlSet = { expr = CallbackUrl != \"\"; expected = true; };\n" +
-                    "callbackTokenSet = { expr = CallbackToken != \"\"; expected = true; };";
-                t.ChangeModuleTest(
-                    test.Id,
-                    testContent,
-                    [SeedPlaceholders.CallbackUrl, SeedPlaceholders.CallbackToken]);
             });
     }
 

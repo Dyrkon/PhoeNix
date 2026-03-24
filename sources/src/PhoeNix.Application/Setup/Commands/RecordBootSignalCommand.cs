@@ -22,7 +22,9 @@ internal sealed class RecordBootSignalCommandHandler(
     IMachineRepository machineRepository)
     : ICommandHandler<RecordBootSignalCommand>
 {
-    public async Task<Result> Handle(RecordBootSignalCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        RecordBootSignalCommand request,
+        CancellationToken cancellationToken)
     {
         var nowUtc = DateTime.UtcNow;
 
@@ -59,6 +61,11 @@ internal sealed class RecordBootSignalCommandHandler(
                 "SetupTargetNotFound",
                 $"Machine '{request.MachineId.Value}' is not enrolled in setup session '{request.SessionId.Value}'."));
 
+        if (target.Stage != SetupStage.ArtefactsAssigned)
+            return Result.Failure(new Error(
+                "SetupTargetInvalidStage",
+                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.ArtefactsAssigned}' stage before bootstrap callback can be recorded."));
+
         if (target.CallbackToken is null)
             return Result.Failure(new Error(
                 "SetupCallbackTokenMissing",
@@ -78,16 +85,19 @@ internal sealed class RecordBootSignalCommandHandler(
         if (recordIpResult.IsFailure)
             return recordIpResult.Error;
 
-        var revokeResult = session.RevokeMachineCallbackToken(request.MachineId, nowUtc);
-        if (revokeResult.IsFailure)
-            return revokeResult.Error;
-
         var stageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Bootstrapped);
         if (stageResult.IsFailure)
             return stageResult.Error;
 
-        return await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
-            .EnsureNotNull(new Error("MachineNotFound", "The machine was not found."))
-            .Bind(machine => machine.ChangeMachineState(MachineState.Registered, nowUtc));
+        var machineResult = await machineRepository
+            .GetByIdAsync(request.MachineId, cancellationToken)
+            .EnsureNotNull(new Error(
+                "MachineNotFound",
+                $"Machine '{request.MachineId.Value}' was not found."));
+
+        if (machineResult.IsFailure)
+            return machineResult.Error;
+
+        return machineResult.Value.ChangeMachineState(MachineState.Registered, nowUtc);
     }
 }

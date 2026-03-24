@@ -1,8 +1,13 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Data;
+using PhoeNix.Application.Options;
 using PhoeNix.Domain.Repositories;
+using PhoeNix.Persistence.Interceptors;
+using PhoeNix.Persistence.Outbox;
 using PhoeNix.Persistence.Repositories;
 using PhoeNix.Persistence.Seeding;
 
@@ -31,15 +36,28 @@ public static class DependencyInjection
 
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        services.AddScoped<IOutboxMessageSerializer, OutboxMessageSerializer>();
+        services.AddScoped<InsertOutboxMessagesInterceptor>();
+
+        services.Configure<OutboxOptions>(options =>
+        {
+            options.BatchSize = 20;
+            options.PollInterval = TimeSpan.FromSeconds(2);
+        });
+        
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
                 // TODO the DB shouldn't be in TMP folder
                 var dbName = Path.Combine(Path.GetTempPath(),
                     configuration.GetConnectionString("PhoeNix") ?? "phoenix.db");
                 options.UseSqlite($"Data Source={dbName}");
+                options.AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>());
             })
             .ConfigureDbContext()
             .AddRepositories();
+        
+        services.AddHostedService<OutboxProcessorBackgroundService>();
 
         return services;
     }
