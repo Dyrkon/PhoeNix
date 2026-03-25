@@ -39,13 +39,24 @@ internal sealed class CancelSetupSessionCommandHandler(
 
         foreach (var target in session.Targets)
         {
-            session.RevokeMachineCallbackToken(target.MachineId, nowUtc);
-            var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled);
+            if (target.CallbackToken is not null)
+            {
+                var revokeTokenResult = session.RevokeMachineCallbackToken(target.MachineId, nowUtc);
+                if (revokeTokenResult.IsFailure)
+                    return revokeTokenResult.Error;
+            }
+
+            if (target.Stage is SetupStage.Finished or SetupStage.Cancelled)
+                continue;
+
+            var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled, nowUtc);
             if (stageResult.IsFailure)
                 return stageResult.Error;
         }
 
-        await netbootHostService.StopAsync(cancellationToken);
+        var stopHostResult = await netbootHostService.StopAsync(cancellationToken);
+        if (stopHostResult.IsFailure)
+            return stopHostResult.Error;
 
         return Result.Success();
     }

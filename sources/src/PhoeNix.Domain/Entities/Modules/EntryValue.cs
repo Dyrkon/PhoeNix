@@ -15,10 +15,17 @@ public abstract class EntryValue
     public string Value { get; protected set; }
 
     public ModuleValueId ModuleValueId { get; private set; }
+
+    public void SetValue(string value)
+    {
+        Value = value;
+    }
 }
 
 public record EntryValueDefinition(
     ModuleTemplateId ModuleTemplateId,
     string Name,
     string Placeholder,
-    UserInputType InputType);
+    UserInputType InputType,
+    EntryBindingKind BindingKind,
+    int? BindingIndex = null);

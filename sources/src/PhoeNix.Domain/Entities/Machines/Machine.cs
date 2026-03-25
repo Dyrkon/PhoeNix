@@ -1,4 +1,7 @@
+using System.Net;
 using System.Net.NetworkInformation;
+using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
@@ -25,6 +28,8 @@ public class Machine : AggregateRoot<MachineId>
     public HardwareProfile? HardwareProfile { get; private set; }
 
     public SoftwareSnapshot? SoftwareSnapshot { get; private set; }
+
+    public ProvisioningSnapshot? ProvisioningSnapshot { get; private set; }
 
     public MachineStatus MachineStatus { get; private set; }
 
@@ -60,6 +65,21 @@ public class Machine : AggregateRoot<MachineId>
     public Result ClearHardwareProfile()
     {
         HardwareProfile = null;
+        return Result.Success();
+    }
+
+    public Result RecordProvisioningSnapshot(
+        ConfigurationId configurationId,
+        SystemId systemId,
+        IPAddress ipAddress,
+        DateTime nowUtc)
+    {
+        ProvisioningSnapshot = new ProvisioningSnapshot(
+            configurationId,
+            systemId,
+            ipAddress,
+            nowUtc);
+
         return Result.Success();
     }
 

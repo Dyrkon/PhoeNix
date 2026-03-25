@@ -1,3 +1,4 @@
+using PhoeNix.Application.Models.Setup;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
@@ -10,5 +11,7 @@ public interface INixBuildMaterializer
 {
     Result<ConfigurationBuildResult> MaterializeConfiguration(
         Configuration configuration,
-        IReadOnlyCollection<ModuleTemplate> templates);
+        IEnumerable<ModuleTemplate> templates,
+        SystemId? systemId = null,
+        BuiltInModuleParameters? builtInModules = null);
 }

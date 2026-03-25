@@ -930,7 +930,8 @@
         "type": "Project",
         "dependencies": {
           "FluentValidation": "[12.1.0, )",
-          "Humanizer": "[3.0.1, )"
+          "Humanizer": "[3.0.1, )",
+          "MediatR.Contracts": "[2.0.1, )"
         }
       },
       "phoenix.infrastructure": {

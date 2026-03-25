@@ -57,11 +57,11 @@ public class Configuration : AggregateRoot<ConfigurationId>
 
     public Result ChangeModule(ModuleValueId moduleValueId, List<EntryValue> entries, string? content = null)
     {
-        if (_modules.All(h => h.ModuleTemplateId != moduleValueId))
-            return Result.Failure(
-                new Error("", $"This module ({moduleValueId}) is not in this ({Title}) configuration"));
+        var module = _modules.FirstOrDefault(m => m.Id == moduleValueId);
 
-        return _modules.First(h => h.ModuleTemplateId == moduleValueId).ChangeEntry(entries, content);
+        return module is null
+            ? Result.Failure(new Error("", $"This module ({moduleValueId}) is not in this ({Title}) configuration"))
+            : module.ChangeEntry(entries, content);
     }
 
     public Result RemoveModule(ModuleValueId moduleValueId)
@@ -104,24 +104,29 @@ public class Configuration : AggregateRoot<ConfigurationId>
         return system.AddModule(moduleTemplateId, [system.Architecture], enabled);
     }
 
-    public Result ChangeSystemModule(ModuleValueId moduleValueId, SystemId systemId, List<EntryValue> entries,
+    public Result ChangeSystemModule(
+        ModuleValueId moduleValueId,
+        SystemId systemId,
+        List<EntryValue> entries,
         string? content = null)
     {
         var system = _systemSpecifications.FirstOrDefault(s => s.Id == systemId);
-        if (system == null)
-            return Result.Failure(new Error("", $"This system ({systemId}) is not in this ({Title}) configuration"));
-        var module = _modules.FirstOrDefault(m => m.Id == moduleValueId);
-        if (module == null)
-            return Result.Failure(new Error("",
-                $"This module ({moduleValueId}) is not in system ({systemId}) in configuration ({Title}) configuration"));
 
-        return module.ChangeEntry(entries, content);
+        if (system is null)
+            return Result.Failure(new Error("", $"This system ({systemId}) is not in this ({Title}) configuration"));
+
+        var module = system.Modules.FirstOrDefault(m => m.Id == moduleValueId);
+
+        return module is null
+            ? Result.Failure(new Error("",
+                $"This module ({moduleValueId}) is not in system ({systemId}) in configuration ({Title})"))
+            : module.ChangeEntry(entries, content);
     }
 
     public Result RemoveSystemModule(SystemId systemId, ModuleValueId moduleValueId)
     {
         if (_systemSpecifications.All(h => h.Id != systemId))
-            Result.Failure(new Error("", $"This system ({systemId}) is not in configuration {Title}"));
+            return Result.Failure(new Error("", $"This system ({systemId}) is not in configuration {Title}"));
 
         return _systemSpecifications.First(s => s.Id == systemId).RemoveModule(moduleValueId);
     }

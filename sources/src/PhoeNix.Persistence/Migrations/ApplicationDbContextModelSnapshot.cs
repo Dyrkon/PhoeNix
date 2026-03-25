@@ -17,6 +17,42 @@ namespace PhoeNix.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
 
+            modelBuilder.Entity("PhoeNix.Application.Models.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NextAttemptOnUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedOnUtc", "NextAttemptOnUtc", "OccurredOnUtc");
+
+                    b.ToTable("OutboxMessages", (string)null);
+                });
+
             modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.Configuration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -175,10 +211,16 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("_supportedArchitectures")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -206,6 +248,8 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("ConfigurationId");
 
+                    b.HasIndex("ModuleTemplateId");
+
                     b.HasIndex("SystemId");
 
                     b.ToTable("ModuleValue");
@@ -218,7 +262,6 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(10000)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ModuleTemplateId")
@@ -226,7 +269,11 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("_variableNames")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -701,6 +748,36 @@ namespace PhoeNix.Persistence.Migrations
                                 .HasForeignKey("MachineId");
                         });
 
+                    b.OwnsOne("PhoeNix.Domain.Entities.Machines.ProvisioningSnapshot", "ProvisioningSnapshot", b1 =>
+                        {
+                            b1.Property<Guid>("MachineId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("ConfigurationId")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("ProvisionedConfigurationId");
+
+                            b1.Property<string>("LastKnownIpAddress")
+                                .IsRequired()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("ProvisionedIpAddress");
+
+                            b1.Property<DateTime>("ProvisionedAtUtc")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("ProvisionedAtUtc");
+
+                            b1.Property<Guid>("SystemId")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("ProvisionedSystemId");
+
+                            b1.HasKey("MachineId");
+
+                            b1.ToTable("Machines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MachineId");
+                        });
+
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.SoftwareSnapshot", "SoftwareSnapshot", b1 =>
                         {
                             b1.Property<Guid>("MachineId")
@@ -722,6 +799,8 @@ namespace PhoeNix.Persistence.Migrations
                     b.Navigation("MachineStatus")
                         .IsRequired();
 
+                    b.Navigation("ProvisioningSnapshot");
+
                     b.Navigation("SoftwareSnapshot");
                 });
 
@@ -742,8 +821,16 @@ namespace PhoeNix.Persistence.Migrations
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int>("InputType")
+                            b1.Property<int?>("BindingIndex")
                                 .HasColumnType("INTEGER");
+
+                            b1.Property<string>("BindingKind")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("InputType")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
 
                             b1.Property<Guid>("ModuleTemplateId")
                                 .HasColumnType("TEXT");
@@ -762,7 +849,7 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasIndex("ModuleTemplateId");
 
-                            b1.ToTable("EntryValueDefinition");
+                            b1.ToTable("ModuleTemplateEntryValueDefinitions", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ModuleTemplateId");
@@ -836,8 +923,36 @@ namespace PhoeNix.Persistence.Migrations
                                 .HasColumnType("TEXT")
                                 .HasColumnName("IpAddress");
 
-                            b1.Property<string>("SelectedInstallDiskByIdPath")
-                                .HasColumnType("TEXT");
+                            b1.Property<DateTime?>("LastErrorAtUtc")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LastErrorAtUtc");
+
+                            b1.Property<string>("LastErrorCode")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LastErrorCode");
+
+                            b1.Property<string>("LastErrorDescription")
+                                .HasMaxLength(2000)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LastErrorDescription");
+
+                            b1.Property<string>("LastErrorSource")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LastErrorSource");
+
+                            b1.Property<DateTime?>("LastTransitionAtUtc")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LastTransitionAtUtc");
+
+                            b1.Property<Guid?>("SelectedConfigurationId")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SelectedConfigurationId");
+
+                            b1.Property<Guid?>("SelectedSystemId")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SelectedSystemId");
 
                             b1.Property<string>("Stage")
                                 .IsRequired()
@@ -847,10 +962,42 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasIndex("MachineId");
 
+                            b1.HasIndex("SelectedConfigurationId");
+
+                            b1.HasIndex("SelectedSystemId");
+
                             b1.ToTable("SetupSessionTargets", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("SetupSessionId");
+
+                            b1.OwnsMany("PhoeNix.Domain.Entities.SetupSessions.RankedDiskAssignment", "RankedDiskAssignments", b2 =>
+                                {
+                                    b2.Property<Guid>("SetupSessionId")
+                                        .HasColumnType("TEXT");
+
+                                    b2.Property<Guid>("MachineId")
+                                        .HasColumnType("TEXT");
+
+                                    b2.Property<int>("Index")
+                                        .HasColumnType("INTEGER")
+                                        .HasColumnName("RankIndex");
+
+                                    b2.Property<string>("DiskByIdPath")
+                                        .IsRequired()
+                                        .HasMaxLength(500)
+                                        .HasColumnType("TEXT")
+                                        .HasColumnName("DiskByIdPath");
+
+                                    b2.HasKey("SetupSessionId", "MachineId", "Index");
+
+                                    b2.HasIndex("DiskByIdPath");
+
+                                    b2.ToTable("SetupSessionTargetRankedDisks", (string)null);
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("SetupSessionId", "MachineId");
+                                });
 
                             b1.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.CallbackToken", "CallbackToken", b2 =>
                                 {
@@ -882,6 +1029,8 @@ namespace PhoeNix.Persistence.Migrations
                                 });
 
                             b1.Navigation("CallbackToken");
+
+                            b1.Navigation("RankedDiskAssignments");
                         });
 
                     b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.SshCredential", "SshCredential", b1 =>

@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddInfrastructure();
         services.AddApplication();
+        services.AddSeeding();
 
         return services;
     }
@@ -66,6 +67,16 @@ public static class DependencyInjection
 
         services.AddOptions<HardwareProbeOptions>()
             .BindConfiguration("HardwareProbe")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<NixosInstallerOptions>()
+            .BindConfiguration("NixosInstaller")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<SeedExampleOptions>()
+            .BindConfiguration("SeedExample")
             .ValidateDataAnnotations()
             .ValidateOnStart();
 

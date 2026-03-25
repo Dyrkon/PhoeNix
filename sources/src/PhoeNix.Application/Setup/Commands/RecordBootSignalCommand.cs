@@ -1,6 +1,8 @@
 using System.Net;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Setup;
+using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
@@ -22,7 +24,9 @@ internal sealed class RecordBootSignalCommandHandler(
     IMachineRepository machineRepository)
     : ICommandHandler<RecordBootSignalCommand>
 {
-    public async Task<Result> Handle(RecordBootSignalCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        RecordBootSignalCommand request,
+        CancellationToken cancellationToken)
     {
         var nowUtc = DateTime.UtcNow;
 
@@ -59,35 +63,83 @@ internal sealed class RecordBootSignalCommandHandler(
                 "SetupTargetNotFound",
                 $"Machine '{request.MachineId.Value}' is not enrolled in setup session '{request.SessionId.Value}'."));
 
+        if (target.Stage != SetupStage.ArtefactsAssigned)
+        {
+            var error = new Error(
+                "SetupTargetInvalidStage",
+                $"Machine '{request.MachineId.Value}' must be in '{SetupStage.ArtefactsAssigned}' stage before bootstrap callback can be recorded.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
+
         if (target.CallbackToken is null)
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMissing",
-                "No callback token is assigned to the setup target."));
+                "No callback token is assigned to the setup target.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         if (!string.Equals(target.CallbackToken.Token, request.CallbackToken, StringComparison.Ordinal))
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenMismatch",
-                "Setup callback token does not match the token assigned to the setup target."));
+                "Setup callback token does not match the token assigned to the setup target.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         if (!target.CallbackToken.IsValid(nowUtc))
-            return Result.Failure(new Error(
+        {
+            var error = new Error(
                 "SetupCallbackTokenInvalid",
-                "The callback token is expired or revoked."));
+                "The callback token is expired or revoked.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
+        }
 
         var recordIpResult = session.RecordMachineIpAddress(request.MachineId, request.MachineIpAddress);
         if (recordIpResult.IsFailure)
-            return recordIpResult.Error;
+            return session.PersistFailure(
+                request.MachineId,
+                recordIpResult.Error,
+                nameof(RecordBootSignalCommandHandler),
+                nowUtc);
 
-        var revokeResult = session.RevokeMachineCallbackToken(request.MachineId, nowUtc);
-        if (revokeResult.IsFailure)
-            return revokeResult.Error;
+        var stageResult = session.UpdateMachineStage(
+            request.MachineId,
+            SetupStage.Bootstrapped,
+            nowUtc);
 
-        var stageResult = session.UpdateMachineStage(request.MachineId, SetupStage.Bootstrapped);
         if (stageResult.IsFailure)
             return stageResult.Error;
 
-        return await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
-            .EnsureNotNull(new Error("MachineNotFound", "The machine was not found."))
-            .Bind(machine => machine.ChangeMachineState(MachineState.Registered, nowUtc));
+        var machineResult = await machineRepository
+            .GetByIdAsync(request.MachineId, cancellationToken)
+            .EnsureNotNull(new Error(
+                "MachineNotFound",
+                $"Machine '{request.MachineId.Value}' was not found."));
+
+        if (machineResult.IsFailure)
+            return machineResult.Error;
+
+        return machineResult.Value.ChangeMachineState(MachineState.Registered, nowUtc);
     }
 }

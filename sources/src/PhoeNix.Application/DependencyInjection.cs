@@ -12,6 +12,7 @@ public static class DependencyInjection
             config.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
 
             config.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
+            config.AddOpenBehavior(typeof(RequestLoggingBehavior<,>));
         });
 
         return services;
