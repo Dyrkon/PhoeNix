@@ -2,13 +2,14 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
+using PhoeNix.Application.Abstractions.Deployment;
+using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Services;
 using PhoeNix.Infrastructure.Services;
 
 namespace PhoeNix.Infrastructure;
@@ -26,10 +27,11 @@ public static class DependencyInjection
         services.AddSingleton<INixTestRunner, NixTestRunner>();
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
+        services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
+        services.AddSingleton<INetbootHostService, NetbootHostService>();
         services.AddScoped<INixBuildMaterializer, NixBuildMaterializer>();
         services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
-        services.AddScoped<ISshKeyProvider, SshKeyProvider>();
-        services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
+        services.AddScoped<ISetupSshKeyProvider, SetupSshKeyProvider>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
         services.AddScoped<IInstallDiskSelectionPolicy, InstallDiskSelectionPolicy>();
         services.AddScoped<IHardwareProbeService, SshHardwareProbeService>();
@@ -37,7 +39,10 @@ public static class DependencyInjection
         services.AddScoped<INixosInstaller, NixosAnywhereInstaller>();
         services.AddScoped<IRuntimeBindingResolver, RuntimeBindingResolver>();
         services.AddScoped<ISetupWorkflowDecider, SetupWorkflowDecider>();
-        services.AddSingleton<INetbootHostService, NetbootHostService>();
+        services.AddScoped<ISetupSshKeyProvider, SetupSshKeyProvider>();
+        services.AddScoped<IDeploySshKeyProvider, DeploySshKeyProvider>();
+        services.AddScoped<INixOsMachineUpdater, NixOsMachineUpdater>();
+        services.AddScoped<IDeploymentBindingResolver, DeploymentBindingResolver>();
 
         return services;
     }

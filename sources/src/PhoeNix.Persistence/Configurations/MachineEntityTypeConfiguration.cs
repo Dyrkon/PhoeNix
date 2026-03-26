@@ -225,35 +225,59 @@ internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeCon
             });
         });
 
-        builder.OwnsOne(i => i.ProvisioningSnapshot, provisioning =>
+        builder.OwnsOne(i => i.DeploymentSnapshot, deployment =>
         {
-            provisioning.WithOwner();
+            deployment.WithOwner();
 
-            provisioning.Property(p => p.ConfigurationId)
+            deployment.Property(p => p.ConfigurationId)
                 .HasColumnName("ProvisionedConfigurationId")
                 .HasConversion(
                     id => id.Value,
                     value => new ConfigurationId(value));
 
-            provisioning.Property(p => p.SystemId)
+            deployment.Property(p => p.SystemId)
                 .HasColumnName("ProvisionedSystemId")
                 .HasConversion(
                     id => id.Value,
                     value => new SystemId(value));
 
-            provisioning.Property(p => p.LastKnownIpAddress)
+            deployment.Property(p => p.LastKnownIpAddress)
                 .HasColumnName("ProvisionedIpAddress")
                 .HasConversion(
                     ip => ip.ToString(),
                     value => IPAddress.Parse(value));
 
-            provisioning.Property(p => p.ProvisionedAtUtc)
+            deployment.Property(p => p.ProvisionedAtUtc)
                 .HasColumnName("ProvisionedAtUtc");
+
+            deployment.OwnsMany(p => p.BoundDisks, disk =>
+            {
+                disk.ToTable("MachineDeploymentBoundDisks");
+
+                disk.WithOwner().HasForeignKey("MachineId");
+
+                disk.Property(d => d.Index)
+                    .HasColumnName("DiskIndex")
+                    .ValueGeneratedNever()
+                    .IsRequired();
+
+                disk.Property(d => d.StableDevicePath)
+                    .HasColumnName("StableDevicePath")
+                    .HasMaxLength(500)
+                    .IsRequired();
+
+                disk.HasKey("MachineId", nameof(DeploymentDiskBinding.Index));
+
+                disk.HasIndex(d => d.StableDevicePath);
+            });
+
+            deployment.Navigation(p => p.BoundDisks)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
         builder.OwnsOne(i => i.SoftwareSnapshot, software => { software.WithOwner(); });
 
-        builder.Navigation(i => i.ProvisioningSnapshot).IsRequired(false);
+        builder.Navigation(i => i.DeploymentSnapshot).IsRequired(false);
         builder.Navigation(i => i.HardwareProfile).IsRequired(false);
         builder.Navigation(i => i.SoftwareSnapshot).IsRequired(false);
         builder.Navigation(i => i.MachineStatus).IsRequired();

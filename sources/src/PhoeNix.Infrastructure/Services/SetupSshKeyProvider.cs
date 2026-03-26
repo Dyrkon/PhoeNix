@@ -9,11 +9,11 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
 
-public sealed class SshKeyProvider(
+public sealed class SetupSshKeyProvider(
     ISshKeyFileStore fileStore,
     IProcessRunner processRunner,
     IOptions<SshCaOptions> caOptions
-) : ISshKeyProvider
+) : ISetupSshKeyProvider
 {
     private readonly SshCaOptions _ca = caOptions.Value;
 

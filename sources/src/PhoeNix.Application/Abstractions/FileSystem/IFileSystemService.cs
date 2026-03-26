@@ -1,15 +1,15 @@
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Services;
+namespace PhoeNix.Application.Abstractions.FileSystem;
 
 public interface IFileSystemService
 {
-    public Result<string> GetRootFolder();
+    Result<string> GetRootFolder();
 
-    public Result<string> WriteConfigurationToFs(Folder configurationFolder, ConfigurationId id,
+    Task<Result<string>> WriteConfigurationToFsAsync(
+        Folder configurationFolder,
+        ConfigurationId id,
         CancellationToken cancellationToken);
 }

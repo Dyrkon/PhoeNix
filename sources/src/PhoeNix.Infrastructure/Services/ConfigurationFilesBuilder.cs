@@ -2,7 +2,6 @@ using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;

@@ -1,11 +1,9 @@
 using Microsoft.Extensions.Options;
 using PhoeNix.Domain.Entities.Configurations;
-using System.IO.Abstractions;
+using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services;
@@ -15,69 +13,6 @@ public class FileSystemService(
     INixFormatterService nixFormatterService)
     : IFileSystemService
 {
-    private static Result<string> CreateFolder(string path)
-    {
-        if (Directory.Exists(path))
-            return Result.Failure<string>(new Error("", $"Folder {path} already exists."));
-
-        try
-        {
-            var fs = new FileSystem();
-            fs.Directory.CreateDirectory(path);
-            return path;
-        }
-        catch (Exception e)
-        {
-            return Result.Failure<string>(new Error("", e.Message));
-        }
-    }
-
-    private static Result<string> CheckAndRemoveDirectory(string path)
-    {
-        var fs = new FileSystem();
-        if (fs.Directory.Exists(path))
-            fs.Directory.Delete(path, true);
-
-        return path;
-    }
-
-    private static Result<string> WriteFile(string path, string contents)
-    {
-        if (Directory.Exists(path))
-            return Result.Failure<string>(new Error("", $"File {path} already exists."));
-
-        try
-        {
-            var fs = new FileSystem();
-            fs.File.WriteAllText(path, contents);
-            return path;
-        }
-        catch (Exception e)
-        {
-            return Result.Failure<string>(new Error("", e.Message));
-        }
-    }
-
-    private static Result<string> WriteFolderStructure(string rootPath, Folder folder)
-    {
-        return CreateFolder(Path.Combine(rootPath, folder.Name)).Bind(path =>
-        {
-            foreach (var file in folder.Files)
-                if (file.IsFolder)
-                {
-                    var result = WriteFolderStructure(path, (Folder)file);
-                    if (result.IsFailure) return result;
-                }
-                else
-                {
-                    var result = WriteFile(Path.Combine(path, file.Name), ((TextFile)file).Content);
-                    if (result.IsFailure) return result;
-                }
-
-            return Result.Success(folder.Name);
-        });
-    }
-
     public Result<string> GetRootFolder()
     {
         var options = storageOptions.Value;
@@ -93,15 +28,54 @@ public class FileSystemService(
         return Result.Success(fullPath);
     }
 
-    public Result<string> WriteConfigurationToFs(
+    public async Task<Result<string>> WriteConfigurationToFsAsync(
         Folder configurationFolder,
         ConfigurationId id,
         CancellationToken cancellationToken)
     {
-        var rootPath = GetRootFolder().Value;
+        var rootPathResult = GetRootFolder();
+        if (rootPathResult.IsFailure)
+            return (Result<string>)rootPathResult.Error;
 
-        return CheckAndRemoveDirectory(rootPath)
-            .Bind(_ => WriteFolderStructure(rootPath, configurationFolder))
-            .Bind(path => nixFormatterService.FormatNixFilesInPlace(Path.Combine(rootPath, path), cancellationToken));
+        var rootPath = rootPathResult.Value;
+        var configurationPath = Path.Combine(rootPath, id.Value.ToString());
+
+        try
+        {
+            Directory.CreateDirectory(rootPath);
+
+            if (Directory.Exists(configurationPath))
+                Directory.Delete(configurationPath, true);
+
+            Directory.CreateDirectory(configurationPath);
+
+            await WriteFolderContentsAsync(configurationPath, configurationFolder, cancellationToken);
+
+            return nixFormatterService.FormatNixFilesInPlace(configurationPath, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return Result.Failure<string>(new Error("WriteConfigurationToFsFailed", e.Message));
+        }
+    }
+
+    private static async Task WriteFolderContentsAsync(
+        string rootPath,
+        Folder folder,
+        CancellationToken cancellationToken)
+    {
+        foreach (var file in folder.Files)
+        {
+            var path = Path.Combine(rootPath, file.Name);
+
+            if (file.IsFolder)
+            {
+                Directory.CreateDirectory(path);
+                await WriteFolderContentsAsync(path, (Folder)file, cancellationToken);
+                continue;
+            }
+
+            await File.WriteAllTextAsync(path, ((TextFile)file).Content, cancellationToken);
+        }
     }
 }

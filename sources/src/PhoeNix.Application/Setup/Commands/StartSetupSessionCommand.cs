@@ -14,7 +14,7 @@ internal sealed class StartSetupSessionCommandHandler(
     ISetupSessionRepository setupSessionRepository,
     INetbootHostService netbootHostService,
     IBootstrapImageBuilder bootstrapImageBuilder,
-    ISshKeyProvider sshKeyProvider)
+    ISetupSshKeyProvider sshKeyProvider)
     : ICommandHandler<StartSetupSessionCommand, string>
 {
     public async Task<Result<string>> Handle(

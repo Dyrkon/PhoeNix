@@ -1,7 +1,6 @@
 using FluentAssertions;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.Processes;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Infrastructure.Services;
 

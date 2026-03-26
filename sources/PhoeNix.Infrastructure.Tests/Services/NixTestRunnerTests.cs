@@ -6,7 +6,6 @@ using PhoeNix.Application.Models.Tests;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Infrastructure.Services;
 
