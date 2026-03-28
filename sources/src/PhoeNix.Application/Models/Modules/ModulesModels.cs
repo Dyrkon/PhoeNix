@@ -1,42 +1,61 @@
-using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.Models.Modules;
 
-public record ModuleTemplateListResponse(
-    ModuleTemplateId Id,
+public sealed record ModuleTemplateListResponse(
+    Guid Id,
     string Name,
-    ModuleType Type
-);
+    bool Enabled,
+    ModuleType Type,
+    IReadOnlyList<Architecture> SupportedArchitectures);
 
-public record EntryValueDefinitionResponse(
+public sealed record EntryValueDefinitionResponse(
     string Name,
     string Placeholder,
-    UserInputType InputType
-);
+    UserInputType InputType,
+    EntryBindingKind BindingKind,
+    int? BindingIndex);
 
-public record ModuleTemplateResponse(
-    ModuleTemplateId Id,
+public sealed record ModuleTemplateTestResponse(
+    Guid Id,
     string Name,
+    string Content,
+    IReadOnlyList<string> VariableNames);
+
+public sealed record ModuleTemplateResponse(
+    Guid Id,
+    string Name,
+    bool Enabled,
     ModuleType Type,
     string Content,
-    List<EntryValueDefinitionResponse> EditableValueTypes,
-    List<Architecture> SupportedArchitectures
-);
+    bool RequiresSetupBindings,
+    IReadOnlyList<EntryValueDefinitionResponse> EditableValueTypes,
+    IReadOnlyList<Architecture> SupportedArchitectures,
+    IReadOnlyList<ModuleTemplateTestResponse> Tests);
 
-public record EntryValueResponse(
+public sealed record ModuleTemplateEntryValueDefinitionModel(
     string Name,
     string Placeholder,
-    string Value
-);
+    UserInputType InputType,
+    EntryBindingKind BindingKind,
+    int? BindingIndex);
 
-public record ModuleValueResponse(
-    ModuleValueId Id,
+public sealed record ModuleTemplateTestUpsertModel(
+    Guid? Id,
+    string Name,
+    string Content,
+    IReadOnlyList<string> VariableNames);
+
+public sealed record EntryValueResponse(
+    string Name,
+    string Placeholder,
+    string Value);
+
+public sealed record ModuleValueResponse(
+    Guid Id,
     bool Enabled,
-    List<EntryValueResponse> EditableValues
-);
+    List<EntryValueResponse> EditableValues);
 
-public record ModuleValueListResponse(
-    ModuleValueId Id,
-    bool Enabled
-);
+public sealed record ModuleValueListResponse(
+    Guid Id,
+    bool Enabled);

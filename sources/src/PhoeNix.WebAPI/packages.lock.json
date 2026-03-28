@@ -961,7 +961,8 @@
           "MediatR": "[14.0.0, )",
           "Microsoft.CodeAnalysis.Common": "[5.0.0, )",
           "PhoeNix.Application": "[1.0.0, )",
-          "PhoeNix.Domain": "[1.0.0, )"
+          "PhoeNix.Domain": "[1.0.0, )",
+          "PhoeNix.Persistence": "[1.0.0, )"
         }
       }
     }

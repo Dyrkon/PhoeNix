@@ -5,32 +5,139 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
+public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
 {
-    private readonly List<Architecture> _supportedArchitectures = new();
-    private readonly List<Test> _tests = new();
-    private readonly List<EntryValueDefinition> _editableValueTypes = new();
+    private readonly List<Architecture> _supportedArchitectures = [];
+    private readonly List<Test> _tests = [];
+    private readonly List<EntryValueDefinition> _editableValueTypes = [];
 
     private ModuleTemplate(ModuleTemplateId id) : base(id)
     {
     }
 
-    public string Name { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+
+    public bool Enabled { get; private set; }
 
     public ModuleType Type { get; private set; }
 
-    public string Content { get; private set; }
+    public string Content { get; private set; } = string.Empty;
 
     public IReadOnlyList<Test> Tests => _tests;
+
     public IReadOnlyList<EntryValueDefinition> EditableValueTypes => _editableValueTypes;
+
+    public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
 
     public bool RequiresSetupBindings =>
         _editableValueTypes.Any(v => v.BindingKind == EntryBindingKind.RankedDiskCandidate);
 
-    public Result ChangeContent(string content, List<EntryValueDefinition> entries)
+    public Result EditModule(string newName)
     {
-        foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))
-            return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
+        if (string.IsNullOrWhiteSpace(newName))
+            return Result.Failure(new Error("Modules.NameEmpty", "Module template name can't be empty."));
+
+        Name = newName.Trim();
+        return Result.Success();
+    }
+
+    public Result SetEnabled(bool enabled)
+    {
+        Enabled = enabled;
+        return Result.Success();
+    }
+
+    public Result ChangeType(ModuleType type)
+    {
+        Type = type;
+        return Result.Success();
+    }
+
+    public Result AddArchitectureSupport(Architecture architecture)
+    {
+        if (_supportedArchitectures.Contains(architecture))
+            return Result.Failure(
+                new Error("Modules.ArchitectureAlreadySupported",
+                    $"Architecture '{architecture}' is already supported."));
+
+        _supportedArchitectures.Add(architecture);
+        return Result.Success();
+    }
+
+    public Result AddArchitecturesSupport(IEnumerable<Architecture> architectures)
+    {
+        var incomingArchitectures = architectures.Distinct().ToList();
+
+        if (incomingArchitectures.Count == 0)
+            return Result.Failure(
+                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
+
+        if (_supportedArchitectures.Any(incomingArchitectures.Contains))
+            return Result.Failure(
+                new Error("Modules.ArchitectureAlreadySupported",
+                    "One or more architectures are already supported."));
+
+        _supportedArchitectures.AddRange(incomingArchitectures);
+        return Result.Success();
+    }
+
+    public Result ReplaceArchitectureSupport(IEnumerable<Architecture> architectures)
+    {
+        var incomingArchitectures = architectures.Distinct().ToList();
+
+        if (incomingArchitectures.Count == 0)
+            return Result.Failure(
+                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
+
+        _supportedArchitectures.Clear();
+        _supportedArchitectures.AddRange(incomingArchitectures);
+
+        return Result.Success();
+    }
+
+    public Result RemoveArchitectureSupport(Architecture architecture)
+    {
+        var removed = _supportedArchitectures.RemoveAll(a => a == architecture);
+        return removed == 0
+            ? Result.Failure(Error.ValueNotFound)
+            : Result.Success();
+    }
+
+    public Result ChangeContent(string content, IReadOnlyCollection<EntryValueDefinition> entries)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return Result.Failure(
+                new Error("Modules.ContentEmpty", "Module template content can't be empty."));
+
+        if (entries.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
+            return Result.Failure(
+                new Error("Modules.DuplicateEntryName", "Entry names must be unique within a module template."));
+
+        if (entries.GroupBy(x => x.Placeholder, StringComparer.Ordinal).Any(g => g.Count() > 1))
+            return Result.Failure(
+                new Error("Modules.DuplicatePlaceholder",
+                    "Entry placeholders must be unique within a module template."));
+
+        foreach (var entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name))
+                return Result.Failure(
+                    new Error("Modules.EntryNameEmpty", "Entry name can't be empty."));
+
+            if (string.IsNullOrWhiteSpace(entry.Placeholder))
+                return Result.Failure(
+                    new Error("Modules.PlaceholderEmpty", "Entry placeholder can't be empty."));
+
+            if (!content.Contains(entry.Placeholder, StringComparison.Ordinal))
+                return Result.Failure(
+                    new Error("Modules.PlaceholderMissing",
+                        $"Placeholder '{entry.Placeholder}' is not present in the module content."));
+
+            if (entry.BindingKind == EntryBindingKind.RankedDiskCandidate && entry.BindingIndex is null)
+                return Result.Failure(
+                    new Error("Modules.BindingIndexMissing",
+                        $"Binding index is required for '{EntryBindingKind.RankedDiskCandidate}'."));
+        }
 
         Content = content;
         _editableValueTypes.Clear();
@@ -39,83 +146,134 @@ public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         return Result.Success();
     }
 
-    public Result EditModule(string newName)
-    {
-        if (newName == string.Empty)
-            return Result.Failure(new Error("", "Module name can't be empty"));
-
-        Name = newName;
-        return Result.Success();
-    }
-
-    public Result AddArchitectureSupport(Architecture architecture)
-    {
-        if (_supportedArchitectures.Contains(architecture))
-            return Result.Failure(new Error("", $"Can't add already supported architecture {architecture}"));
-
-        _supportedArchitectures.Add(architecture);
-        return Result.Success();
-    }
-
-    public Result AddArchitecturesSupport(IEnumerable<Architecture> architectures)
-    {
-        if (_supportedArchitectures.Any(architectures.Contains))
-            return Result.Failure(new Error("", "Can't add already supported architectures"));
-
-        _supportedArchitectures.AddRange(architectures);
-        return Result.Success();
-    }
-
-    public Result RemoveArchitectureSupport(Architecture architecture)
-    {
-        var removed = _supportedArchitectures.RemoveAll(a => a == architecture);
-        return removed == 0 ? Result.Failure(Error.ValueNotFound) : Result.Success();
-    }
-
     public Result AddModuleTest(string name)
     {
-        if (_tests.Any(h => h.Name == name))
-            return Result.Failure(new Error("", $"Module {name} has with the name {name} already"));
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure(new Error("Modules.TestNameEmpty", "Module test name can't be empty."));
 
-        return Test.Create(new TestId(Guid.NewGuid()), name)
+        if (_tests.Any(h => h.Name == name))
+            return Result.Failure(
+                new Error("Modules.TestNameDuplicate", $"Module test with name '{name}' already exists."));
+
+        return Test.Create(new TestId(Guid.NewGuid()), Id, name.Trim())
             .Tap(t => _tests.Add(t));
     }
-
 
     public Result ChangeModuleTest(TestId testId, string newContent, List<string> variableNames)
     {
         return _tests.FirstOrDefault(h => h.Id == testId)
-            .EnsureNotNull(new Error("", $"Module test {Id.Value} has not been found in module template {Name}"))
+            .EnsureNotNull(
+                new Error("Modules.TestNotFound",
+                    $"Module test '{testId.Value}' has not been found in module template '{Name}'."))
             .Bind(test => test.ChangeContent(newContent, variableNames));
     }
 
     public Result RemoveModuleTest(TestId id)
     {
         var removedModules = _tests.RemoveAll(t => t.Id == id);
+
         if (removedModules == 0)
-            return Result.Failure(new Error("", $"There is no module with id {id.Value} in this module"));
+            return Result.Failure(
+                new Error("Modules.TestNotFound",
+                    $"There is no module test with id '{id.Value}' in this module template."));
 
         return Result.Success();
     }
 
-    public static Result<ModuleTemplate> Create(ModuleTemplateId templateId, string name, bool enabled, ModuleType type,
-        List<Architecture> architectures)
+    public Result ReconcileTests(IReadOnlyCollection<ModuleTemplateTestDefinition> tests)
     {
-        if (name == string.Empty)
-            return Result.Failure<ModuleTemplate>(new Error("", "Modules name can't be empty"));
+        if (tests.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
+            return Result.Failure(
+                new Error("Modules.TestNameDuplicate", "Module test names must be unique within a module template."));
+
+        if (tests.Where(x => x.Id is not null).GroupBy(x => x.Id).Any(g => g.Count() > 1))
+            return Result.Failure(
+                new Error("Modules.TestIdDuplicate",
+                    "Module test ids must be unique within a module template update."));
+
+        var requestedIds = tests
+            .Where(x => x.Id is not null)
+            .Select(x => x.Id!)
+            .ToHashSet();
+
+        var testsToRemove = _tests
+            .Where(x => !requestedIds.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToList();
+
+        foreach (var testId in testsToRemove)
+        {
+            var removeResult = RemoveModuleTest(testId);
+            if (removeResult.IsFailure)
+                return removeResult;
+        }
+
+        foreach (var requestedTest in tests.Where(x => x.Id is not null))
+        {
+            var existingTest = _tests.FirstOrDefault(x => x.Id == requestedTest.Id);
+
+            if (existingTest is null)
+                return Result.Failure(
+                    new Error("Modules.TestNotFound",
+                        $"Module test '{requestedTest.Id!.Value}' was not found."));
+
+            var renameResult = existingTest.Rename(requestedTest.Name);
+            if (renameResult.IsFailure)
+                return renameResult;
+
+            var contentResult = existingTest.ChangeContent(
+                requestedTest.Content,
+                requestedTest.VariableNames.ToList());
+
+            if (contentResult.IsFailure)
+                return contentResult;
+        }
+
+        foreach (var requestedTest in tests.Where(x => x.Id is null))
+        {
+            var addResult = AddModuleTest(requestedTest.Name);
+            if (addResult.IsFailure)
+                return addResult;
+
+            var createdTest = _tests.Single(x => x.Name == requestedTest.Name);
+
+            var contentResult = createdTest.ChangeContent(
+                requestedTest.Content,
+                requestedTest.VariableNames.ToList());
+
+            if (contentResult.IsFailure)
+                return contentResult;
+        }
+
+        return Result.Success();
+    }
+
+    public static Result<ModuleTemplate> Create(
+        ModuleTemplateId templateId,
+        string name,
+        bool enabled,
+        ModuleType type,
+        IReadOnlyCollection<Architecture> architectures)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure<ModuleTemplate>(
+                new Error("Modules.NameEmpty", "Module template name can't be empty."));
 
         if (architectures.Count == 0)
-            return Result.Failure<ModuleTemplate>(new Error("", "Module has to support at least one architecture"));
+            return Result.Failure<ModuleTemplate>(
+                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
 
         var newModule = new ModuleTemplate(templateId)
         {
-            Name = name,
+            Name = name.Trim(),
+            Enabled = enabled,
             Type = type,
             Content = string.Empty
         };
-        var result = newModule.AddArchitecturesSupport(architectures);
-        return result.IsFailure ? Result.Failure<ModuleTemplate>(result.Error) : newModule;
-    }
 
-    public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
+        var result = newModule.ReplaceArchitectureSupport(architectures);
+        return result.IsFailure
+            ? Result.Failure<ModuleTemplate>(result.Error)
+            : newModule;
+    }
 }

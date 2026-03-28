@@ -16,13 +16,15 @@ internal sealed class ModuleTemplateRepository : RepositoryBase<ModuleTemplate, 
         return await DbContext.ModuleTemplates
             .Include(m => m.EditableValueTypes)
             .Include(m => m.Tests)
-            .SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+            .SingleOrDefaultAsync(m => m.Name == name, token);
     }
 
     public async Task<IEnumerable<ModuleTemplate>> GetAllAsync(CancellationToken token)
     {
-        return await DbContext.ModuleTemplates.Include(m => m.EditableValueTypes)
+        return await DbContext.ModuleTemplates
+            .Include(m => m.EditableValueTypes)
             .Include(m => m.Tests)
+            .OrderBy(m => m.Name)
             .ToListAsync(token);
     }
 

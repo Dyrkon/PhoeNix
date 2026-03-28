@@ -5,41 +5,75 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Modules.Queries;
-using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Enums;
+using PhoeNix.Persistence.Contracts;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Modules;
 
-public class ModulesModule : ICarterModule
+public sealed class ModulesModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/modules{configurationId:guid}/module/{moduleId:guid}/architecture/{architecture:int}/validate",
-                ValidateModule)
+        var group = app.MapGroup("/modules");
+
+        group.MapGet(string.Empty, GetModuleTemplates)
+            .WithName("GetModuleTemplates")
+            .Produces(StatusCodes.Status200OK);
+
+        group.MapGet("/{moduleTemplateId:guid}", GetModuleTemplateById)
+            .WithName("GetModuleTemplateById")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
-        app.MapPost("/modules/create", CreateModuleTemplate)
+
+        group.MapPost(string.Empty, CreateModuleTemplate)
+            .WithName("CreateModuleTemplate")
             .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        group.MapPut("/{moduleTemplateId:guid}", UpdateModuleTemplate)
+            .WithName("UpdateModuleTemplate")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
     }
 
-    private async Task<IResult> ValidateModule(Guid configurationId, Guid moduleId, int architecture, ISender sender,
+    private static async Task<IResult> GetModuleTemplates(
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var query = new ValidateModuleQuery(new ConfigurationId(configurationId), new ModuleTemplateId(moduleId),
-            (Architecture)architecture);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(new GetModuleTemplatesQuery(), cancellationToken);
         return result.AsHttpResult();
     }
 
-    private async Task<IResult> CreateModuleTemplate(string name, bool enabled, ModuleType moduleType,
-        List<Architecture> architectures, ISender sender,
+    private static async Task<IResult> GetModuleTemplateById(
+        Guid moduleTemplateId,
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var query = new AddModuleTemplateCommand(name, enabled, moduleType, architectures);
-        var result = await sender.Send(query, cancellationToken);
+        var result = await sender.Send(new GetModuleTemplateByIdQuery(moduleTemplateId), cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> CreateModuleTemplate(
+        CreateModuleTemplateRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new CreateModuleTemplateCommand(request.Name, request.Enabled, request.Type, request.Content,
+            request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> UpdateModuleTemplate(
+        Guid moduleTemplateId,
+        UpdateModuleTemplateRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateModuleTemplateCommand(moduleTemplateId, request.Name, request.Enabled, request.Type,
+            request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
+        var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
 }
