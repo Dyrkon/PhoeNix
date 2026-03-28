@@ -10,6 +10,8 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
 {
     public void Configure(EntityTypeBuilder<ModuleTemplate> builder)
     {
+        builder.ToTable("ModuleTemplates");
+
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Id)
@@ -21,6 +23,12 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
         builder.Property(m => m.Name)
             .IsRequired()
             .HasMaxLength(200);
+
+        builder.HasIndex(m => m.Name)
+            .IsUnique();
+
+        builder.Property(m => m.Enabled)
+            .IsRequired();
 
         builder.Property(m => m.Type)
             .HasConversion<string>()
@@ -42,7 +50,8 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
             owned.Property(e => e.ModuleTemplateId)
                 .HasConversion(
                     id => id.Value,
-                    value => new ModuleTemplateId(value));
+                    value => new ModuleTemplateId(value))
+                .IsRequired();
 
             owned.Property(e => e.Name)
                 .IsRequired()
@@ -63,9 +72,15 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
             owned.Property(e => e.BindingIndex);
 
             owned.HasIndex("ModuleTemplateId");
+            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Name))
+                .IsUnique();
+            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Placeholder))
+                .IsUnique();
         });
 
-        builder.PrimitiveCollection<List<Architecture>>("_supportedArchitectures")
+        builder.PrimitiveCollection(m => m.SupportedArchitectures)
+            .HasField("_supportedArchitectures")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
             .ElementType()
             .HasConversion<string>();
 

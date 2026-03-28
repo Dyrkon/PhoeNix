@@ -36,8 +36,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly,
-            type => type.IsAssignableTo(typeof(IApplicationEntityTypeConfiguration)));
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(ApplicationDbContext).Assembly,
+            type =>
+                !type.IsAbstract &&
+                !type.IsGenericTypeDefinition &&
+                type.IsAssignableTo(typeof(IApplicationEntityTypeConfiguration)));
 
         base.OnModelCreating(modelBuilder);
     }

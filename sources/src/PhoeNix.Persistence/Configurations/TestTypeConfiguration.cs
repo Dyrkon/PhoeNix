@@ -9,6 +9,8 @@ internal sealed class TestEntityTypeConfiguration : IApplicationEntityTypeConfig
 {
     public void Configure(EntityTypeBuilder<Test> builder)
     {
+        builder.ToTable("ModuleTemplateTests");
+
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Id)
@@ -30,8 +32,13 @@ internal sealed class TestEntityTypeConfiguration : IApplicationEntityTypeConfig
         builder.Property(t => t.Content)
             .IsRequired();
 
-        builder.PrimitiveCollection<List<string>>("_variableNames")
-            .ElementType()
-            .HasMaxLength(200);
+        builder.HasIndex(t => t.ModuleTemplateId);
+
+        builder.HasIndex(t => new { t.ModuleTemplateId, t.Name })
+            .IsUnique();
+
+        builder.PrimitiveCollection(t => t.VariableNames)
+            .HasField("_variableNames")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
