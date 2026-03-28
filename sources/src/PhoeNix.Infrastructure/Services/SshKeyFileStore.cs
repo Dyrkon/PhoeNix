@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Options;
+using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
@@ -148,6 +149,93 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
             ));
 
         return Result.Success();
+    }
+
+    public Result<string> GetOrCreateMachineDirectory(MachineId machineId)
+    {
+        return CreateDirectoryIfMissing(
+            Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString()));
+    }
+
+    public Result<string> GetOrCreateMachineDeployDirectory(MachineId machineId)
+    {
+        return CreateDirectoryIfMissing(
+            Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString(), "deploy-ssh"));
+    }
+
+    public Result<(string CaPrivateKeyPath, string CaPublicKeyPath)> GetDeployCaKeyPaths()
+    {
+        return GetOrCreateCaDirectory()
+            .Map(caDir =>
+            {
+                var priv = Path.Combine(caDir, "phoenix-deploy-user-ca");
+                var pub = priv + ".pub";
+                return (priv, pub);
+            });
+    }
+
+    public async Task<Result<string>> ReadDeployCaPublicKeyAsync(CancellationToken cancellationToken)
+    {
+        var caPaths = GetDeployCaKeyPaths();
+        if (caPaths.IsFailure)
+            return Result.Failure<string>(caPaths.Error);
+
+        var publicKeyPath = caPaths.Value.CaPublicKeyPath;
+
+        if (!File.Exists(publicKeyPath))
+            return Result.Failure<string>(new Error(
+                "DeploySshCaPublicKeyMissing",
+                $"Deploy SSH CA public key was not found at '{publicKeyPath}'."));
+
+        try
+        {
+            var content = await File.ReadAllTextAsync(publicKeyPath, cancellationToken);
+            var normalized = content.Trim();
+
+            if (string.IsNullOrWhiteSpace(normalized))
+                return Result.Failure<string>(new Error(
+                    "DeploySshCaPublicKeyEmpty",
+                    $"Deploy SSH CA public key file '{publicKeyPath}' is empty."));
+
+            return Result.Success(normalized);
+        }
+        catch (Exception e)
+        {
+            return Result.Failure<string>(new Error(
+                "DeploySshCaPublicKeyReadFailed",
+                $"Failed to read deploy SSH CA public key from '{publicKeyPath}': {e.Message}"));
+        }
+    }
+
+    public Result<(string PrivateKeyPath, string PublicKeyPath, string CertificatePath)> GetMachineDeployKeyPaths(
+        MachineId machineId)
+    {
+        return GetOrCreateMachineDeployDirectory(machineId)
+            .Map(machineDir =>
+            {
+                var baseName = Path.Combine(machineDir, "deploy_ed25519");
+                var priv = baseName;
+                var pub = baseName + ".pub";
+                var cert = baseName + "-cert.pub";
+                return (priv, pub, cert);
+            });
+    }
+
+    public Result DeleteMachineDeployDirectory(MachineId machineId)
+    {
+        var dir = Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString(), "deploy-ssh");
+
+        try
+        {
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, true);
+
+            return Result.Success();
+        }
+        catch (Exception e)
+        {
+            return Result.Failure(new Error("SshKeyFileStoreDeleteFailed", e.Message));
+        }
     }
 
     private static Result<string> CreateDirectoryIfMissing(string path)

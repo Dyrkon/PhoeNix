@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PhoeNix.Persistence;
 
@@ -10,9 +11,11 @@ using PhoeNix.Persistence;
 namespace PhoeNix.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326205321_RenameMachineProvisioningDescription")]
+    partial class RenameMachineProvisioningDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -497,33 +500,6 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("MachineId");
-
-                            b1.OwnsMany("PhoeNix.Domain.Entities.Machines.DeploymentDiskBinding", "BoundDisks", b2 =>
-                                {
-                                    b2.Property<Guid>("MachineId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<int>("Index")
-                                        .HasColumnType("INTEGER")
-                                        .HasColumnName("DiskIndex");
-
-                                    b2.Property<string>("StableDevicePath")
-                                        .IsRequired()
-                                        .HasMaxLength(500)
-                                        .HasColumnType("TEXT")
-                                        .HasColumnName("StableDevicePath");
-
-                                    b2.HasKey("MachineId", "Index");
-
-                                    b2.HasIndex("StableDevicePath");
-
-                                    b2.ToTable("MachineDeploymentBoundDisks", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("MachineId");
-                                });
-
-                            b1.Navigation("BoundDisks");
                         });
 
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.HardwareProfile", "HardwareProfile", b1 =>

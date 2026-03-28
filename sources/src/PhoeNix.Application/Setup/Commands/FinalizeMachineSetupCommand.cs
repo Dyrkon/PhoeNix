@@ -1,4 +1,3 @@
-using System.Net;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Messaging;
@@ -11,9 +10,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
 
-public record FinalizeMachineSetupCommand(
-    string Token,
-    IPAddress MachineIpAddress) : ICommand;
+public record FinalizeMachineSetupCommand(string Token, System.Net.IPAddress MachineIpAddress) : ICommand;
 
 internal sealed class FinalizeMachineSetupCommandHandler(
     ISetupSessionRepository setupSessionRepository,
@@ -113,14 +110,20 @@ internal sealed class FinalizeMachineSetupCommandHandler(
                 nowUtc);
         }
 
-        var provisioningSnapshotResult = machine.RecordProvisioningSnapshot(
+        var boundDiskPaths = target.RankedDiskAssignments
+            .OrderBy(d => d.Index)
+            .Select(d => d.DiskByIdPath)
+            .ToList();
+
+        var snapshotResult = machine.RecordDeploymentSnapshot(
             target.SelectedConfigurationId,
             target.SelectedSystemId,
             request.MachineIpAddress,
-            nowUtc);
+            nowUtc,
+            boundDiskPaths);
 
-        if (provisioningSnapshotResult.IsFailure)
-            return provisioningSnapshotResult.Error;
+        if (snapshotResult.IsFailure)
+            return snapshotResult.Error;
 
         var revokeTokenResult = session.RevokeMachineCallbackToken(machine.Id, nowUtc);
         if (revokeTokenResult.IsFailure)

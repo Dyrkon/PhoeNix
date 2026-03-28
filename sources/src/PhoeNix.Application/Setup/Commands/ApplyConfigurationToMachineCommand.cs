@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Options;
+using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Setup;
@@ -10,7 +12,6 @@ using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Repositories;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -26,7 +27,8 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
     ISetupSessionRepository sessionRepository,
     INixosInstaller nixosInstaller,
     IRuntimeBindingResolver runtimeBindingResolver,
-    IOptions<NetbootHostOptions> setupCallbackOptions)
+    IOptions<NetbootHostOptions> setupCallbackOptions,
+    IDeploySshKeyProvider deploySshKeyProvider)
     : ICommandHandler<ApplyConfigurationToMachineCommand>
 {
     public async Task<Result> Handle(
@@ -142,12 +144,26 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 nowUtc);
         }
 
+        var deployAccessResult = await deploySshKeyProvider.GetOrCreateAsync(
+            request.MachineId,
+            cancellationToken);
+
+        if (deployAccessResult.IsFailure)
+            return session.PersistFailure(
+                request.MachineId,
+                deployAccessResult.Error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+
         var finalizeUrl = $"{setupCallbackOptions.Value.ApiBasePublicUrl.TrimEnd('/')}/setup/finalize";
 
         var builtInModules = new BuiltInModuleParameters(
             new CallbackModuleParameters(
                 finalizeUrl,
-                target.CallbackToken.Token));
+                target.CallbackToken.Token),
+            new DeployAccessModuleParameters(
+                deployAccessResult.Value.DeployUser,
+                deployAccessResult.Value.CaPublicKey));
 
         var boundConfigurationResult = runtimeBindingResolver.ApplyBindings(
             configuration,
@@ -168,7 +184,7 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 target.SelectedSystemId,
                 builtInModules)
             .Bind(configurationFilesBuilder.BuildConfigurationFiles)
-            .Bind(files => fileSystemService.WriteConfigurationToFs(
+            .Bind(files => fileSystemService.WriteConfigurationToFsAsync(
                 files,
                 target.SelectedConfigurationId,
                 cancellationToken))

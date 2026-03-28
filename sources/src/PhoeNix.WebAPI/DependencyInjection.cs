@@ -80,6 +80,11 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<NixOsUpdaterOptions>()
+            .BindConfiguration("NixosUpdater")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         return services;
     }
 

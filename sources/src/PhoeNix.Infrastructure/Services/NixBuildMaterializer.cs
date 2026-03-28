@@ -35,7 +35,57 @@ public class NixBuildMaterializer : INixBuildMaterializer
         if (builtInModules?.Callback is not null)
             modules.Add(BuildCallbackBuiltInModule(builtInModules.Callback));
 
+        if (builtInModules?.DeployAccess is not null)
+            modules.Add(BuildDeployAccessBuiltInModule(builtInModules.DeployAccess));
+
         return modules;
+    }
+
+    private ModuleBuildResult BuildDeployAccessBuiltInModule(DeployAccessModuleParameters parameters)
+    {
+        var deployUser = parameters.DeployUser.Trim();
+        var deployCaPublicKey = parameters.DeployCaPublicKey.Trim();
+
+        var content =
+            "{ pkgs, ... }:\n" +
+            "{\n" +
+            $"  users.users.{deployUser} = {{\n" +
+            "    isNormalUser = true;\n" +
+            "    createHome = true;\n" +
+            "    extraGroups = [ \"wheel\" ];\n" +
+            "    hashedPassword = \"!\";\n" +
+            "  };\n" +
+            "\n" +
+            "  services.openssh.enable = true;\n" +
+            $"  environment.etc.\"ssh/phoenix_deploy_ca.pub\".text = {ToNixString(deployCaPublicKey)};\n" +
+            "  services.openssh.settings = {\n" +
+            "    PubkeyAuthentication = true;\n" +
+            "    TrustedUserCAKeys = \"/etc/ssh/phoenix_deploy_ca.pub\";\n" +
+            "  };\n" +
+            "\n" +
+            $"  nix.settings.trusted-users = [ \"root\" \"{deployUser}\" ];\n" +
+            "\n" +
+            "  security.sudo.extraRules = [\n" +
+            "    {\n" +
+            $"      users = [ \"{deployUser}\" ];\n" +
+            "      commands = [\n" +
+            "        {\n" +
+            "          command = \"ALL\";\n" +
+            "          options = [ \"NOPASSWD\" ];\n" +
+            "        }\n" +
+            "      ];\n" +
+            "    }\n" +
+            "  ];\n" +
+            "}";
+
+        return new ModuleBuildResult(
+            new ModuleTemplateId(Guid.NewGuid()),
+            "PhoenixDeployAccess",
+            content,
+            "{ }",
+            "values",
+            Guid.NewGuid().ToString(),
+            []);
     }
 
     private ModuleBuildResult BuildCallbackBuiltInModule(CallbackModuleParameters parameters)
@@ -130,7 +180,8 @@ public class NixBuildMaterializer : INixBuildMaterializer
                 "ModuleTestContainsUnresolvedVariables",
                 $"Test '{test.Name}' contains unresolved variables: {string.Join(", ", unresolvedVariables)}."));
 
-        foreach (var pair in placeholders) outputContent = outputContent.Replace(pair.Value, $"args.{pair.Key}");
+        foreach (var pair in placeholders)
+            outputContent = outputContent.Replace(pair.Value, $"args.{pair.Key}");
 
         var moduleTestContent =
             "{ inputs, pkgs, ... }: let\n" +
@@ -206,6 +257,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
         BuiltInModuleParameters? builtInModules)
     {
         var modules = system.Modules
+            .Where(m => m.Enabled)
             .Select(m => BuildModule(moduleTemplates.First(i => i.Id == m.ModuleTemplateId), m))
             .ToList();
 
@@ -248,6 +300,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
             return Result.Failure<ConfigurationBuildResult>(inputFailure.Error);
 
         var modules = configuration.Modules
+            .Where(m => m.Enabled)
             .Select(m => BuildModule(templateList.First(i => i.Id == m.ModuleTemplateId), m))
             .ToList();
 

@@ -24,6 +24,9 @@ public class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     public IReadOnlyList<Test> Tests => _tests;
     public IReadOnlyList<EntryValueDefinition> EditableValueTypes => _editableValueTypes;
 
+    public bool RequiresSetupBindings =>
+        _editableValueTypes.Any(v => v.BindingKind == EntryBindingKind.RankedDiskCandidate);
+
     public Result ChangeContent(string content, List<EntryValueDefinition> entries)
     {
         foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))

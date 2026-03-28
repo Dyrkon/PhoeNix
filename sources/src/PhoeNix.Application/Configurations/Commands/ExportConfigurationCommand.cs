@@ -1,9 +1,9 @@
+using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Repositories;
-using PhoeNix.Domain.Services;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Configurations.Commands;
@@ -31,6 +31,6 @@ internal sealed class ExportConfigurationCommandHandler(
                 nixBuildMaterializer.MaterializeConfiguration(configuration, moduleTemplates.ToList()))
             .Bind(configurationFilesBuilder.BuildConfigurationFiles)
             .Bind(cFolder =>
-                fileSystemService.WriteConfigurationToFs(cFolder, command.ConfigurationId, cancellationToken));
+                fileSystemService.WriteConfigurationToFsAsync(cFolder, command.ConfigurationId, cancellationToken));
     }
 }

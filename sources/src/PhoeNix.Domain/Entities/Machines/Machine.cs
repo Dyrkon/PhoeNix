@@ -29,7 +29,7 @@ public class Machine : AggregateRoot<MachineId>
 
     public SoftwareSnapshot? SoftwareSnapshot { get; private set; }
 
-    public ProvisioningSnapshot? ProvisioningSnapshot { get; private set; }
+    public DeploymentSnapshot? DeploymentSnapshot { get; private set; }
 
     public MachineStatus MachineStatus { get; private set; }
 
@@ -68,18 +68,24 @@ public class Machine : AggregateRoot<MachineId>
         return Result.Success();
     }
 
-    public Result RecordProvisioningSnapshot(
+    public Result RecordDeploymentSnapshot(
         ConfigurationId configurationId,
         SystemId systemId,
         IPAddress ipAddress,
-        DateTime nowUtc)
+        DateTime nowUtc,
+        IReadOnlyList<string> boundDiskPaths)
     {
-        ProvisioningSnapshot = new ProvisioningSnapshot(
+        var snapshotResult = DeploymentSnapshot.Create(
             configurationId,
             systemId,
             ipAddress,
-            nowUtc);
+            nowUtc,
+            boundDiskPaths);
 
+        if (snapshotResult.IsFailure)
+            return snapshotResult.Error;
+
+        DeploymentSnapshot = snapshotResult.Value;
         return Result.Success();
     }
 

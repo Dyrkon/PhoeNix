@@ -13,5 +13,10 @@ public sealed record CallbackModuleParameters(
     string FinalizeUrl,
     string BearerToken);
 
+public sealed record DeployAccessModuleParameters(
+    string DeployUser,
+    string DeployCaPublicKey);
+
 public sealed record BuiltInModuleParameters(
-    CallbackModuleParameters? Callback = null);
+    CallbackModuleParameters? Callback = null,
+    DeployAccessModuleParameters? DeployAccess = null);
