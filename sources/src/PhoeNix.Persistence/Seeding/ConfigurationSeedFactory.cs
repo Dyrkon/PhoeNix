@@ -20,9 +20,12 @@ internal static class ConfigurationSeedFactory
                 "Minimal bootable NixOS target for nixos-anywhere with Disko, callback, and Prometheus node exporter.")
             .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddSystem(SeedIds.ExampleSystem, Architecture.X86Linux, "demo-install-target"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.MinimalBaseTemplate, true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.DiskoEfiExt4Template, true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.PrometheusTemplate, true))
+            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.MinimalBaseTemplate, [Architecture.X86Linux],
+                true))
+            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.DiskoEfiExt4Template,
+                [Architecture.X86Linux], true))
+            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.PrometheusTemplate, [Architecture.X86Linux],
+                true))
             .Tap(cfg => SetSeededValues(cfg, options));
     }
 
@@ -31,7 +34,7 @@ internal static class ConfigurationSeedFactory
         var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.ExampleSystem);
 
         var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
-        baseModule.ChangeEntry(
+        baseModule.ReplaceEntries(
         [
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
@@ -51,7 +54,7 @@ internal static class ConfigurationSeedFactory
         ]);
 
         var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiExt4Template);
-        diskoModule.ChangeEntry(
+        diskoModule.ReplaceEntries(
         [
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
@@ -61,7 +64,7 @@ internal static class ConfigurationSeedFactory
         ]);
 
         var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);
-        prometheusModule.ChangeEntry(
+        prometheusModule.ReplaceEntries(
         [
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),

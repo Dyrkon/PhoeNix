@@ -326,7 +326,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
             return Result.Failure<ConfigurationBuildResult>(systemFailure.Error);
 
         var supportedArchitectures = configuration.SupportedSystemArchitectures();
-        if (supportedArchitectures.IsFailure || supportedArchitectures.Value.Count == 0)
+        if (supportedArchitectures.Count == 0)
             return Result.Failure<ConfigurationBuildResult>(new Error(
                 "",
                 $"Failed to get supported architectures for configuration {configuration.Title}"));
@@ -342,7 +342,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
             $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"github:nix-community/disko/latest\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n" +
             "outputs = {self, nixpkgs, flake-utils, ...} @ inputs: " +
             "let\n" +
-            $"systems = [{supportedArchitectures.Value.Aggregate(string.Empty, (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +
+            $"systems = [{supportedArchitectures.Aggregate(string.Empty, (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +
             $"sharedModules = [ {sharedModulesPlaceholder} ];\n" +
             "lib = nixpkgs.lib;" +
             "\nin\n" +
@@ -360,7 +360,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
             sharedModulesPlaceholder,
             systemsPlaceholder,
             checksPlaceholder,
-            supportedArchitectures.Value,
+            supportedArchitectures,
             modules.Select(m => m.Value).ToList(),
             systems.Select(s => s.Value).ToList());
     }

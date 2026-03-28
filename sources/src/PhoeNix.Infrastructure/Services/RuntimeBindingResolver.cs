@@ -137,7 +137,7 @@ public sealed class RuntimeBindingResolver(
                     entry.Name,
                     disk.DiskByIdPath);
 
-                entry.SetValue($"\"{disk.DiskByIdPath}\"");
+                entry.Value = $"\"{disk.DiskByIdPath}\"";
             }
 
             logger.LogDebug(
@@ -148,7 +148,7 @@ public sealed class RuntimeBindingResolver(
             newEntries.Add(entry);
         }
 
-        var result = module.ChangeEntry(newEntries);
+        var result = module.ReplaceEntries(newEntries);
         if (result.IsFailure)
             return result.Error;
 

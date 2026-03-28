@@ -5,20 +5,23 @@ namespace PhoeNix.Application.Mappings;
 
 public static class ConfigurationMappings
 {
-    public static ConfigurationResponse MapConfigurationToDto(Configuration flake)
+    public static ConfigurationResponse MapConfigurationToDto(Configuration configuration)
     {
         return new ConfigurationResponse(
-            flake.Id,
-            flake.Title,
-            flake.Description,
-            flake.Inputs.Select(InputMappings.MapInputToDto).ToList(),
-            flake.Modules.Select(ModuleMappings.MapModuleValueToDto).ToList(),
-            flake.SystemSpecifications.Select(SystemMappings.MapSystemToListDto).ToList(),
-            flake.SupportedSystemArchitectures().Value.ToList());
+            configuration.Id.Value,
+            configuration.Title,
+            configuration.Description,
+            configuration.Inputs.Select(InputMappings.MapInputToDto).ToList(),
+            configuration.Modules.Select(ModuleMappings.MapModuleValueToDto).ToList(),
+            configuration.SystemSpecifications.Select(SystemMappings.MapSystemToListDto).ToList(),
+            configuration.SupportedSystemArchitectures().ToList());
     }
 
-    public static ConfigurationListResponse MapConfigurationToListDto(Configuration flake)
+    public static ConfigurationListResponse MapConfigurationToListDto(Configuration configuration)
     {
-        return new ConfigurationListResponse(flake.Id, flake.Title, flake.Description);
+        return new ConfigurationListResponse(
+            configuration.Id.Value,
+            configuration.Title,
+            configuration.Description);
     }
 }

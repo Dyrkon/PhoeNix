@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Modules.Queries;
-using PhoeNix.Persistence.Contracts;
+using PhoeNix.Domain.Entities.Modules;
+using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Modules;
@@ -50,7 +51,8 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetModuleTemplateByIdQuery(moduleTemplateId), cancellationToken);
+        var result = await sender.Send(new GetModuleTemplateByIdQuery(new ModuleTemplateId(moduleTemplateId)),
+            cancellationToken);
         return result.AsHttpResult();
     }
 
@@ -71,7 +73,8 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateModuleTemplateCommand(moduleTemplateId, request.Name, request.Enabled, request.Type,
+        var command = new UpdateModuleTemplateCommand(new ModuleTemplateId(moduleTemplateId), request.Name,
+            request.Enabled, request.Type,
             request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();

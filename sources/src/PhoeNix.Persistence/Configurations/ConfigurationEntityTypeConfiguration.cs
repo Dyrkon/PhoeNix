@@ -9,6 +9,8 @@ internal sealed class ConfigurationEntityTypeConfiguration : IApplicationEntityT
 {
     public void Configure(EntityTypeBuilder<Configuration> builder)
     {
+        builder.ToTable("Configurations");
+
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Id)

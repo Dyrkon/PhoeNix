@@ -56,28 +56,10 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     public Result AddArchitectureSupport(Architecture architecture)
     {
         if (_supportedArchitectures.Contains(architecture))
-            return Result.Failure(
-                new Error("Modules.ArchitectureAlreadySupported",
-                    $"Architecture '{architecture}' is already supported."));
+            return Result.Failure(new Error("Modules.ArchitectureAlreadySupported",
+                $"Architecture '{architecture}' is already supported."));
 
         _supportedArchitectures.Add(architecture);
-        return Result.Success();
-    }
-
-    public Result AddArchitecturesSupport(IEnumerable<Architecture> architectures)
-    {
-        var incomingArchitectures = architectures.Distinct().ToList();
-
-        if (incomingArchitectures.Count == 0)
-            return Result.Failure(
-                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
-
-        if (_supportedArchitectures.Any(incomingArchitectures.Contains))
-            return Result.Failure(
-                new Error("Modules.ArchitectureAlreadySupported",
-                    "One or more architectures are already supported."));
-
-        _supportedArchitectures.AddRange(incomingArchitectures);
         return Result.Success();
     }
 
@@ -86,8 +68,8 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         var incomingArchitectures = architectures.Distinct().ToList();
 
         if (incomingArchitectures.Count == 0)
-            return Result.Failure(
-                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
+            return Result.Failure(new Error("Modules.NoArchitecture",
+                "Module template has to support at least one architecture."));
 
         _supportedArchitectures.Clear();
         _supportedArchitectures.AddRange(incomingArchitectures);
@@ -95,48 +77,38 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         return Result.Success();
     }
 
-    public Result RemoveArchitectureSupport(Architecture architecture)
-    {
-        var removed = _supportedArchitectures.RemoveAll(a => a == architecture);
-        return removed == 0
-            ? Result.Failure(Error.ValueNotFound)
-            : Result.Success();
-    }
-
     public Result ChangeContent(string content, IReadOnlyCollection<EntryValueDefinition> entries)
     {
         if (string.IsNullOrWhiteSpace(content))
-            return Result.Failure(
-                new Error("Modules.ContentEmpty", "Module template content can't be empty."));
+            return Result.Failure(new Error("Modules.ContentEmpty", "Module template content can't be empty."));
 
         if (entries.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
-            return Result.Failure(
-                new Error("Modules.DuplicateEntryName", "Entry names must be unique within a module template."));
+            return Result.Failure(new Error("Modules.DuplicateEntryName",
+                "Entry names must be unique within a module template."));
 
         if (entries.GroupBy(x => x.Placeholder, StringComparer.Ordinal).Any(g => g.Count() > 1))
-            return Result.Failure(
-                new Error("Modules.DuplicatePlaceholder",
-                    "Entry placeholders must be unique within a module template."));
+            return Result.Failure(new Error("Modules.DuplicatePlaceholder",
+                "Entry placeholders must be unique within a module template."));
 
         foreach (var entry in entries)
         {
             if (string.IsNullOrWhiteSpace(entry.Name))
-                return Result.Failure(
-                    new Error("Modules.EntryNameEmpty", "Entry name can't be empty."));
+                return Result.Failure(new Error("Modules.EntryNameEmpty", "Entry name can't be empty."));
 
             if (string.IsNullOrWhiteSpace(entry.Placeholder))
-                return Result.Failure(
-                    new Error("Modules.PlaceholderEmpty", "Entry placeholder can't be empty."));
+                return Result.Failure(new Error("Modules.PlaceholderEmpty", "Entry placeholder can't be empty."));
 
             if (!content.Contains(entry.Placeholder, StringComparison.Ordinal))
-                return Result.Failure(
-                    new Error("Modules.PlaceholderMissing",
-                        $"Placeholder '{entry.Placeholder}' is not present in the module content."));
+                return Result.Failure(new Error("Modules.PlaceholderMissing",
+                    $"Placeholder '{entry.Placeholder}' is not present in the module content."));
 
             if (entry.BindingKind == EntryBindingKind.RankedDiskCandidate && entry.BindingIndex is null)
-                return Result.Failure(
-                    new Error("Modules.BindingIndexMissing",
-                        $"Binding index is required for '{EntryBindingKind.RankedDiskCandidate}'."));
+                return Result.Failure(new Error("Modules.BindingIndexMissing",
+                    $"Binding index is required for '{EntryBindingKind.RankedDiskCandidate}'."));
+
+            var validation = ValidateEntryDefinition(entry);
+            if (validation.IsFailure)
+                return validation;
         }
 
         Content = content;
@@ -146,14 +118,44 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         return Result.Success();
     }
 
+    private static Result ValidateEntryDefinition(EntryValueDefinition entry)
+    {
+        return entry.ValueKind switch
+        {
+            EntryValueKind.Text => Result.Success(),
+
+            EntryValueKind.IntegerRange when entry.IntegerMin is null || entry.IntegerMax is null =>
+                Result.Failure(new Error("Modules.IntegerRangeDefinitionInvalid",
+                    $"Entry '{entry.Name}' requires IntegerMin and IntegerMax.")),
+
+            EntryValueKind.IntegerRange when entry.IntegerMax < entry.IntegerMin =>
+                Result.Failure(new Error("Modules.IntegerRangeDefinitionInvalid",
+                    $"Entry '{entry.Name}' has invalid integer range bounds.")),
+
+            EntryValueKind.DecimalRange when entry.DecimalMin is null || entry.DecimalMax is null =>
+                Result.Failure(new Error("Modules.DecimalRangeDefinitionInvalid",
+                    $"Entry '{entry.Name}' requires DecimalMin and DecimalMax.")),
+
+            EntryValueKind.DecimalRange when entry.DecimalMax < entry.DecimalMin =>
+                Result.Failure(new Error("Modules.DecimalRangeDefinitionInvalid",
+                    $"Entry '{entry.Name}' has invalid decimal range bounds.")),
+
+            EntryValueKind.SingleChoice when entry.GetOptions().Count == 0 =>
+                Result.Failure(new Error("Modules.SingleChoiceDefinitionInvalid",
+                    $"Entry '{entry.Name}' requires at least one option.")),
+
+            _ => Result.Success()
+        };
+    }
+
     public Result AddModuleTest(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(new Error("Modules.TestNameEmpty", "Module test name can't be empty."));
 
         if (_tests.Any(h => h.Name == name))
-            return Result.Failure(
-                new Error("Modules.TestNameDuplicate", $"Module test with name '{name}' already exists."));
+            return Result.Failure(new Error("Modules.TestNameDuplicate",
+                $"Module test with name '{name}' already exists."));
 
         return Test.Create(new TestId(Guid.NewGuid()), Id, name.Trim())
             .Tap(t => _tests.Add(t));
@@ -162,34 +164,30 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     public Result ChangeModuleTest(TestId testId, string newContent, List<string> variableNames)
     {
         return _tests.FirstOrDefault(h => h.Id == testId)
-            .EnsureNotNull(
-                new Error("Modules.TestNotFound",
-                    $"Module test '{testId.Value}' has not been found in module template '{Name}'."))
+            .EnsureNotNull(new Error("Modules.TestNotFound",
+                $"Module test '{testId.Value}' has not been found in module template '{Name}'."))
             .Bind(test => test.ChangeContent(newContent, variableNames));
     }
 
     public Result RemoveModuleTest(TestId id)
     {
-        var removedModules = _tests.RemoveAll(t => t.Id == id);
+        var removed = _tests.RemoveAll(t => t.Id == id);
 
-        if (removedModules == 0)
-            return Result.Failure(
-                new Error("Modules.TestNotFound",
-                    $"There is no module test with id '{id.Value}' in this module template."));
-
-        return Result.Success();
+        return removed == 0
+            ? Result.Failure(new Error("Modules.TestNotFound",
+                $"There is no module test with id '{id.Value}' in this module template."))
+            : Result.Success();
     }
 
     public Result ReconcileTests(IReadOnlyCollection<ModuleTemplateTestDefinition> tests)
     {
         if (tests.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
-            return Result.Failure(
-                new Error("Modules.TestNameDuplicate", "Module test names must be unique within a module template."));
+            return Result.Failure(new Error("Modules.TestNameDuplicate",
+                "Module test names must be unique within a module template."));
 
         if (tests.Where(x => x.Id is not null).GroupBy(x => x.Id).Any(g => g.Count() > 1))
-            return Result.Failure(
-                new Error("Modules.TestIdDuplicate",
-                    "Module test ids must be unique within a module template update."));
+            return Result.Failure(new Error("Modules.TestIdDuplicate",
+                "Module test ids must be unique within a module template update."));
 
         var requestedIds = tests
             .Where(x => x.Id is not null)
@@ -213,18 +211,14 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
             var existingTest = _tests.FirstOrDefault(x => x.Id == requestedTest.Id);
 
             if (existingTest is null)
-                return Result.Failure(
-                    new Error("Modules.TestNotFound",
-                        $"Module test '{requestedTest.Id!.Value}' was not found."));
+                return Result.Failure(new Error("Modules.TestNotFound",
+                    $"Module test '{requestedTest.Id!.Value}' was not found."));
 
             var renameResult = existingTest.Rename(requestedTest.Name);
             if (renameResult.IsFailure)
                 return renameResult;
 
-            var contentResult = existingTest.ChangeContent(
-                requestedTest.Content,
-                requestedTest.VariableNames.ToList());
-
+            var contentResult = existingTest.ChangeContent(requestedTest.Content, requestedTest.VariableNames.ToList());
             if (contentResult.IsFailure)
                 return contentResult;
         }
@@ -237,10 +231,7 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
 
             var createdTest = _tests.Single(x => x.Name == requestedTest.Name);
 
-            var contentResult = createdTest.ChangeContent(
-                requestedTest.Content,
-                requestedTest.VariableNames.ToList());
-
+            var contentResult = createdTest.ChangeContent(requestedTest.Content, requestedTest.VariableNames.ToList());
             if (contentResult.IsFailure)
                 return contentResult;
         }
@@ -260,8 +251,8 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
                 new Error("Modules.NameEmpty", "Module template name can't be empty."));
 
         if (architectures.Count == 0)
-            return Result.Failure<ModuleTemplate>(
-                new Error("Modules.NoArchitecture", "Module template has to support at least one architecture."));
+            return Result.Failure<ModuleTemplate>(new Error("Modules.NoArchitecture",
+                "Module template has to support at least one architecture."));
 
         var newModule = new ModuleTemplate(templateId)
         {

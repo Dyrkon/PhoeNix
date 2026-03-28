@@ -3,14 +3,15 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class ModuleValue : Entity<ModuleValueId>
+public sealed class ModuleValue : Entity<ModuleValueId>
 {
-    private readonly List<EntryValue> _editableValues = new();
-    public ModuleTemplateId ModuleTemplateId { get; private set; }
+    private readonly List<EntryValue> _editableValues = [];
 
     private ModuleValue(ModuleValueId id) : base(id)
     {
     }
+
+    public ModuleTemplateId ModuleTemplateId { get; private set; } = default!;
 
     public bool Enabled { get; private set; }
 
@@ -18,28 +19,36 @@ public class ModuleValue : Entity<ModuleValueId>
 
     public Result Enable()
     {
-        if (Enabled == true)
-            return Result.Failure(new Error("", $"Module {Id.ToString()} is already enabled"));
+        if (Enabled)
+            return Result.Success();
+
         Enabled = true;
         return Result.Success();
     }
 
     public Result Disable()
     {
-        if (Enabled == false)
-            return Result.Failure(new Error("", $"Module {Id.ToString()} is already disabled"));
+        if (!Enabled)
+            return Result.Success();
+
         Enabled = false;
         return Result.Success();
     }
 
-    public Result ChangeEntry(List<EntryValue> entries, string? content = null)
+    public Result SetEnabled(bool enabled)
     {
-        if (content != null)
-            foreach (var entryValue in entries.Where(entryValue => !content.Contains(entryValue.Name)))
-                return Result.Failure(new Error("", $"Name for value {entryValue.Name} is not present"));
-        else if (_editableValues.Count != 0)
-            if (entries.Any(entry => _editableValues.First(i => i.Id == entry.Id).Name != entry.Name))
-                return Result.Failure(new Error("", $"Changing module value names requires module template"));
+        return enabled ? Enable() : Disable();
+    }
+
+    public Result ReplaceEntries(IReadOnlyCollection<EntryValue> entries)
+    {
+        if (entries.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
+            return Result.Failure(new Error("Modules.DuplicateEntryName",
+                "Entry names must be unique within a module value."));
+
+        if (entries.GroupBy(x => x.Placeholder, StringComparer.Ordinal).Any(g => g.Count() > 1))
+            return Result.Failure(new Error("Modules.DuplicatePlaceholder",
+                "Entry placeholders must be unique within a module value."));
 
         _editableValues.Clear();
         _editableValues.AddRange(entries);
@@ -47,7 +56,9 @@ public class ModuleValue : Entity<ModuleValueId>
         return Result.Success();
     }
 
-    public static Result<ModuleValue> Create(ModuleValueId moduleValueId, ModuleTemplateId moduleTemplateId,
+    public static Result<ModuleValue> Create(
+        ModuleValueId moduleValueId,
+        ModuleTemplateId moduleTemplateId,
         bool enabled = true)
     {
         return new ModuleValue(moduleValueId)

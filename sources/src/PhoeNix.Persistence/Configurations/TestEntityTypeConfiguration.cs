@@ -33,9 +33,7 @@ internal sealed class TestEntityTypeConfiguration : IApplicationEntityTypeConfig
             .IsRequired();
 
         builder.HasIndex(t => t.ModuleTemplateId);
-
-        builder.HasIndex(t => new { t.ModuleTemplateId, t.Name })
-            .IsUnique();
+        builder.HasIndex(t => new { t.ModuleTemplateId, t.Name }).IsUnique();
 
         builder.PrimitiveCollection(t => t.VariableNames)
             .HasField("_variableNames")

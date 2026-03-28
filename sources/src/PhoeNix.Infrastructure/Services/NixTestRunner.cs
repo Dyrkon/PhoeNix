@@ -47,7 +47,7 @@ public class NixTestRunner(INixErrorParserService nixErrorParserService, IProces
         var regex = new Regex("test script finished in ([0-9.]+s)", RegexOptions.Compiled);
 
         return processRunner
-            .RunProcess("nixos-anywhere", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3),
+            .RunProcess("nixos-anywhere", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(15),
                 perLineAction: s =>
                 {
                     if (s == null) return;

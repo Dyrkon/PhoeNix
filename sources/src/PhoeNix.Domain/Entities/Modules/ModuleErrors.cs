@@ -1,10 +1,10 @@
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Application.Modules;
+namespace PhoeNix.Domain.Entities.Modules;
 
 public static class ModuleErrors
 {
-    public static Error NotFound(Guid moduleTemplateId)
+    public static Error NotFound(ModuleTemplateId moduleTemplateId)
     {
         return new Error("Modules.NotFound", $"Module template '{moduleTemplateId}' was not found.");
     }

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Modules;
-using PhoeNix.Domain.Enums;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -69,13 +68,23 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
                 .HasConversion<string>()
                 .IsRequired();
 
+            owned.Property(e => e.ValueKind)
+                .HasConversion<string>()
+                .IsRequired();
+
+            owned.Property(e => e.DefaultValue);
+            owned.Property(e => e.DefaultLowerValue);
+            owned.Property(e => e.IntegerMin);
+            owned.Property(e => e.IntegerMax);
+            owned.Property(e => e.DecimalMin);
+            owned.Property(e => e.DecimalMax);
+            owned.Property(e => e.AllowLowerValue).IsRequired();
+            owned.Property(e => e.OptionsJson);
             owned.Property(e => e.BindingIndex);
 
             owned.HasIndex("ModuleTemplateId");
-            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Name))
-                .IsUnique();
-            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Placeholder))
-                .IsUnique();
+            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Name)).IsUnique();
+            owned.HasIndex("ModuleTemplateId", nameof(EntryValueDefinition.Placeholder)).IsUnique();
         });
 
         builder.PrimitiveCollection(m => m.SupportedArchitectures)

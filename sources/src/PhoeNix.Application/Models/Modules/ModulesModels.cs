@@ -14,6 +14,15 @@ public sealed record EntryValueDefinitionResponse(
     string Placeholder,
     UserInputType InputType,
     EntryBindingKind BindingKind,
+    EntryValueKind ValueKind,
+    string? DefaultValue,
+    string? DefaultLowerValue,
+    int? IntegerMin,
+    int? IntegerMax,
+    decimal? DecimalMin,
+    decimal? DecimalMax,
+    bool AllowLowerValue,
+    IReadOnlyList<string>? Options,
     int? BindingIndex);
 
 public sealed record ModuleTemplateTestResponse(
@@ -38,6 +47,15 @@ public sealed record ModuleTemplateEntryValueDefinitionModel(
     string Placeholder,
     UserInputType InputType,
     EntryBindingKind BindingKind,
+    EntryValueKind ValueKind,
+    string? DefaultValue,
+    string? DefaultLowerValue,
+    int? IntegerMin,
+    int? IntegerMax,
+    decimal? DecimalMin,
+    decimal? DecimalMax,
+    bool AllowLowerValue,
+    IReadOnlyList<string>? Options,
     int? BindingIndex);
 
 public sealed record ModuleTemplateTestUpsertModel(
@@ -46,10 +64,32 @@ public sealed record ModuleTemplateTestUpsertModel(
     string Content,
     IReadOnlyList<string> VariableNames);
 
-public sealed record EntryValueResponse(
+public sealed record ModuleEntryValueUpsertModel(
     string Name,
     string Placeholder,
-    string Value);
+    EntryValueKind Kind,
+    string? TextValue,
+    int? IntegerUpperValue,
+    int? IntegerLowerValue,
+    decimal? DecimalUpperValue,
+    decimal? DecimalLowerValue,
+    string? SelectedValue);
+
+public sealed record EntryValueResponse(
+    Guid Id,
+    string Name,
+    string Placeholder,
+    EntryValueKind Kind,
+    string Value,
+    int? IntegerMin,
+    int? IntegerMax,
+    int? IntegerLowerValue,
+    int? IntegerUpperValue,
+    decimal? DecimalMin,
+    decimal? DecimalMax,
+    decimal? DecimalLowerValue,
+    decimal? DecimalUpperValue,
+    IReadOnlyList<string>? Options);
 
 public sealed record ModuleValueResponse(
     Guid Id,

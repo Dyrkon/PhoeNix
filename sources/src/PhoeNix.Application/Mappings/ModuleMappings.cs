@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PhoeNix.Application.Models.Modules;
 using PhoeNix.Domain.Entities.Modules;
 
@@ -36,6 +37,15 @@ public static class ModuleMappings
             entryValue.Placeholder,
             entryValue.InputType,
             entryValue.BindingKind,
+            entryValue.ValueKind,
+            entryValue.DefaultValue,
+            entryValue.DefaultLowerValue,
+            entryValue.IntegerMin,
+            entryValue.IntegerMax,
+            entryValue.DecimalMin,
+            entryValue.DecimalMax,
+            entryValue.AllowLowerValue,
+            entryValue.GetOptions(),
             entryValue.BindingIndex);
     }
 
@@ -58,6 +68,15 @@ public static class ModuleMappings
             model.Placeholder,
             model.InputType,
             model.BindingKind,
+            model.ValueKind,
+            model.DefaultValue,
+            model.DefaultLowerValue,
+            model.IntegerMin,
+            model.IntegerMax,
+            model.DecimalMin,
+            model.DecimalMax,
+            model.AllowLowerValue,
+            model.Options is null ? null : JsonSerializer.Serialize(model.Options),
             model.BindingIndex);
     }
 
@@ -80,7 +99,74 @@ public static class ModuleMappings
 
     public static EntryValueResponse MapEntryValueToDto(EntryValue entryValue)
     {
-        return new EntryValueResponse(entryValue.Name, entryValue.Placeholder, entryValue.Value);
+        return entryValue switch
+        {
+            TextValue textValue => new EntryValueResponse(
+                textValue.Id.Value,
+                textValue.Name,
+                textValue.Placeholder,
+                textValue.Kind,
+                textValue.Value,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null),
+
+            IntegerRangeValue integerRangeValue => new EntryValueResponse(
+                integerRangeValue.Id.Value,
+                integerRangeValue.Name,
+                integerRangeValue.Placeholder,
+                integerRangeValue.Kind,
+                integerRangeValue.Value,
+                integerRangeValue.Min,
+                integerRangeValue.Max,
+                integerRangeValue.LowerValue,
+                integerRangeValue.UpperValue,
+                null,
+                null,
+                null,
+                null,
+                null),
+
+            DecimalRangeValue decimalRangeValue => new EntryValueResponse(
+                decimalRangeValue.Id.Value,
+                decimalRangeValue.Name,
+                decimalRangeValue.Placeholder,
+                decimalRangeValue.Kind,
+                decimalRangeValue.Value,
+                null,
+                null,
+                null,
+                null,
+                decimalRangeValue.Min,
+                decimalRangeValue.Max,
+                decimalRangeValue.LowerValue,
+                decimalRangeValue.UpperValue,
+                null),
+
+            SingleChoiceValue singleChoiceValue => new EntryValueResponse(
+                singleChoiceValue.Id.Value,
+                singleChoiceValue.Name,
+                singleChoiceValue.Placeholder,
+                singleChoiceValue.Kind,
+                singleChoiceValue.Value,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                singleChoiceValue.Options.ToList()),
+
+            _ => throw new InvalidOperationException($"Unsupported entry value type '{entryValue.GetType().Name}'.")
+        };
     }
 
     public static ModuleValueListResponse MapModuleValueToListDto(ModuleValue moduleValue)

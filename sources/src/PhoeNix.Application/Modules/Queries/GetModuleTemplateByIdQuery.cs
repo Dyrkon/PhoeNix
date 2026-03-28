@@ -8,7 +8,7 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Modules.Queries;
 
-public sealed record GetModuleTemplateByIdQuery(Guid ModuleTemplateId) : IQuery<ModuleTemplateResponse>;
+public sealed record GetModuleTemplateByIdQuery(ModuleTemplateId ModuleTemplateId) : IQuery<ModuleTemplateResponse>;
 
 internal sealed class GetModuleTemplateByIdHandler(
     IModuleTemplateRepository moduleTemplateRepository)
@@ -19,7 +19,7 @@ internal sealed class GetModuleTemplateByIdHandler(
         CancellationToken cancellationToken)
     {
         var template = await moduleTemplateRepository.GetByIdAsync(
-            new ModuleTemplateId(request.ModuleTemplateId),
+            request.ModuleTemplateId,
             cancellationToken);
 
         return template
