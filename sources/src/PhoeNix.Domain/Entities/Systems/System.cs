@@ -7,54 +7,93 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Systems;
 
-public class System : Entity<SystemId>
+public sealed class System : Entity<SystemId>
 {
-    private readonly List<ModuleValue> _modules = new();
-    public ConfigurationId ConfigurationId { get; private set; }
-
-    public Architecture Architecture { get; private set; }
-
-    public string Name { get; private set; }
-
-    public IReadOnlyList<ModuleValue> Modules => _modules;
+    private readonly List<ModuleValue> _modules = [];
 
     private System(SystemId id) : base(id)
     {
     }
 
+    public ConfigurationId ConfigurationId { get; private set; } = default!;
+
+    public Architecture Architecture { get; private set; }
+
+    public string Name { get; private set; } = string.Empty;
+
+    public IReadOnlyList<ModuleValue> Modules => _modules;
+
     public Result ChangeName(string newName)
     {
-        if (newName == string.Empty)
-            return Result.Failure(new Error("", $"System name can't be empty"));
+        if (string.IsNullOrWhiteSpace(newName))
+            return Result.Failure(new Error("Systems.NameEmpty", "System name can't be empty."));
 
-        Name = newName;
+        Name = newName.Trim();
         return Result.Success();
     }
 
-    public Result AddModule(ModuleTemplateId moduleTemplateId, List<Architecture> supportedArchitectures,
+    public Result<ModuleValue> AddModule(
+        ModuleTemplateId moduleTemplateId,
+        List<Architecture> supportedArchitectures,
         bool enabled = true)
     {
         if (_modules.Any(m => m.ModuleTemplateId == moduleTemplateId))
-            return Result.Failure(new Error("", "This module has been added to this system already"));
+            return Result.Failure<ModuleValue>(
+                new Error("Systems.ModuleAlreadyAdded", "This module has already been added to this system."));
 
         if (!supportedArchitectures.Contains(Architecture))
-            return Result.Failure(new Error("", $"This module doesn't support system architecture {Architecture}"));
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Systems.ModuleArchitectureMismatch",
+                    $"This module doesn't support system architecture '{Architecture}'."));
 
         return ModuleValue.Create(new ModuleValueId(Guid.NewGuid()), moduleTemplateId, enabled)
             .Tap(m => _modules.Add(m));
     }
 
-    public Result RemoveModule(ModuleValueId moduleValueId)
+    public Result<ModuleValue> UpdateModule(
+        ModuleValueId moduleValueId,
+        bool enabled,
+        IReadOnlyCollection<EntryValue> entries)
     {
-        var removeHomes = _modules.RemoveAll(m => m.Id == moduleValueId);
-        if (removeHomes == 0)
-            return Result.Failure(new Error("", $"There is no module with id {moduleValueId} in this system"));
+        var module = _modules.FirstOrDefault(m => m.Id == moduleValueId);
 
-        return Result.Success();
+        if (module is null)
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Systems.ModuleNotFound",
+                    $"There is no module with id '{moduleValueId.Value}' in this system."));
+
+        return module.SetEnabled(enabled)
+            .Tap(() => module.ReplaceEntries(entries))
+            .Map(() => module);
     }
 
-    public static Result<System> Create(SystemId id, Architecture architecture, string name)
+    public Result RemoveModule(ModuleValueId moduleValueId)
     {
-        return new System(id) { Architecture = architecture, Name = name };
+        var removedModules = _modules.RemoveAll(m => m.Id == moduleValueId);
+
+        return removedModules == 0
+            ? Result.Failure(
+                new Error("Systems.ModuleNotFound",
+                    $"There is no module with id '{moduleValueId.Value}' in this system."))
+            : Result.Success();
+    }
+
+    public static Result<System> Create(
+        SystemId id,
+        ConfigurationId configurationId,
+        Architecture architecture,
+        string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure<System>(new Error("Systems.NameEmpty", "System name can't be empty."));
+
+        return new System(id)
+        {
+            ConfigurationId = configurationId,
+            Architecture = architecture,
+            Name = name.Trim()
+        };
     }
 }

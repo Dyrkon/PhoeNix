@@ -1,15 +1,16 @@
-using PhoeNix.Domain.Entities.Inputs;
-
 namespace PhoeNix.Application.Models.Inputs;
 
-public record FollowInputResponse(
+public sealed record InputFollowResponse(
+    Guid Id,
     string FollowName,
-    string FollowValue
-);
+    string FollowValue);
 
-public record InputResponse(
-    InputId Id,
+public sealed record InputResponse(
+    Guid Id,
     string Source,
     string Name,
-    List<FollowInputResponse> Follows
-);
+    IReadOnlyList<InputFollowResponse> Followers);
+
+public sealed record InputFollowUpsertModel(
+    string FollowName,
+    string FollowValue);

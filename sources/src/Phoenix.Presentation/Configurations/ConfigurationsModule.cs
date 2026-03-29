@@ -4,49 +4,92 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Configurations.Commands;
-using PhoeNix.Application.Models.Configurations;
+using PhoeNix.Application.Configurations.Queries;
 using PhoeNix.Domain.Entities.Configurations;
+using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Configurations;
 
-public class ConfigurationsModule : ICarterModule
+public sealed class ConfigurationsModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/configurations/{configurationId:guid}/build", BuildConfiguration)
+        var group = app.MapGroup("/configurations");
+
+        group.MapGet(string.Empty, GetConfigurations)
+            .WithName("GetConfigurations")
+            .Produces(StatusCodes.Status200OK);
+
+        group.MapGet("/{configurationId:guid}", GetConfigurationById)
+            .WithName("GetConfigurationById")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPost("/configurations/create", CreateConfiguration)
-            .Produces(StatusCodes.Status200OK);
+        group.MapPost(string.Empty, CreateConfiguration)
+            .WithName("CreateConfiguration")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
-        app.MapDelete("/configurations/{configurationId:guid}/delete", DeleteConfiguration)
-            .Produces(StatusCodes.Status200OK);
+        group.MapPut("/{configurationId:guid}", UpdateConfiguration)
+            .WithName("UpdateConfiguration")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/{configurationId:guid}/build", BuildConfiguration)
+            .WithName("BuildConfiguration")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
-    private async Task<IResult> BuildConfiguration(Guid configurationId, ISender sender,
+    private static async Task<IResult> GetConfigurations(
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new ExportConfigurationCommand(new ConfigurationId(configurationId));
+        var result = await sender.Send(new GetConfigurationsQuery(), cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> GetConfigurationById(
+        Guid configurationId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetConfigurationByIdQuery(new ConfigurationId(configurationId)),
+            cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> CreateConfiguration(
+        CreateConfigurationRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new CreateConfigurationCommand(request.Title, request.Description);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
 
-    private async Task<IResult> CreateConfiguration(CreateConfigurationRequest request, ISender sender,
+    private static async Task<IResult> UpdateConfiguration(
+        Guid configurationId,
+        UpdateConfigurationRequest request,
+        ISender sender,
         CancellationToken cancellationToken)
     {
         var command =
-            new AddConfigurationCommand(request.Title, request.Description);
+            new UpdateConfigurationCommand(new ConfigurationId(configurationId), request.Title, request.Description);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
 
-    // TODO Mark deprecated or something instead of deletion
-    private async Task<IResult> DeleteConfiguration(Guid configurationId, ISender sender,
+    private static async Task<IResult> BuildConfiguration(
+        Guid configurationId,
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var command = new RemoveConfigurationCommand(new ConfigurationId(configurationId));
+        var command =
+            new ExportConfigurationCommand(new ConfigurationId(configurationId));
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

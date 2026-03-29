@@ -1,23 +1,20 @@
 using PhoeNix.Application.Models.Inputs;
 using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Models.Systems;
-using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.Models.Configurations;
 
-public record ConfigurationListResponse(
-    ConfigurationId Id,
+public sealed record ConfigurationListResponse(
+    Guid Id,
     string Title,
-    string Description
-);
+    string Description);
 
-public record ConfigurationResponse(
-    ConfigurationId Id,
+public sealed record ConfigurationResponse(
+    Guid Id,
     string Title,
     string Description,
-    List<InputResponse> Inputs,
-    List<ModuleValueResponse> Modules,
-    List<SystemListResponse> Systems,
-    List<Architecture> SupportedArchitectures
-);
+    IReadOnlyList<InputResponse> Inputs,
+    IReadOnlyList<ModuleValueResponse> Modules,
+    IReadOnlyList<SystemListResponse> Systems,
+    IReadOnlyList<Architecture> SupportedArchitectures);

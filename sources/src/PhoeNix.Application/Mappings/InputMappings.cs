@@ -8,16 +8,24 @@ public static class InputMappings
     public static InputResponse MapInputToDto(Input input)
     {
         return new InputResponse(
-            input.Id,
+            input.Id.Value,
             input.Source,
             input.Name,
-            MapInputsFollowsToDto(input.Followers.ToList()));
+            input.Followers
+                .Select(MapInputFollowToDto)
+                .ToList());
     }
 
-    public static List<FollowInputResponse> MapInputsFollowsToDto(List<FollowInput> followInputs)
+    public static InputFollowResponse MapInputFollowToDto(FollowInput follow)
     {
-        return followInputs
-            .Select(f => new FollowInputResponse(f.FollowName, f.FollowValue))
-            .ToList();
+        return new InputFollowResponse(
+            follow.Id,
+            follow.FollowName,
+            follow.FollowValue);
+    }
+
+    public static InputFollowDraft MapInputFollowToDomain(InputFollowUpsertModel model)
+    {
+        return new InputFollowDraft(model.FollowName, model.FollowValue);
     }
 }

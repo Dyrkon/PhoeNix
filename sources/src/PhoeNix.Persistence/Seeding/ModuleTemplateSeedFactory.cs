@@ -32,19 +32,19 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.HostName,
                 SeedPlaceholders.HostName,
                 UserInputType.Text,
-                EntryBindingKind.UserProvided),
+                EntryBindingKind.UserProvided, EntryValueKind.Text),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.StateVersion,
                 SeedPlaceholders.StateVersion,
                 UserInputType.Text,
-                EntryBindingKind.UserProvided),
+                EntryBindingKind.UserProvided, EntryValueKind.Text),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.RootAuthorizedKeys,
                 SeedPlaceholders.RootAuthorizedKeys,
                 UserInputType.Text,
-                EntryBindingKind.UserProvided)
+                EntryBindingKind.UserProvided, EntryValueKind.Text)
         };
 
         var content =
@@ -88,7 +88,8 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.InstallDisk,
                 UserInputType.Text,
                 EntryBindingKind.RankedDiskCandidate,
-                0)
+                EntryValueKind.Text,
+                BindingIndex: 0)
         };
 
         var content =
@@ -147,13 +148,13 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.MetricsPort,
                 SeedPlaceholders.MetricsPort,
                 UserInputType.Text,
-                EntryBindingKind.UserProvided),
+                EntryBindingKind.UserProvided, EntryValueKind.Text),
             new(
                 SeedIds.PrometheusTemplate,
                 SeedPlaceholders.OpenFirewall,
                 SeedPlaceholders.OpenFirewall,
                 UserInputType.Text,
-                EntryBindingKind.UserProvided)
+                EntryBindingKind.UserProvided, EntryValueKind.Text)
         };
 
         var content =

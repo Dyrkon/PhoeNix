@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
@@ -14,27 +13,35 @@ internal sealed class ConfigurationRepository : RepositoryBase<Configuration, Co
     {
     }
 
+    public async Task<IEnumerable<Configuration>> GetAllAsync(CancellationToken token)
+    {
+        return await DbContext.Configurations
+            .OrderBy(c => c.Title)
+            .ToListAsync(token);
+    }
+
     public async Task<Configuration?> GetByDescriptionAsync(string description, CancellationToken token)
     {
         return await DbContext.Configurations
-            .AddIncludeStatements()
-            .SingleOrDefaultAsync(c => c.Description.Contains(description), token);
+            .SingleOrDefaultAsync(c => c.Description == description, token);
     }
 
     public async Task<Configuration?> GetByTitleAsync(string title, CancellationToken token)
     {
         return await DbContext.Configurations
-            .AddIncludeStatements()
-            .SingleOrDefaultAsync(c => c.Title.Contains(title), token);
+            .SingleOrDefaultAsync(c => c.Title == title, token);
     }
 
     public async Task<Result> RemoveByIdAsync(ConfigurationId id, CancellationToken token)
     {
-        var tmp = await DbContext.Configurations.AddIncludeStatements()
+        var configuration = await DbContext.Configurations
+            .AddIncludeStatements()
             .SingleOrDefaultAsync(c => c.Id == id, token);
-        if (tmp == null)
-            return Result.Failure(new Error("", $"Configuration with id {id.Value} was not found"));
-        DbContext.Configurations.Remove(tmp);
+
+        if (configuration is null)
+            return Result.Failure(new Error("Configurations.NotFound", $"Configuration '{id.Value}' was not found."));
+
+        DbContext.Configurations.Remove(configuration);
         return Result.Success();
     }
 

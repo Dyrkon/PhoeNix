@@ -55,6 +55,11 @@ public static class ResultExtensions
         return result.IsSuccess ? Result.Success(map(result.Value)) : Result.Failure<TOut>(result.Error);
     }
 
+    public static Result<TOut> Map<TOut>(this Result result, Func<TOut> map)
+    {
+        return result.IsSuccess ? Result.Success(map()) : Result.Failure<TOut>(result.Error);
+    }
+
     public static async Task<Result<TOut>> Map<TIn, TOut>(this Result<TIn> result, Func<TIn, Task<TOut>> map)
     {
         return result.IsSuccess ? Result.Success(await map(result.Value)) : Result.Failure<TOut>(result.Error);
@@ -87,6 +92,12 @@ public static class ResultExtensions
     public static Result<TIn> Tap<TIn>(this Result<TIn> result, Action<TIn> action)
     {
         if (result.IsSuccess) action(result.Value);
+        return result;
+    }
+
+    public static Result Tap(this Result result, Action action)
+    {
+        if (result.IsSuccess) action();
         return result;
     }
 

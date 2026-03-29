@@ -1,14 +1,21 @@
-using PhoeNix.Domain.Primitives;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Modules;
 
-public class TextValue : EntryValue
+public sealed class TextValue : EntryValue
 {
-    private TextValue(EntryValueId id)
+    private TextValue()
     {
-        Id = id;
     }
+
+    private TextValue(EntryValueId id, string name, string placeholder, string value)
+        : base(id, name, placeholder)
+    {
+        Value = value;
+    }
+
+    public override EntryValueKind Kind => EntryValueKind.Text;
 
     public Result SetValue(string value)
     {
@@ -16,13 +23,8 @@ public class TextValue : EntryValue
         return Result.Success();
     }
 
-    public static Result<TextValue> Create(EntryValueId id, string initialValue, string name, string placeHolder)
+    public static Result<TextValue> Create(EntryValueId id, string value, string name, string placeholder)
     {
-        return new TextValue(id) { Value = initialValue, Placeholder = placeHolder, Name = name };
-    }
-
-    public static Result<TextValue> Create(EntryValueId id, string name, string placeHolder)
-    {
-        return new TextValue(id) { Value = placeHolder, Placeholder = placeHolder, Name = name };
+        return new TextValue(id, name, placeholder, value);
     }
 }

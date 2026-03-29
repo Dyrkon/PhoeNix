@@ -133,13 +133,13 @@ public sealed class DeploymentBindingResolver(
                     entry.Name,
                     disk.StableDevicePath);
 
-                entry.SetValue($"\"{disk.StableDevicePath}\"");
+                entry.Value = $"\"{disk.StableDevicePath}\"";
             }
 
             newEntries.Add(entry);
         }
 
-        var result = module.ChangeEntry(newEntries);
+        var result = module.ReplaceEntries(newEntries);
         if (result.IsFailure)
             return result.Error;
 

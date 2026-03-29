@@ -8,135 +8,184 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Entities.Configurations;
 
-public class Configuration : AggregateRoot<ConfigurationId>
+public sealed class Configuration : AggregateRoot<ConfigurationId>
 {
-    private readonly List<Input> _inputs = new();
-    private readonly List<ModuleValue> _modules = new();
-    private readonly List<Systems.System> _systemSpecifications = new();
-    public string Title { get; private set; }
-    public string Description { get; private set; }
-    public IReadOnlyList<Input> Inputs => _inputs;
-    public IReadOnlyList<ModuleValue> Modules => _modules;
-    public IReadOnlyList<Systems.System> SystemSpecifications => _systemSpecifications;
+    private readonly List<Input> _inputs = [];
+    private readonly List<ModuleValue> _modules = [];
+    private readonly List<Systems.System> _systemSpecifications = [];
 
     private Configuration(ConfigurationId id) : base(id)
     {
     }
 
+    public string Title { get; private set; } = string.Empty;
+
+    public string Description { get; private set; } = string.Empty;
+
+    public IReadOnlyList<Input> Inputs => _inputs;
+
+    public IReadOnlyList<ModuleValue> Modules => _modules;
+
+    public IReadOnlyList<Systems.System> SystemSpecifications => _systemSpecifications;
+
     public Result EditConfiguration(string? newTitle = null, string? newDescription = null)
     {
-        if (newDescription is not null)
-        {
-            if (newDescription == string.Empty)
-                return Result.Failure(new Error("", "Title can't be blank"));
-
-            Description = newDescription;
-        }
-
         if (newTitle is not null)
         {
-            if (newTitle == string.Empty)
-                return Result.Failure(new Error("", "Title can't be blank"));
+            if (string.IsNullOrWhiteSpace(newTitle))
+                return Result.Failure(
+                    new Error("Configurations.TitleEmpty", "Configuration title can't be blank."));
 
-            Title = newTitle;
+            Title = newTitle.Trim();
+        }
+
+        if (newDescription is not null)
+        {
+            if (string.IsNullOrWhiteSpace(newDescription))
+                return Result.Failure(
+                    new Error("Configurations.DescriptionEmpty", "Configuration description can't be blank."));
+
+            Description = newDescription.Trim();
         }
 
         return Result.Success();
     }
 
-
-    public Result AddModule(ModuleTemplateId moduleTemplateId, bool enabled)
+    public Result<ModuleValue> AddModule(ModuleTemplateId moduleTemplateId, bool enabled)
     {
         if (_modules.Any(h => h.ModuleTemplateId == moduleTemplateId))
-            return Result.Failure(new Error("",
-                $"This module ({moduleTemplateId}) is added already to this ({Title}) configuration"));
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Configurations.ModuleAlreadyAdded",
+                    $"Module template '{moduleTemplateId.Value}' is already added to configuration '{Title}'."));
 
         return ModuleValue.Create(new ModuleValueId(Guid.NewGuid()), moduleTemplateId, enabled)
             .Tap(configurationModule => _modules.Add(configurationModule));
     }
 
-    public Result ChangeModule(ModuleValueId moduleValueId, List<EntryValue> entries, string? content = null)
+    public Result<ModuleValue> UpdateModule(
+        ModuleValueId moduleValueId,
+        bool enabled,
+        IReadOnlyCollection<EntryValue> entries)
     {
         var module = _modules.FirstOrDefault(m => m.Id == moduleValueId);
 
-        return module is null
-            ? Result.Failure(new Error("", $"This module ({moduleValueId}) is not in this ({Title}) configuration"))
-            : module.ChangeEntry(entries, content);
+        if (module is null)
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Configurations.ModuleNotFound",
+                    $"Module value '{moduleValueId.Value}' was not found in configuration '{Title}'."));
+
+        return module.SetEnabled(enabled)
+            .Tap(() => module.ReplaceEntries(entries))
+            .Map(() => module);
     }
 
     public Result RemoveModule(ModuleValueId moduleValueId)
     {
         var removedModules = _modules.RemoveAll(m => m.Id == moduleValueId);
+
         if (removedModules == 0)
-            return Result.Failure(new Error("",
-                $"There is no module with id {moduleValueId} in this ({Title}) configuration"));
+            return Result.Failure(
+                new Error(
+                    "Configurations.ModuleNotFound",
+                    $"Module value '{moduleValueId.Value}' was not found in configuration '{Title}'."));
 
         return Result.Success();
     }
 
-    public Result AddSystem(SystemId systemId, Architecture architecture, string name)
+    public Result<Systems.System> AddSystem(SystemId systemId, Architecture architecture, string name)
     {
         if (_systemSpecifications.Any(h => h.Id == systemId))
-            return Result.Failure(new Error("", $"This system ({systemId}) is added already"));
+            return Result.Failure<Systems.System>(
+                new Error("Configurations.SystemAlreadyAdded", $"System '{systemId.Value}' is already added."));
 
-        return Systems.System.Create(new SystemId(systemId), architecture, name)
+        if (_systemSpecifications.Any(h => h.Name == name))
+            return Result.Failure<Systems.System>(
+                new Error(
+                    "Configurations.SystemNameAlreadyUsed",
+                    $"System with name '{name}' already exists in configuration '{Title}'."));
+
+        return Systems.System.Create(systemId, Id, architecture, name)
             .Tap(system => _systemSpecifications.Add(system));
     }
 
-    public Result ChangeSystemName(SystemId systemId, string newName)
+    public Result<Systems.System> UpdateSystem(SystemId systemId, string newName)
     {
-        if (_systemSpecifications.All(h => h.Id != systemId))
-            return Result.Failure(new Error("", $"There is no system with id {systemId}"));
+        var system = _systemSpecifications.FirstOrDefault(h => h.Id == systemId);
 
-        if (_systemSpecifications.Any(h => h.Name == newName))
-            return Result.Failure(new Error("",
-                $"This system ({systemId}) with name {newName} is already in this ({Title}) configuration"));
+        if (system is null)
+            return Result.Failure<Systems.System>(
+                new Error(
+                    "Configurations.SystemNotFound",
+                    $"System '{systemId.Value}' was not found in configuration '{Title}'."));
 
-        return _systemSpecifications.First(s => s.Id == systemId).ChangeName(newName);
+        if (_systemSpecifications.Any(h => h.Id != systemId && h.Name == newName))
+            return Result.Failure<Systems.System>(
+                new Error(
+                    "Configurations.SystemNameAlreadyUsed",
+                    $"System with name '{newName}' already exists in configuration '{Title}'."));
+
+        return system.ChangeName(newName)
+            .Map(() => system);
     }
 
-    public Result AddSystemModule(SystemId systemId, ModuleTemplateId moduleTemplateId, bool enabled)
-    {
-        if (_systemSpecifications.All(h => h.Id != systemId))
-            return Result.Failure(new Error("", $"This system ({systemId}) is not in configuration {Title}"));
-
-        var system = _systemSpecifications.First(s => s.Id == systemId);
-        return system.AddModule(moduleTemplateId, [system.Architecture], enabled);
-    }
-
-    public Result ChangeSystemModule(
-        ModuleValueId moduleValueId,
+    public Result<ModuleValue> AddSystemModule(
         SystemId systemId,
-        List<EntryValue> entries,
-        string? content = null)
+        ModuleTemplateId moduleTemplateId,
+        List<Architecture> supportedArchitectures,
+        bool enabled)
+    {
+        var system = _systemSpecifications.FirstOrDefault(h => h.Id == systemId);
+
+        if (system is null)
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Configurations.SystemNotFound",
+                    $"System '{systemId.Value}' is not in configuration '{Title}'."));
+
+        return system.AddModule(moduleTemplateId, supportedArchitectures, enabled);
+    }
+
+    public Result<ModuleValue> UpdateSystemModule(
+        SystemId systemId,
+        ModuleValueId moduleValueId,
+        bool enabled,
+        IReadOnlyCollection<EntryValue> entries)
     {
         var system = _systemSpecifications.FirstOrDefault(s => s.Id == systemId);
 
         if (system is null)
-            return Result.Failure(new Error("", $"This system ({systemId}) is not in this ({Title}) configuration"));
+            return Result.Failure<ModuleValue>(
+                new Error(
+                    "Configurations.SystemNotFound",
+                    $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
-        var module = system.Modules.FirstOrDefault(m => m.Id == moduleValueId);
-
-        return module is null
-            ? Result.Failure(new Error("",
-                $"This module ({moduleValueId}) is not in system ({systemId}) in configuration ({Title})"))
-            : module.ChangeEntry(entries, content);
+        return system.UpdateModule(moduleValueId, enabled, entries);
     }
 
     public Result RemoveSystemModule(SystemId systemId, ModuleValueId moduleValueId)
     {
-        if (_systemSpecifications.All(h => h.Id != systemId))
-            return Result.Failure(new Error("", $"This system ({systemId}) is not in configuration {Title}"));
+        var system = _systemSpecifications.FirstOrDefault(h => h.Id == systemId);
 
-        return _systemSpecifications.First(s => s.Id == systemId).RemoveModule(moduleValueId);
+        if (system is null)
+            return Result.Failure(
+                new Error(
+                    "Configurations.SystemNotFound",
+                    $"System '{systemId.Value}' is not in configuration '{Title}'."));
+
+        return system.RemoveModule(moduleValueId);
     }
 
     public Result RemoveSystem(SystemId systemId)
     {
         var removedSystems = _systemSpecifications.RemoveAll(s => s.Id == systemId);
+
         if (removedSystems == 0)
-            return Result.Failure(new Error("",
-                $"There is no system with id {systemId} in this ({Title}) configuration"));
+            return Result.Failure(
+                new Error(
+                    "Configurations.SystemNotFound",
+                    $"System '{systemId.Value}' was not found in configuration '{Title}'."));
 
         return Result.Success();
     }
@@ -144,57 +193,94 @@ public class Configuration : AggregateRoot<ConfigurationId>
     public Result<Input> AddInput(string source, string name)
     {
         if (_inputs.Any(i => i.Name == name))
-            return Result.Failure<Input>(new Error("",
-                $"This input ({name}) is added to this ({Title}) configuration already"));
+            return Result.Failure<Input>(
+                new Error(
+                    "Configurations.InputAlreadyAdded",
+                    $"Input '{name}' is already added to configuration '{Title}'."));
 
-        return Input.Create(new InputId(Guid.NewGuid()), Id, source, name).Tap(i => _inputs.Add(i));
+        return Input.Create(new InputId(Guid.NewGuid()), Id, source, name)
+            .Tap(i => _inputs.Add(i));
+    }
+
+    public Result<Input> UpdateInput(
+        InputId inputId,
+        string source,
+        string name,
+        IReadOnlyCollection<InputFollowDraft> follows)
+    {
+        var input = _inputs.FirstOrDefault(i => i.Id == inputId);
+
+        if (input is null)
+            return Result.Failure<Input>(
+                new Error(
+                    "Configurations.InputNotFound",
+                    $"Input '{inputId.Value}' was not found in configuration '{Title}'."));
+
+        if (_inputs.Any(i => i.Id != inputId && i.Name == name))
+            return Result.Failure<Input>(
+                new Error(
+                    "Configurations.InputNameAlreadyUsed",
+                    $"Input with name '{name}' already exists in configuration '{Title}'."));
+
+        return input.ChangeSource(source)
+            .Tap(() => input.ChangeName(name))
+            .Tap(() => input.ReplaceFollows(follows))
+            .Map(() => input);
     }
 
     public Result AddInputFollow(InputId inputId, string followName, string followValue)
     {
         var input = _inputs.FirstOrDefault(i => i.Id == inputId);
+
         return input is null
-            ? Result.Failure(new Error("ConfigurationInputCannotFindInput", $"Cannot find input {inputId.Value}"))
+            ? Result.Failure(new Error("Configurations.InputNotFound", $"Cannot find input '{inputId.Value}'."))
             : input.AddFollow(followName, followValue);
     }
 
     public Result RemoveInputFollow(Guid followId)
     {
         var input = _inputs.FirstOrDefault(i => i.Followers.Any(f => f.Id == followId));
+
         return input is null
-            ? Result.Failure(
-                new Error("ConfigurationInputCannotFindInput", $"Cannot find input with follow {followId}"))
+            ? Result.Failure(new Error("Configurations.InputFollowNotFound", $"Cannot find follow '{followId}'."))
             : input.RemoveFollow(followId);
     }
 
     public Result RemoveInput(InputId inputId)
     {
-        var removeHomes = _inputs.RemoveAll(i => i.Id == inputId);
-        if (removeHomes == 0)
-            return Result.Failure(new Error("",
-                $"There is no input with id {inputId} in this ({Title}) configuration"));
+        var removedInputs = _inputs.RemoveAll(i => i.Id == inputId);
+
+        if (removedInputs == 0)
+            return Result.Failure(
+                new Error(
+                    "Configurations.InputNotFound",
+                    $"Input '{inputId.Value}' was not found in configuration '{Title}'."));
 
         return Result.Success();
     }
 
-    public Result<List<Architecture>> SupportedSystemArchitectures()
+    public IReadOnlyList<Architecture> SupportedSystemArchitectures()
     {
-        if (_systemSpecifications.Count == 0) return new List<Architecture>();
-        List<Architecture> supportedArchitectures = new();
-        if (_systemSpecifications.All(s => s.Architecture == Architecture.X86Linux))
-            supportedArchitectures.Add(Architecture.X86Linux);
-        if (_systemSpecifications.All(s => s.Architecture == Architecture.Aarch64Linux))
-            supportedArchitectures.Add(Architecture.Aarch64Linux);
-        if (_systemSpecifications.All(s => s.Architecture == Architecture.X86Darwin))
-            supportedArchitectures.Add(Architecture.X86Darwin);
-        if (_systemSpecifications.All(s => s.Architecture == Architecture.Aarch64Darwin))
-            supportedArchitectures.Add(Architecture.Aarch64Darwin);
-
-        return supportedArchitectures;
+        return _systemSpecifications
+            .Select(s => s.Architecture)
+            .Distinct()
+            .ToList();
     }
 
     public static Result<Configuration> Create(ConfigurationId id, string title, string description)
     {
-        return new Configuration(id) { Title = title, Description = description };
+        if (string.IsNullOrWhiteSpace(title))
+            return Result.Failure<Configuration>(
+                new Error("Configurations.TitleEmpty", "Configuration title can't be blank."));
+
+        if (string.IsNullOrWhiteSpace(description))
+            return Result.Failure<Configuration>(
+                new Error("Configurations.DescriptionEmpty", "Configuration description can't be blank."));
+
+        return new Configuration(id)
+        {
+            Title = title.Trim(),
+            Description = description.Trim()
+        };
     }
 }

@@ -10,7 +10,7 @@ using PhoeNix.Domain.Shared;
 namespace PhoeNix.Application.Modules.Commands;
 
 public sealed record UpdateModuleTemplateCommand(
-    Guid ModuleTemplateId,
+    ModuleTemplateId ModuleTemplateId,
     string Name,
     bool Enabled,
     ModuleType Type,
@@ -28,7 +28,7 @@ internal sealed class UpdateModuleTemplateHandler(
         CancellationToken cancellationToken)
     {
         var template = await moduleTemplateRepository.GetByIdAsync(
-            new ModuleTemplateId(request.ModuleTemplateId),
+            request.ModuleTemplateId,
             cancellationToken);
 
         if (template is null)
