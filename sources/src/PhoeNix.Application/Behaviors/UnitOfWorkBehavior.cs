@@ -1,4 +1,3 @@
-using System.Transactions;
 using MediatR;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Domain.Repositories;
@@ -22,18 +21,15 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        // TODO transaction scope doesn't work is SQLite
-        // using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-
         var response = await next();
 
         if (response is Result { IsFailure: true })
-            // Do not commit transaction when result of command is failure
+            return response;
+
+        if (request is ISelfManagedUnitOfWorkCommand)
             return response;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // transactionScope.Complete();
 
         return response;
     }

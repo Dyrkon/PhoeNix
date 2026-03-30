@@ -29,24 +29,29 @@ public sealed class SetupModule : ICarterModule
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/v1/boot/{mac}", ProvideMachineBootDetails)
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/setup/files/{sessionId:guid}/kernel", ProvideMachinePxeBootKernel)
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/setup/files/{sessionId:guid}/init", ProvideMachinePxeBootRamDisk)
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/setup/bootstrap/callback", RecordBootSignal)
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/setup/finalize", FinalizeMachineSetup)
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);

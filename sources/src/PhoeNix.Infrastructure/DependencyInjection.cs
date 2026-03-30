@@ -11,6 +11,13 @@ using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
 using PhoeNix.Infrastructure.Services;
+using PhoeNix.Infrastructure.Services.Authentication;
+using PhoeNix.Infrastructure.Services.ConfigurationManagement;
+using PhoeNix.Infrastructure.Services.Filesystem;
+using PhoeNix.Infrastructure.Services.HardwareManagement;
+using PhoeNix.Infrastructure.Services.Processes;
+using PhoeNix.Infrastructure.Services.Setup;
+using PhoeNix.Infrastructure.Services.UtilityWrappers;
 
 namespace PhoeNix.Infrastructure;
 
@@ -43,6 +50,9 @@ public static class DependencyInjection
         services.AddScoped<IDeploySshKeyProvider, DeploySshKeyProvider>();
         services.AddScoped<INixOsMachineUpdater, NixOsMachineUpdater>();
         services.AddScoped<IDeploymentBindingResolver, DeploymentBindingResolver>();
+        services.AddScoped<IUserPasswordHasher, AspNetUserPasswordHasher>();
+        services.AddScoped<IUserSessionService, CookieUserSessionService>();
+        services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
         return services;
     }

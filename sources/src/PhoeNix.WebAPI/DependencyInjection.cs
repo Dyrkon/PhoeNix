@@ -1,14 +1,17 @@
 using Carter;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using PhoeNix.Application;
+using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Options;
 using PhoeNix.Infrastructure;
 using PhoeNix.Persistence;
-using Phoenix.Presentation.Extensions;
 using System.Text;
-using PhoeNix.Application.Options;
+using Phoenix.Presentation.Extensions;
 
 namespace PhoeNix.WebAPI;
 
@@ -26,9 +29,7 @@ public static class DependencyInjection
         });
 
         services.AddWebApiOptions(configuration);
-        services.AddProvisioningCallbackAuth(configuration);
-
-        services.AddAuthorization();
+        services.AddPhoeNixAuthentication(configuration);
 
         services.AddPersistence(configuration);
         services.AddInfrastructure();
@@ -88,16 +89,46 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddProvisioningCallbackAuth(this IServiceCollection services,
+    private static IServiceCollection AddPhoeNixAuthentication(this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddHttpContextAccessor();
+
         var jwt = configuration.GetSection("CallbackToken").Get<JwtCallbackTokenOptions>()
                   ?? throw new InvalidOperationException("CallbackToken options are missing.");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey));
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = AuthenticationSchemeNames.UserCookie;
+                options.DefaultChallengeScheme = AuthenticationSchemeNames.UserCookie;
+                options.DefaultSignInScheme = AuthenticationSchemeNames.UserCookie;
+            })
+            .AddCookie(AuthenticationSchemeNames.UserCookie, options =>
+            {
+                options.Cookie.Name = "phoenix.auth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.SlidingExpiration = true;
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    },
+                    OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    }
+                };
+            })
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.MapInboundClaims = false;
                 options.RequireHttpsMetadata = true;
@@ -120,6 +151,28 @@ public static class DependencyInjection
                 };
             });
 
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .AddAuthenticationSchemes(AuthenticationSchemeNames.UserCookie)
+                .RequireAuthenticatedUser()
+                .Build();
+
+            options.AddPolicy("ProvisioningCallback", policy =>
+            {
+                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                policy.RequireAuthenticatedUser();
+            });
+        });
+
         return services;
+    }
+
+    public static IApplicationBuilder UseUserAuthentication(this IApplicationBuilder app)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        return app;
     }
 }

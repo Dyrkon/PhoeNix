@@ -25,9 +25,7 @@ app.UseWhen(
     appBuilder => { appBuilder.UseHttpsRedirection(); });
 
 app.MapHealthChecks("/health");
-
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseUserAuthentication();
 app.MapCarter();
 
 app.Run();

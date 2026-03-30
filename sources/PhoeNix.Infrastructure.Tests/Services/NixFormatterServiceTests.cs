@@ -3,6 +3,7 @@ using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.Processes;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Infrastructure.Services;
+using PhoeNix.Infrastructure.Services.UtilityWrappers;
 
 namespace PhoeNix.Infrastructure.Tests.Services;
 

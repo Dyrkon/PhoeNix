@@ -10,6 +10,21 @@ internal sealed class UserEntityTypeConfiguration : IApplicationEntityTypeConfig
     {
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Name)
+            .HasMaxLength(64)
+            .IsRequired();
+
+        builder.Property(x => x.NormalizedName)
+            .HasMaxLength(64)
+            .IsRequired();
+
+        builder.Property(x => x.PasswordHash)
+            .HasMaxLength(512)
+            .IsRequired();
+
+        builder.HasIndex(x => x.NormalizedName)
+            .IsUnique();
+
         builder.Property(x => x.Id).HasConversion(id => id.Value, value => new UserId(value));
     }
 }
