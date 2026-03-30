@@ -20,4 +20,10 @@
         <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.3"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Reference Include="Microsoft.EntityFrameworkCore">
+            <HintPath>..\..\..\..\..\..\.nuget\packages\microsoft.entityframeworkcore\10.0.3\lib\net10.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
 </Project>

@@ -11,8 +11,18 @@ internal sealed class UserRepository : RepositoryBase<User, UserId>, IUserReposi
     {
     }
 
-    public async Task<SystemUser?> GetByNameAsync(string name, CancellationToken token)
+    public async Task<User?> GetByNameAsync(string name, CancellationToken token)
     {
-        return await DbContext.SystemUsers.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+        return await DbContext.Users.SingleOrDefaultAsync(m => m.Name.Contains(name), token);
+    }
+
+    public Task<User?> GetByNormalizedNameAsync(string normalizedName, CancellationToken cancellationToken)
+    {
+        return DbContext.Users.SingleOrDefaultAsync(x => x.NormalizedName == normalizedName, cancellationToken);
+    }
+
+    public Task<bool> ExistsByNormalizedNameAsync(string normalizedName, CancellationToken cancellationToken)
+    {
+        return DbContext.Users.AnyAsync(x => x.NormalizedName == normalizedName, cancellationToken);
     }
 }

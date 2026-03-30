@@ -4,6 +4,7 @@ using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Infrastructure.Services;
+using PhoeNix.Infrastructure.Services.ConfigurationManagement;
 
 namespace PhoeNix.Infrastructure.Tests.Services;
 
