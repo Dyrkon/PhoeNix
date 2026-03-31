@@ -1,0 +1,19 @@
+using PhoeNix.WebAPP.ApiClient.Abstractions;
+using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.ApiClient.Models;
+
+namespace PhoeNix.WebAPP.ApiClient.Clients;
+
+public sealed class SystemsApiClient(HttpClient httpClient)
+    : ApiClientBase(httpClient), ISystemsApiClient
+{
+    public Task<ApiResult<SystemTestResponse>> ValidateSystemAsync(
+        Guid configurationId,
+        Guid systemId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<SystemTestResponse>(
+            $"systems/{configurationId}/system/{systemId}/validate",
+            cancellationToken);
+    }
+}

@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+@using PhoeNix.WebAPP.ApiClient.Abstractions
+@using PhoeNix.WebAPP.Components.Navigation
+@implements IDisposable
+@inject IAuthenticationApiClient AuthenticationApiClient
+
+<CascadingValue Value="_userState">
+    <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
+    <MudPopoverProvider/>
+    <MudDialogProvider/>
+    <MudSnackbarProvider/>
+    <MudLayout>
+        <LeftPanel></LeftPanel>
+        <AppBar></AppBar>
+        <MudMainContent Class="pt-4" style="min-height: 100vh">
+            <MudContainer MaxWidth="MaxWidth.False" Class="mt-2 h-100">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</CascadingValue>

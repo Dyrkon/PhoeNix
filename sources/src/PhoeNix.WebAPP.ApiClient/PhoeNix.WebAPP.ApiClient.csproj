@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.AspNetCore.Components.WebAssembly">
+            <HintPath>..\..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.components.webassembly\10.0.5\lib\net10.0\Microsoft.AspNetCore.Components.WebAssembly.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
+    </ItemGroup>
+
+</Project>

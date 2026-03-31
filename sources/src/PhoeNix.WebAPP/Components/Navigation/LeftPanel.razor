@@ -1,0 +1,30 @@
+<MudDrawer Style="overflow-x: hidden" @bind-Open="_drawerOpen" OpenMiniOnHover="true" Elevation="1"
+           Variant="DrawerVariant.Mini" Width="14rem"
+           Class="animation: slide-right 0.5s ease-in-out forwards; animation-delay: 0.3s;">
+    @if (_drawerOpen)
+    {
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">PhoeNix</MudText>
+        </MudDrawerHeader>
+    }
+    <MudNavMenu>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Article" IconColor="Color.Primary">Nix
+            configurations
+        </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary">
+            Machines
+        </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.AutoAwesomeMotion"
+                    IconColor="Color.Primary">Templates
+        </MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Outlined.Logout"
+                    IconColor="Color.Primary" OnClick="@Logout">Log out
+        </MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
+
+<style>
+    .mud-nav-link-text {
+        color: black
+    }
+</style>
