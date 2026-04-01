@@ -13,4 +13,8 @@
         <PackageReference Include="MudBlazor" Version="9.*"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\PhoeNix.WebAPP.ApiClient\PhoeNix.WebAPP.ApiClient.csproj"/>
+    </ItemGroup>
+
 </Project>

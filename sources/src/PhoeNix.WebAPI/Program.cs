@@ -25,6 +25,7 @@ app.UseWhen(
     appBuilder => { appBuilder.UseHttpsRedirection(); });
 
 app.MapHealthChecks("/health");
+app.UseCors("WebAppClient");
 app.UseUserAuthentication();
 app.MapCarter();
 

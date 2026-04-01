@@ -23,6 +23,19 @@ public static class DependencyInjection
         services.AddSwaggerGen();
         services.AddHealthChecks();
 
+        services.AddCors(options =>
+        {
+            options.AddPolicy("WebAppClient", policy =>
+            {
+                policy.WithOrigins(
+                        "http://localhost:5269",
+                        "https://localhost:7052")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+
         services.AddCarter(configurator: c =>
         {
             c.WithValidatorsFromAssembly(typeof(PhoeNix.Application.DependencyInjection).Assembly);
@@ -109,8 +122,8 @@ public static class DependencyInjection
             {
                 options.Cookie.Name = "phoenix.auth";
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 options.SlidingExpiration = true;
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
 

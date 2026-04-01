@@ -1,5 +1,40 @@
-<h3>LoginForm</h3>
+<EditForm Model="_model" OnValidSubmit="SubmitAsync">
+    <DataAnnotationsValidator/>
 
-@code {
-    
-}
+    <MudPaper Class="mx-auto mt-8 pa-6" MaxWidth="MaxWidth.Small" Elevation="2">
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.h4">Sign in</MudText>
+
+            @if (!string.IsNullOrWhiteSpace(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <MudTextField T="string"
+                          Label="User name"
+                          Variant="Variant.Outlined"
+                          @bind-Value="_model.Name"
+                          For="@(() => _model.Name)"
+                          Disabled="_isSubmitting"/>
+
+            <MudTextField T="string"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          @bind-Value="_model.Password"
+                          For="@(() => _model.Password)"
+                          Disabled="_isSubmitting"/>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       ButtonType="ButtonType.Submit"
+                       Disabled="_isSubmitting">
+                @SubmitButtonText
+            </MudButton>
+
+            <MudLink Href="/register">Create a new account</MudLink>
+        </MudStack>
+    </MudPaper>
+</EditForm>
