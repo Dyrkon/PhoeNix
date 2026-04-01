@@ -1,8 +1,10 @@
 using Carter;
 using MediatR;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Machines.Commands;
+using PhoeNix.Application.Machines.Queries;
 using PhoeNix.Application.Models.Machines;
 using Phoenix.Presentation.Extensions;
 
@@ -15,6 +17,10 @@ public class MachinesModule : ICarterModule
         app.MapPost<CreateMachineRequest>("/machines/create", CreateMachine)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        app.MapGet("/machines", GetAllMachines)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private async Task<IResult> CreateMachine(CreateMachineRequest request, ISender sender,
@@ -24,5 +30,12 @@ public class MachinesModule : ICarterModule
             request.InstallDiskSelectionPreference);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
+    }
+
+    private async Task<IResult> GetAllMachines(ISender sender, CancellationToken cancellationToken)
+    {
+        var query = new ListMachinesQuery();
+        var response = await sender.Send(query, cancellationToken);
+        return response.AsHttpResult();
     }
 }

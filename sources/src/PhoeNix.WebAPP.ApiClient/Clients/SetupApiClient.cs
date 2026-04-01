@@ -4,8 +4,8 @@ using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
 
-public sealed class SetupApiClient(HttpClient httpClient)
-    : ApiClientBase(httpClient), ISetupApiClient
+public sealed class SetupApiClient(HttpClient httpClient, IAuthenticationInvalidationNotifier notifier)
+    : ApiClientBase(httpClient, notifier), ISetupApiClient
 {
     public Task<ApiResult<string>> StartSessionAsync(
         CancellationToken cancellationToken = default)

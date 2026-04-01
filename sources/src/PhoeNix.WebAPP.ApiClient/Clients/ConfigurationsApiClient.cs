@@ -4,8 +4,8 @@ using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
 
-public sealed class ConfigurationsApiClient(HttpClient httpClient)
-    : ApiClientBase(httpClient), IConfigurationsApiClient
+public sealed class ConfigurationsApiClient(HttpClient httpClient, IAuthenticationInvalidationNotifier notifier)
+    : ApiClientBase(httpClient, notifier), IConfigurationsApiClient
 {
     public Task<ApiResult<IReadOnlyList<ConfigurationListResponse>>> GetConfigurationsAsync(
         CancellationToken cancellationToken = default)

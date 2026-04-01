@@ -2,23 +2,28 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using PhoeNix.WebAPP.ApiClient.Abstractions;
+using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Models;
-using ApiError = PhoeNix.WebAPP.ApiClient.Contracts.ApiError;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
 
 public abstract class ApiClientBase
 {
     protected readonly HttpClient HttpClient;
+    private readonly IAuthenticationInvalidationNotifier _authenticationInvalidationNotifier;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
     };
 
-    protected ApiClientBase(HttpClient httpClient)
+    protected ApiClientBase(
+        HttpClient httpClient,
+        IAuthenticationInvalidationNotifier authenticationInvalidationNotifier)
     {
         HttpClient = httpClient;
+        _authenticationInvalidationNotifier = authenticationInvalidationNotifier;
     }
 
     protected Task<ApiResult> PostAsync(
@@ -58,6 +63,30 @@ public abstract class ApiClientBase
         return SendAsync<TResponse>(HttpMethod.Post, uri, null, cancellationToken);
     }
 
+    protected async Task<ApiResult<TResponse>> PostWithResponseAsync<TResponse>(
+        string uri,
+        object body,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Post, uri);
+        request.Content = JsonContent.Create(body);
+
+        using var response = await HttpClient.SendAsync(request, cancellationToken);
+
+        NotifyIfAuthenticationInvalid(response);
+
+        if (!response.IsSuccessStatusCode)
+            return ApiResult<TResponse>.Failure(await ReadErrorAsync(response, cancellationToken));
+
+        var payload = await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
+
+        return payload is null
+            ? ApiResult<TResponse>.Failure(new ApiError(
+                "ResponseBodyInvalid",
+                "The server returned an invalid response body."))
+            : ApiResult<TResponse>.Success(payload);
+    }
+
     private async Task<ApiResult> SendAsync(
         HttpMethod method,
         string uri,
@@ -70,6 +99,8 @@ public abstract class ApiClientBase
             request.Content = JsonContent.Create(body);
 
         using var response = await HttpClient.SendAsync(request, cancellationToken);
+
+        NotifyIfAuthenticationInvalid(response);
 
         if (response.IsSuccessStatusCode)
             return ApiResult.Success();
@@ -90,6 +121,8 @@ public abstract class ApiClientBase
 
         using var response = await HttpClient.SendAsync(request, cancellationToken);
 
+        NotifyIfAuthenticationInvalid(response);
+
         if (!response.IsSuccessStatusCode)
             return ApiResult<TResponse>.Failure(await ReadErrorAsync(response, cancellationToken));
 
@@ -107,6 +140,12 @@ public abstract class ApiClientBase
                 "ResponseBodyInvalid",
                 "The server returned an invalid response body."))
             : ApiResult<TResponse>.Success(value);
+    }
+
+    private void NotifyIfAuthenticationInvalid(HttpResponseMessage response)
+    {
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            _authenticationInvalidationNotifier.NotifyAuthenticationInvalidated();
     }
 
     protected static HttpRequestMessage CreateRequest(HttpMethod method, string uri)
