@@ -923,15 +923,20 @@
         "dependencies": {
           "MediatR": "[14.0.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.3, )",
+          "PhoeNix.Common": "[1.0.0, )",
           "PhoeNix.Domain": "[1.0.0, )"
         }
+      },
+      "phoenix.common": {
+        "type": "Project"
       },
       "phoenix.domain": {
         "type": "Project",
         "dependencies": {
           "FluentValidation": "[12.1.0, )",
           "Humanizer": "[3.0.1, )",
-          "MediatR.Contracts": "[2.0.1, )"
+          "MediatR.Contracts": "[2.0.1, )",
+          "PhoeNix.Common": "[1.0.0, )"
         }
       },
       "phoenix.infrastructure": {

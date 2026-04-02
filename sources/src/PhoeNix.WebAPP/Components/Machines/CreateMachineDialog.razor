@@ -1,0 +1,64 @@
+@using MudBlazor
+@using PhoeNix.Domain.Enums
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="3">
+                <MudTextField T="string"
+                              @bind-Value="_model.Title"
+                              Label="Title"
+                              Required="true"
+                              RequiredError="Title is required."/>
+
+                <MudTextField T="string"
+                              @bind-Value="_model.MacAddress"
+                              Label="MAC Address"
+                              Placeholder="00:11:22:33:44:55"
+                              Required="true"
+                              RequiredError="MAC address is required."/>
+
+                <MudCheckBox T="bool"
+                             @bind-Value="_model.Enabled"
+                             Label="Enabled"/>
+
+                <MudSelect T="Architecture"
+                           @bind-Value="_model.Architecture"
+                           Label="Architecture"
+                           Required="true">
+                    @foreach (var architecture in Enum.GetValues<Architecture>())
+                    {
+                        <MudSelectItem Value="@architecture">
+                            @architecture.ToArchitectureString()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="InstallDiskSelectionPreference"
+                           @bind-Value="_model.InstallDiskSelectionPreference"
+                           Label="Install Disk Selection Preference"
+                           Required="true">
+                    @foreach (var preference in Enum.GetValues<InstallDiskSelectionPreference>())
+                    {
+                        <MudSelectItem Value="@preference">
+                            @preference.ToString()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">
+            Cancel
+        </MudButton>
+
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting">
+            Create
+        </MudButton>
+    </DialogActions>
+</MudDialog>

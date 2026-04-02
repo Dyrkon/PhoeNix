@@ -26,4 +26,8 @@
         </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\PhoeNix.Common\PhoeNix.Common.csproj"/>
+    </ItemGroup>
+
 </Project>

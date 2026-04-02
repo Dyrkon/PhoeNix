@@ -492,6 +492,12 @@ namespace PhoeNix.Persistence.Migrations
                                 .HasColumnType("TEXT")
                                 .HasColumnName("ProvisionedConfigurationId");
 
+                            b1.Property<string>("ConfigurationTitle")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("ConfigurationTitle");
+
                             b1.Property<string>("LastKnownIpAddress")
                                 .IsRequired()
                                 .HasColumnType("TEXT")
@@ -504,6 +510,12 @@ namespace PhoeNix.Persistence.Migrations
                             b1.Property<Guid>("SystemId")
                                 .HasColumnType("TEXT")
                                 .HasColumnName("ProvisionedSystemId");
+
+                            b1.Property<string>("SystemName")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SystemName");
 
                             b1.HasKey("MachineId");
 

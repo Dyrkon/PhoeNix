@@ -70,14 +70,18 @@ public class Machine : AggregateRoot<MachineId>
 
     public Result RecordDeploymentSnapshot(
         ConfigurationId configurationId,
+        string configurationTitle,
         SystemId systemId,
+        string systemName,
         IPAddress ipAddress,
         DateTime nowUtc,
         IReadOnlyList<string> boundDiskPaths)
     {
         var snapshotResult = DeploymentSnapshot.Create(
             configurationId,
+            configurationTitle,
             systemId,
+            systemName,
             ipAddress,
             nowUtc,
             boundDiskPaths);

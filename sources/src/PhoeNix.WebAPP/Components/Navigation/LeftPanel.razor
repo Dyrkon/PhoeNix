@@ -1,3 +1,4 @@
+@using PhoeNix.WebAPP.Extensions
 <MudDrawer Style="overflow-x: hidden" @bind-Open="_drawerOpen" OpenMiniOnHover="true" Elevation="1"
            Variant="DrawerVariant.Mini" Width="14rem"
            Class="animation: slide-right 0.5s ease-in-out forwards; animation-delay: 0.3s;">
@@ -11,7 +12,8 @@
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Article" IconColor="Color.Primary">Nix
             configurations
         </MudNavLink>
-        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary">
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary"
+                    OnClick="NavigationManager.NavigateToMachineIndex">
             Machines
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.AutoAwesomeMotion"

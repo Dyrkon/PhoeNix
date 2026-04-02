@@ -1,7 +1,7 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Configurations;
-using PhoeNix.Domain.Repositories;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Configurations.Queries;

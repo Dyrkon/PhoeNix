@@ -1,3 +1,5 @@
+using PhoeNix.Domain.Enums;
+
 namespace PhoeNix.WebAPP.ApiClient.Contracts;
 
 public sealed record SystemListResponse(

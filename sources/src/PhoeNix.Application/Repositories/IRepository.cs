@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PhoeNix.Domain.Primitives;
 
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface IRepository<TEntity, TId>
     where TId : StronglyTypedId

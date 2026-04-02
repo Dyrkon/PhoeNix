@@ -3,11 +3,11 @@ using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Modules;
 using PhoeNix.Application.Modules.Factories;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Configurations.Commands;

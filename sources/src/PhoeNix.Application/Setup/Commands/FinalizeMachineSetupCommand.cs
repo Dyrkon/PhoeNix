@@ -1,11 +1,12 @@
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Setup;
 using PhoeNix.Application.Setup.Extensions;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -16,6 +17,7 @@ internal sealed class FinalizeMachineSetupCommandHandler(
     ISetupSessionRepository setupSessionRepository,
     IMachineRepository machineRepository,
     INetbootHostService netbootHostService,
+    IConfigurationRepository configurationRepository,
     ICallbackTokenService callbackTokenService)
     : ICommandHandler<FinalizeMachineSetupCommand>
 {
@@ -110,6 +112,13 @@ internal sealed class FinalizeMachineSetupCommandHandler(
                 nowUtc);
         }
 
+        var configurationResult = await configurationRepository
+            .GetByIdAsync(target.SelectedConfigurationId, cancellationToken)
+            .EnsureNotNull(ConfigurationErrors.NotFound(target.SelectedConfigurationId));
+
+        if (configurationResult.IsFailure)
+            return configurationResult.Error;
+
         var boundDiskPaths = target.RankedDiskAssignments
             .OrderBy(d => d.Index)
             .Select(d => d.DiskByIdPath)
@@ -117,7 +126,9 @@ internal sealed class FinalizeMachineSetupCommandHandler(
 
         var snapshotResult = machine.RecordDeploymentSnapshot(
             target.SelectedConfigurationId,
+            configurationResult.Value.Title,
             target.SelectedSystemId,
+            configurationResult.Value.SystemSpecifications.First(s => s.Id == target.SelectedSystemId).Name,
             request.MachineIpAddress,
             nowUtc,
             boundDiskPaths);
@@ -152,6 +163,6 @@ internal sealed class FinalizeMachineSetupCommandHandler(
         if (stopHostResult.IsFailure)
             return stopHostResult.Error;
 
-        return Result.Success();
+        return machine.ChangeMachineState(MachineState.Orchestrated, nowUtc);
     }
 }

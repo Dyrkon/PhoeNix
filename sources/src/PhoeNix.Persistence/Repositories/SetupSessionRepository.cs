@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
-using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 

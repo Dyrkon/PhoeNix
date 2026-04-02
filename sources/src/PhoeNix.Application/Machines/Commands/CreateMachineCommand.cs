@@ -1,8 +1,8 @@
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Machines.Commands;
@@ -19,10 +19,34 @@ internal sealed class CreateMachineHandler(IMachineRepository machineRepository)
 {
     public async Task<Result<string>> Handle(CreateMachineCommand request, CancellationToken cancellationToken)
     {
-        return await Machine
-            .Create(new MachineId(Guid.NewGuid()), request.MacAddress, request.Title, request.Enabled,
-                request.Architecture, request.InstallDiskSelectionPreference)
+        var normalizedTitle = request.Title.Trim();
+
+        var existingMachineByTitle = await machineRepository.GetByTitleAsync(normalizedTitle, cancellationToken);
+        if (existingMachineByTitle is not null)
+            return Result.Failure<string>(new Error(
+                "Machines.TitleAlreadyExists",
+                $"Machine with title '{normalizedTitle}' already exists."));
+
+        if (!System.Net.NetworkInformation.PhysicalAddress.TryParse(request.MacAddress, out var macAddress))
+            return Result.Failure<string>(new Error(
+                "Machines.InvalidMacAddress",
+                $"Unable to parse machine MAC address '{request.MacAddress}'."));
+
+        var existingMachineByMacAddress = await machineRepository.GetByMacAddressAsync(macAddress, cancellationToken);
+        if (existingMachineByMacAddress is not null)
+            return Result.Failure<string>(new Error(
+                "Machines.MacAddressAlreadyExists",
+                $"Machine with MAC address '{request.MacAddress}' already exists."));
+
+        return Machine
+            .Create(
+                new MachineId(Guid.NewGuid()),
+                request.MacAddress,
+                normalizedTitle,
+                request.Enabled,
+                request.Architecture,
+                request.InstallDiskSelectionPreference)
             .Tap(machineRepository.Add)
-            .Bind(machine => Task.FromResult(Result.Success(machine.Id.Value.ToString())));
+            .Map(machine => machine.Id.Value.ToString());
     }
 }

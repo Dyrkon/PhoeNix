@@ -1,9 +1,9 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Modules.Queries;

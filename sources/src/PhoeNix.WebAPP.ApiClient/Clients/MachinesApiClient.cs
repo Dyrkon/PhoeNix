@@ -1,5 +1,7 @@
+using PhoeNix.Application.Models.Machines;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.ApiClient.Helpers;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
@@ -14,9 +16,18 @@ public sealed class MachinesApiClient(HttpClient httpClient, IAuthenticationInva
         return await PostAsync("machines/create", request, cancellationToken);
     }
 
-    public async Task<ApiResult<IEnumerable<MachineListResponse>>> GetMachinesAsync(
+    public async Task<ApiResult<PagedResponse<MachineListResponse>>> GetMachinesAsync(
+        ListMachinesRequest request,
         CancellationToken cancellationToken = default)
     {
-        return await GetAsync<IEnumerable<MachineListResponse>>("machines", cancellationToken);
+        var queryString = QueryStringBuilder.BuildFrom(request);
+        return await GetAsync<PagedResponse<MachineListResponse>>($"machines{queryString}", cancellationToken);
+    }
+
+    public async Task<ApiResult<MachineDetailResponse>> GetMachineAsync(
+        Guid machineId,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<MachineDetailResponse>($"machines/{machineId}", cancellationToken);
     }
 }

@@ -6,12 +6,12 @@ using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Setup;
 using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -27,6 +27,7 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
     ISetupSessionRepository sessionRepository,
     INixosInstaller nixosInstaller,
     IRuntimeBindingResolver runtimeBindingResolver,
+    IMachineRepository machineRepository,
     IOptions<NetbootHostOptions> setupCallbackOptions,
     IDeploySshKeyProvider deploySshKeyProvider)
     : ICommandHandler<ApplyConfigurationToMachineCommand>
@@ -46,6 +47,13 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
         if (sessionResult.IsFailure)
             return sessionResult.Error;
 
+        var machineResult = await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
+            .EnsureNotNull(MachineErrors.NotFound(request.MachineId));
+
+        if (machineResult.IsFailure)
+            return machineResult.Error;
+
+        var machine = machineResult.Value;
         var session = sessionResult.Value;
         var target = session.Targets.First(t => t.MachineId == request.MachineId);
 

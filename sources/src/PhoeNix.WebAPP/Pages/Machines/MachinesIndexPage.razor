@@ -1,22 +1,11 @@
 @page "/"
-@using Humanizer
-@using PhoeNix.WebAPP.Extensions
+@using PhoeNix.WebAPP.Components.Machines
 
-<h3>MachineIndexPage</h3>
-
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
+@if (_isLoading)
 {
-    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
 }
 else
 {
-    @foreach (var machine in _machineListResponses)
-    {
-        <MudText>
-            @machine.Title
-            @machine.MachineState.Humanize()
-            @machine.Architecture.ToArchitectureString()
-            @machine.Enabled
-        </MudText>
-    }
+    <MachinesTable Configurations="_configurations"/>
 }

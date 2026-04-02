@@ -1,5 +1,92 @@
-<h3>MachineTable</h3>
+@using Humanizer
+@using PhoeNix.Domain.Enums
+@using MachineState = PhoeNix.Domain.Enums.MachineState
 
-@code {
+<MudPaper Class="pa-4" Elevation="0">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h6">Machines</MudText>
 
-}
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       OnClick="OpenCreateDialogAsync"/>
+    </MudStack>
+
+    <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
+        <MudTextField T="string"
+                      Value="_search"
+                      ValueChanged="OnSearchChangedAsync"
+                      Label="Search"
+                      Placeholder="Title"
+                      Immediate="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true"/>
+
+        <MudSelect T="bool?" Value="_enabled" ValueChanged="OnEnabledChangedAsync" Label="Enabled" Clearable="true">
+            <MudSelectItem Value="@((bool?)true)">Enabled</MudSelectItem>
+            <MudSelectItem Value="@((bool?)false)">Disabled</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="Architecture?" Value="_architecture" ValueChanged="OnArchitectureChangedAsync"
+                   Label="Architecture" Clearable="true">
+            @foreach (var architecture in Enum.GetValues<Architecture>())
+            {
+                <MudSelectItem Value="@((Architecture?)architecture)">
+                    @architecture.ToArchitectureString()
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="MachineState?" Value="_machineState" ValueChanged="OnMachineStateChangedAsync" Label="State"
+                   Clearable="true">
+            @foreach (var machineState in Enum.GetValues<MachineState>())
+            {
+                <MudSelectItem Value="@((MachineState?)machineState)">
+                    @machineState.Humanize()
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+
+    <MudDataGrid T="MachineTableRow"
+                 @ref="_dataGrid"
+                 ServerData="LoadServerDataAsync"
+                 Dense="true"
+                 Hover="true"
+                 ReadOnly="true"
+                 Filterable="false"
+                 SortMode="SortMode.Single"
+                 Elevation="0"
+                 RowClick="OnRowClickAsync">
+
+        <Columns>
+            <PropertyColumn Property="x => x.Title" Title="Title" Sortable="true"/>
+            <PropertyColumn Property="x => x.MacAddress" Title="MAC Address" Sortable="true"/>
+            <PropertyColumn Property="x => x.Architecture" Title="Architecture" Sortable="true"/>
+            <PropertyColumn Property="x => x.MachineState" Title="State" Sortable="true"/>
+            <PropertyColumn Property="x => x.InstalledConfigurationTitle" Title="Installed Configuration"
+                            Sortable="false"/>
+
+            <TemplateColumn Title="Enabled" Sortable="true">
+                <CellTemplate>
+                    <MudChip Color="@(context.Item.Enabled ? Color.Success : Color.Default)"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+                        @(context.Item.Enabled ? "Enabled" : "Disabled")
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="pa-4">
+                No machines found.
+            </MudText>
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudDataGridPager T="MachineTableRow"/>
+        </PagerContent>
+    </MudDataGrid>
+</MudPaper>

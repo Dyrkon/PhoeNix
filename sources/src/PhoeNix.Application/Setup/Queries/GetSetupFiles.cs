@@ -1,8 +1,8 @@
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Queries;

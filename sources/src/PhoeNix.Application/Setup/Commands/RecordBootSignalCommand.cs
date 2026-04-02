@@ -1,13 +1,13 @@
 using System.Net;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Setup;
 using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -140,6 +140,6 @@ internal sealed class RecordBootSignalCommandHandler(
         if (machineResult.IsFailure)
             return machineResult.Error;
 
-        return machineResult.Value.ChangeMachineState(MachineState.Registered, nowUtc);
+        return machineResult.Value.ChangeMachineState(MachineState.Provisioned, nowUtc);
     }
 }
