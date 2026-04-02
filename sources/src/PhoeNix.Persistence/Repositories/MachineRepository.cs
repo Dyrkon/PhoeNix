@@ -31,4 +31,9 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
                 m => m.MacAddress.Equals(macAddress),
                 cancellationToken);
     }
+
+    public async Task<IEnumerable<Machine>> GetAllMachines(CancellationToken cancellationToken)
+    {
+        return await DbContext.Machines.ToListAsync(cancellationToken);
+    }
 }

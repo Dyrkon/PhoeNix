@@ -8,4 +8,6 @@ public interface IMachineRepository : IRepository<Machine, MachineId>
     Task<Machine?> GetByTitleAsync(string title, CancellationToken cancellationToken);
 
     Task<Machine?> GetByMacAddressAsync(PhysicalAddress macAddress, CancellationToken cancellationToken);
+
+    Task<IEnumerable<Machine>> GetAllMachines(CancellationToken cancellationToken);
 }

@@ -4,8 +4,8 @@ using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
 
-public sealed class ModulesApiClient(HttpClient httpClient)
-    : ApiClientBase(httpClient), IModulesApiClient
+public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInvalidationNotifier notifier)
+    : ApiClientBase(httpClient, notifier), IModulesApiClient
 {
     public Task<ApiResult<IReadOnlyList<ModuleTemplateListResponse>>> GetModuleTemplatesAsync(
         CancellationToken cancellationToken = default)

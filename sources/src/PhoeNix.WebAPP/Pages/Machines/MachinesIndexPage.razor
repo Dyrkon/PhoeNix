@@ -1,6 +1,22 @@
 @page "/"
+@using Humanizer
+@using PhoeNix.WebAPP.Extensions
+
 <h3>MachineIndexPage</h3>
 
-@code {
-
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+}
+else
+{
+    @foreach (var machine in _machineListResponses)
+    {
+        <MudText>
+            @machine.Title
+            @machine.MachineState.Humanize()
+            @machine.Architecture.ToArchitectureString()
+            @machine.Enabled
+        </MudText>
+    }
 }

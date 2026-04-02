@@ -8,4 +8,6 @@ public interface IMachinesApiClient
     Task<ApiResult> CreateMachineAsync(
         CreateMachineRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResult<IEnumerable<MachineListResponse>>> GetMachinesAsync(CancellationToken cancellationToken = default);
 }

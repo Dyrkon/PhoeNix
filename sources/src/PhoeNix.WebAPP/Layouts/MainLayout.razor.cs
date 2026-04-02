@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.WebAPP.ApiClient.Abstractions;
+using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.Shared;
 using PhoeNix.WebAPP.States;
 
@@ -8,13 +10,16 @@ namespace PhoeNix.WebAPP.Layouts;
 public partial class MainLayout
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    private bool _isDarkMode = false;
+    [Inject] private IAuthenticationInvalidationNotifier AuthenticationInvalidationNotifier { get; set; } = null!;
+
+    private bool _isDarkMode;
     private MudTheme? _theme;
     private readonly UserState _userState = new();
 
     protected override async Task OnInitializedAsync()
     {
         _userState.Changed += OnUserStateChanged;
+        AuthenticationInvalidationNotifier.AuthenticationInvalidated += OnAuthenticationInvalidated;
 
         _theme = new MudTheme
         {
@@ -38,6 +43,22 @@ public partial class MainLayout
         }
     }
 
+    private void OnAuthenticationInvalidated()
+    {
+        _userState.Clear();
+
+        _ = InvokeAsync(() =>
+        {
+            var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+            if (!relativePath.StartsWith("login", StringComparison.OrdinalIgnoreCase) &&
+                !relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase))
+                NavigationManager.NavigateToLogin();
+
+            StateHasChanged();
+        });
+    }
+
     private void OnUserStateChanged()
     {
         _ = InvokeAsync(StateHasChanged);
@@ -46,16 +67,6 @@ public partial class MainLayout
     public void Dispose()
     {
         _userState.Changed -= OnUserStateChanged;
+        AuthenticationInvalidationNotifier.AuthenticationInvalidated -= OnAuthenticationInvalidated;
     }
-
-    private void DarkModeToggle()
-    {
-        _isDarkMode = !_isDarkMode;
-    }
-
-    public string DarkLightModeButtonIcon => _isDarkMode switch
-    {
-        true => Icons.Material.Rounded.AutoMode,
-        false => Icons.Material.Outlined.DarkMode
-    };
 }
