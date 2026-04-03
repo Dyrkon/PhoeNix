@@ -23,4 +23,14 @@ public static class NavigationExtensions
     {
         navigationManager.NavigateTo($"/machines/{machineId}");
     }
+
+    public static void NavigateToConfigurationIndex(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/configurations");
+    }
+
+    public static void NavigateToConfigurationDetail(this NavigationManager navigationManager, Guid configurationId)
+    {
+        navigationManager.NavigateTo($"/configurations/{configurationId}");
+    }
 }
