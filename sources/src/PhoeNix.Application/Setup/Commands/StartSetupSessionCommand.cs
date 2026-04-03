@@ -1,9 +1,9 @@
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;

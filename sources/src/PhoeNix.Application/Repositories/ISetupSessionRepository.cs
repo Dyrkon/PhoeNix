@@ -1,7 +1,7 @@
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface ISetupSessionRepository : IRepository<SetupSession, SetupSessionId>
 {

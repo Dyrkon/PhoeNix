@@ -1,6 +1,6 @@
 using PhoeNix.Domain.Entities.Modules;
 
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface IModuleTemplateRepository : IRepository<ModuleTemplate, ModuleTemplateId>
 {

@@ -1,7 +1,6 @@
-using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
 
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface IUserRepository : IRepository<User, UserId>
 {

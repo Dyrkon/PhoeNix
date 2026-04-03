@@ -1,3 +1,4 @@
+using PhoeNix.Application.Models.Machines;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Models;
 
@@ -9,5 +10,11 @@ public interface IMachinesApiClient
         CreateMachineRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<IEnumerable<MachineListResponse>>> GetMachinesAsync(CancellationToken cancellationToken = default);
+    Task<ApiResult<PagedResponse<MachineListResponse>>> GetMachinesAsync(
+        ListMachinesRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult<MachineDetailResponse>> GetMachineAsync(
+        Guid machineId,
+        CancellationToken cancellationToken = default);
 }

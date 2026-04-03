@@ -1,7 +1,7 @@
 using System.Net.NetworkInformation;
 using Microsoft.EntityFrameworkCore;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
-using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 
@@ -30,10 +30,5 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
             .SingleOrDefaultAsync(
                 m => m.MacAddress.Equals(macAddress),
                 cancellationToken);
-    }
-
-    public async Task<IEnumerable<Machine>> GetAllMachines(CancellationToken cancellationToken)
-    {
-        return await DbContext.Machines.ToListAsync(cancellationToken);
     }
 }

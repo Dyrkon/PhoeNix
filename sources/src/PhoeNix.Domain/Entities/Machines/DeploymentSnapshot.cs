@@ -15,7 +15,11 @@ public sealed class DeploymentSnapshot
 
     public ConfigurationId ConfigurationId { get; private set; }
 
+    public string ConfigurationTitle { get; private set; }
+
     public SystemId SystemId { get; private set; }
+
+    public string SystemName { get; private set; }
 
     public IPAddress LastKnownIpAddress { get; private set; }
 
@@ -25,7 +29,9 @@ public sealed class DeploymentSnapshot
 
     public static Result<DeploymentSnapshot> Create(
         ConfigurationId configurationId,
+        string configurationTitle,
         SystemId systemId,
+        string systemName,
         IPAddress lastKnownIpAddress,
         DateTime provisionedAtUtc,
         IReadOnlyList<string> boundDiskPaths)
@@ -33,7 +39,9 @@ public sealed class DeploymentSnapshot
         var snapshot = new DeploymentSnapshot
         {
             ConfigurationId = configurationId,
+            ConfigurationTitle = configurationTitle,
             SystemId = systemId,
+            SystemName = systemName,
             LastKnownIpAddress = lastKnownIpAddress,
             ProvisionedAtUtc = provisionedAtUtc
         };

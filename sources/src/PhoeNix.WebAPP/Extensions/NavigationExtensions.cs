@@ -13,4 +13,14 @@ public static class NavigationExtensions
     {
         navigationManager.NavigateTo("/register");
     }
+
+    public static void NavigateToMachineIndex(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/");
+    }
+
+    public static void NavigateToMachineDetail(this NavigationManager navigationManager, Guid machineId)
+    {
+        navigationManager.NavigateTo($"/machines/{machineId}");
+    }
 }

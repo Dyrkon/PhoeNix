@@ -2,10 +2,10 @@ using MediatR;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Setup;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Domain.Extensions;
 

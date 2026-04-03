@@ -1,7 +1,7 @@
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Shared;
 
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface IConfigurationRepository : IRepository<Configuration, ConfigurationId>
 {

@@ -1,4 +1,4 @@
-using PhoeNix.Domain.Repositories;
+using PhoeNix.Application.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 

@@ -2,13 +2,13 @@ using Microsoft.Extensions.Logging;
 using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Setup;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Setup;
 using PhoeNix.Application.Setup.Extensions;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 using ICommand = PhoeNix.Application.Abstractions.Messaging.ICommand;
 

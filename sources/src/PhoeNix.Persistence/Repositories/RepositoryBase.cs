@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Primitives;
-using PhoeNix.Domain.Repositories;
 
 namespace PhoeNix.Persistence.Repositories;
 

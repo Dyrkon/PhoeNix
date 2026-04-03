@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Persistence.Extensions;
 

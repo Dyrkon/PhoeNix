@@ -1,6 +1,6 @@
 using MediatR;
 using PhoeNix.Application.Abstractions.Messaging;
-using PhoeNix.Domain.Repositories;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Behaviors;

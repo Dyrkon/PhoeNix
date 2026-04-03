@@ -241,6 +241,9 @@ internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeCon
                     id => id.Value,
                     value => new SystemId(value));
 
+            deployment.Property(p => p.ConfigurationTitle).HasColumnName("ConfigurationTitle").HasMaxLength(200);
+            deployment.Property(p => p.SystemName).HasColumnName("SystemName").HasMaxLength(200);
+
             deployment.Property(p => p.LastKnownIpAddress)
                 .HasColumnName("ProvisionedIpAddress")
                 .HasConversion(

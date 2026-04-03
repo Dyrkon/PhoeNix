@@ -1,4 +1,4 @@
-namespace PhoeNix.Domain.Repositories;
+namespace PhoeNix.Application.Repositories;
 
 public interface IUnitOfWork
 {

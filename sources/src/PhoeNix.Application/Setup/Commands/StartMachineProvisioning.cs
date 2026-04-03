@@ -1,12 +1,12 @@
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -117,7 +117,9 @@ internal sealed class StartMachineSetupHandler(
         if (assignTokenResult.IsFailure)
             return assignTokenResult.Error;
 
-        return session.UpdateMachineStage(machine.Id, SetupStage.WaitingForPxe, nowUtc);
+        return session.UpdateMachineStage(machine.Id, SetupStage.WaitingForPxe, nowUtc)
+            .Tap(() =>
+                machineResult.Value.ChangeMachineState(MachineState.Registered, nowUtc));
     }
 
     private static bool IsActive(SetupStage stage)

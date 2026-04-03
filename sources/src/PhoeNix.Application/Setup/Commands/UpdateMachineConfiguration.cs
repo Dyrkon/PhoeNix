@@ -5,11 +5,11 @@ using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Setup;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Extensions;
-using PhoeNix.Domain.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Commands;
@@ -150,7 +150,9 @@ internal sealed class UpdateMachineConfigurationHandler(
 
         var snapshotResult = machine.RecordDeploymentSnapshot(
             request.ConfigurationId,
+            configuration.Title,
             request.SystemId,
+            configuration.SystemSpecifications.First(s => s.Id == request.SystemId).Name,
             targetIpAddress,
             nowUtc,
             boundDiskPaths);

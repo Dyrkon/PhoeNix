@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Data;
 using PhoeNix.Application.Options;
-using PhoeNix.Domain.Repositories;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Persistence.Interceptors;
 using PhoeNix.Persistence.Outbox;
 using PhoeNix.Persistence.Repositories;
@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleTemplateRepository, ModuleTemplateRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMachineRepository, MachineRepository>();
+        services.AddScoped<IMachineReadRepository, MachineReadRepository>();
         services.AddScoped<ISetupSessionRepository, SetupSessionRepository>();
 
         return services;
@@ -45,7 +46,7 @@ public static class DependencyInjection
             options.BatchSize = 20;
             options.PollInterval = TimeSpan.FromSeconds(2);
         });
-        
+
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
                 // TODO the DB shouldn't be in TMP folder
@@ -56,7 +57,7 @@ public static class DependencyInjection
             })
             .ConfigureDbContext()
             .AddRepositories();
-        
+
         services.AddHostedService<OutboxProcessorBackgroundService>();
 
         return services;
