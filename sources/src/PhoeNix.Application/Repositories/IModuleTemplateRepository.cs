@@ -6,5 +6,9 @@ public interface IModuleTemplateRepository : IRepository<ModuleTemplate, ModuleT
 {
     Task<ModuleTemplate?> GetByNameAsync(string name, CancellationToken token);
 
-    Task<IEnumerable<ModuleTemplate>?> GetAllAsync(CancellationToken token);
+    Task<IEnumerable<ModuleTemplate>> GetAllAsync(CancellationToken token);
+
+    Task<IReadOnlyList<ModuleTemplate>> GetByIdsAsync(
+        IReadOnlyCollection<ModuleTemplateId> ids,
+        CancellationToken token);
 }

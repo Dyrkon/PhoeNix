@@ -1,0 +1,199 @@
+@using PhoeNix.WebAPP.Helpers;
+
+<MudExpansionPanel Disabled="@(Hardware is null)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">CPU</MudText>
+            @if (Hardware is not null)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @Hardware.CpuProfile.Model.FormatString()
+                </MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Hardware is not null)
+        {
+            <MudGrid Class="pt-2">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Vendor</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.CpuProfile.Vendor.FormatString()</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Model</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.CpuProfile.Model.FormatString()</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Core Count</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.CpuProfile.CoreCount.FormatInt()</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Thread Count</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.CpuProfile.ThreadCount.FormatInt()</MudText>
+                </MudItem>
+            </MudGrid>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+<MudExpansionPanel Disabled="@(Hardware is null)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">Memory</MudText>
+            @if (Hardware is not null)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @Hardware.MemoryProfile.TotalBytes.FormatBytes()
+                </MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Hardware is not null)
+        {
+            <MudGrid Class="pt-2 mb-4">
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption">Total Memory</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.MemoryProfile.TotalBytes.FormatBytes()</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption">Slot Count</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.MemoryProfile.SlotCount.FormatInt()</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption">Occupied Slots</MudText>
+                    <MudText Typo="Typo.body1">@Hardware.MemoryProfile.OccupiedSlotCount.FormatInt()</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudTable Items="@Hardware.MemoryProfile.MemoryModuleProfiles" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Slot</MudTh>
+                    <MudTh>Size</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Slot">@context.Slot.FormatString()</MudTd>
+                    <MudTd DataLabel="Size">@context.SizeBytes.FormatBytes()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+<MudExpansionPanel Disabled="@(Hardware is null || Hardware.GpuProfiles.Count == 0)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Tv" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">GPUs</MudText>
+            @if (Hardware is not null)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @Hardware.GpuProfiles.Count @(Hardware.GpuProfiles.Count == 1 ? "device" : "devices")
+                </MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Hardware is not null)
+        {
+            <MudTable Items="@Hardware.GpuProfiles" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Vendor</MudTh>
+                    <MudTh>Model</MudTh>
+                    <MudTh>VRAM</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Vendor">@context.Vendor.FormatString()</MudTd>
+                    <MudTd DataLabel="Model">@context.Model.FormatString()</MudTd>
+                    <MudTd DataLabel="VRAM">@context.VramBytes.FormatBytes()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+<MudExpansionPanel Disabled="@(Hardware is null || Hardware.DiskProfiles.Count == 0)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">Disks</MudText>
+            @if (Hardware is not null)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @Hardware.DiskProfiles.Count @(Hardware.DiskProfiles.Count == 1 ? "disk" : "disks")
+                </MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Hardware is not null)
+        {
+            <MudTable Items="@Hardware.DiskProfiles" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Stable Device Path</MudTh>
+                    <MudTh>Kernel Device Path</MudTh>
+                    <MudTh>Vendor</MudTh>
+                    <MudTh>Model</MudTh>
+                    <MudTh>Bus</MudTh>
+                    <MudTh>Size</MudTh>
+                    <MudTh>Rotational</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Stable Device Path">
+                        <MudText Typo="Typo.body2"
+                                 Style="word-break: break-all;">@context.StableDevicePath.FormatString()</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Kernel Device Path">
+                        <MudText Typo="Typo.body2"
+                                 Style="word-break: break-all;">@context.KernelDevicePath.FormatString()</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Vendor">@context.Vendor.FormatString()</MudTd>
+                    <MudTd DataLabel="Model">@context.Model.FormatString()</MudTd>
+                    <MudTd DataLabel="Bus">@context.BusType.FormatString()</MudTd>
+                    <MudTd DataLabel="Size">@context.SizeBytes.FormatBytes()</MudTd>
+                    <MudTd DataLabel="Rotational">@context.IsRotational.FormatBool()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+<MudExpansionPanel Disabled="@(Hardware is null || Hardware.PeripheralProfiles.Count == 0)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">Peripherals</MudText>
+            @if (Hardware is not null)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @Hardware.PeripheralProfiles.Count @(Hardware.PeripheralProfiles.Count == 1 ? "device" : "devices")
+                </MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Hardware is not null)
+        {
+            <MudTable Items="@Hardware.PeripheralProfiles" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Kind</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Connected</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Kind">@context.PeripheralKind.ToString()</MudTd>
+                    <MudTd DataLabel="Name">@context.Name.FormatString()</MudTd>
+                    <MudTd DataLabel="Connected">@context.IsConnected.FormatBool()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </ChildContent>
+</MudExpansionPanel>

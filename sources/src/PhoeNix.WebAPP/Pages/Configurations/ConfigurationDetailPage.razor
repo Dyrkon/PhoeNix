@@ -1,2 +1,153 @@
 @page "/configurations/{ConfigurationId:guid}"
+@using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.Components.Configurations
 
+<MudStack Spacing="3">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+    }
+    else if (_configuration is null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            Configuration could not be loaded.
+        </MudAlert>
+    }
+    else
+    {
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h4">@_configuration.Title</MudText>
+
+            <MudButton Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Href="/configurations">
+                Back to configurations
+            </MudButton>
+        </MudStack>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4">Basic Information</MudText>
+
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">Title</MudText>
+                        <MudText Typo="Typo.body1">@_configuration.Title</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">Supported Architectures</MudText>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            @if (_configuration.SupportedArchitectures.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">None</MudText>
+                            }
+                            else
+                            {
+                                @foreach (var architecture in _configuration.SupportedArchitectures)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                                        @architecture.ToArchitectureString()
+                                    </MudChip>
+                                }
+                            }
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption">Description</MudText>
+                        <MudText Typo="Typo.body1">@_configuration.Description</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.caption">Inputs</MudText>
+                        <MudText Typo="Typo.body1">@_configuration.Inputs.Count</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.caption">Shared Modules</MudText>
+                        <MudText Typo="Typo.body1">@_configuration.Modules.Count</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.caption">Systems</MudText>
+                        <MudText Typo="Typo.body1">@_configuration.Systems.Count</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <MudExpansionPanels MultiExpansion="true" Elevation="0">
+
+            <MudExpansionPanel Disabled="@(_configuration.Inputs.Count == 0)">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Inputs</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @_configuration.Inputs.Count @(_configuration.Inputs.Count == 1 ? "input" : "inputs")
+                        </MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudTable Items="@_configuration.Inputs" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Source</MudTh>
+                            <MudTh>Followers</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Name">@context.Name</MudTd>
+                            <MudTd DataLabel="Source">
+                                <MudText Typo="Typo.body2" Style="word-break: break-all;">@context.Source</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Followers">@context.Followers.Count</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Disabled="@(_configuration.Modules.Count == 0)">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Share" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Shared Modules</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @_configuration.Modules.Count @(_configuration.Modules.Count == 1 ? "module" : "modules") applied
+                            to all systems
+                        </MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudStack Spacing="2" Class="pt-2">
+                        @foreach (var module in _configuration.Modules)
+                        {
+                            <ConfiguredModuleCard Module="@module"/>
+                        }
+                    </MudStack>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Disabled="@(_configuration.Systems.Count == 0)">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Systems</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @_configuration.Systems.Count @(_configuration.Systems.Count == 1 ? "system" : "systems")
+                        </MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudStack Spacing="2" Class="pt-2">
+                        @foreach (var system in _configuration.Systems)
+                        {
+                            <ConfiguredSystemCard System="@system"/>
+                        }
+                    </MudStack>
+                </ChildContent>
+            </MudExpansionPanel>
+
+        </MudExpansionPanels>
+    }
+</MudStack>

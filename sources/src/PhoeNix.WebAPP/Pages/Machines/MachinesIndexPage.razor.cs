@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.Application.Models.Configurations;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
 
 namespace PhoeNix.WebAPP.Pages.Machines;
 
@@ -10,12 +10,14 @@ public partial class MachinesIndexPage
     [Inject] private IConfigurationsApiClient ConfigurationsApiClient { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    private IEnumerable<ConfigurationListResponse> _configurations = [];
+    private List<ConfigurationListResponse> _configurations = [];
     private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        var configurationsResponse = await ConfigurationsApiClient.GetConfigurationsAsync();
+        var configurationsResponse =
+            await ConfigurationsApiClient.GetConfigurationsAsync(new ListConfigurationsRequest(),
+                CancellationToken.None);
 
         if (configurationsResponse.IsFailure)
         {
@@ -24,7 +26,7 @@ public partial class MachinesIndexPage
             return;
         }
 
-        _configurations = configurationsResponse.Value ?? [];
+        _configurations = configurationsResponse.Value?.Items.ToList() ?? [];
         _isLoading = false;
     }
 }

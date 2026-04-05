@@ -1,0 +1,35 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="3">
+                <MudTextField T="string"
+                              @bind-Value="_model.Title"
+                              Label="Title"
+                              Required="true"
+                              RequiredError="Title is required."/>
+
+                <MudTextField T="string"
+                              @bind-Value="_model.Description"
+                              Label="Description"
+                              Required="true"
+                              RequiredError="Description is required."
+                              Lines="4"/>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">
+            Cancel
+        </MudButton>
+
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting">
+            Create
+        </MudButton>
+    </DialogActions>
+</MudDialog>

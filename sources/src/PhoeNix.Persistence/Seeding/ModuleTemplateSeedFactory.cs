@@ -13,7 +13,10 @@ internal static class ModuleTemplateSeedFactory
         {
             CreateMinimalBaseTemplate(),
             CreateDiskoTemplate(),
-            CreatePrometheusTemplate()
+            CreatePrometheusTemplate(),
+            CreateTimezoneSyncTemplate(),
+            CreateNixFlakeSettingsTemplate(),
+            CreateNixBuildOptimisationTemplate()
         };
 
         var failure = results.FirstOrDefault(r => r.IsFailure);
@@ -194,8 +197,147 @@ internal static class ModuleTemplateSeedFactory
             });
     }
 
-    private static string pkgsCurl()
+    private static Result<ModuleTemplate> CreateTimezoneSyncTemplate()
     {
-        return "${pkgs.curl}/bin/curl";
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(
+                SeedIds.TimezoneSyncTemplate,
+                SeedPlaceholders.Timezone,
+                SeedPlaceholders.Timezone,
+                UserInputType.Text,
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text)
+        };
+
+        var content =
+            $"time.timeZone = {SeedPlaceholders.Timezone};\n" +
+            "services.timesyncd.enable = true;";
+
+        return ModuleTemplate.Create(
+                SeedIds.TimezoneSyncTemplate,
+                "TimezoneSync",
+                true,
+                ModuleType.Generic,
+                [Architecture.X86Linux, Architecture.Aarch64Linux])
+            .Tap(t => t.ChangeContent(content, definitions))
+            .Tap(t => t.AddModuleTest("timezone-sync-test"))
+            .Tap(t =>
+            {
+                var test = t.Tests.Single(x => x.Name == "timezone-sync-test");
+                var testContent =
+                    "timezoneSet = { expr = Timezone != \"\"; expected = true; };";
+                t.ChangeModuleTest(test.Id, testContent, [SeedPlaceholders.Timezone]);
+            });
+    }
+
+    // Enables flakes and the new nix CLI, configures the official binary cache and the
+    // nix-community cache so the build host doesn't have to recompile cached derivations.
+    // Applies to every system in the configuration via sharedModules.
+    private static Result<ModuleTemplate> CreateNixFlakeSettingsTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(
+                SeedIds.NixFlakeSettingsTemplate,
+                SeedPlaceholders.NixTrustedSubstituters,
+                SeedPlaceholders.NixTrustedSubstituters,
+                UserInputType.Text,
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text),
+            new(
+                SeedIds.NixFlakeSettingsTemplate,
+                SeedPlaceholders.NixTrustedPublicKeys,
+                SeedPlaceholders.NixTrustedPublicKeys,
+                UserInputType.Text,
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text)
+        };
+
+        var content =
+            "nix.settings = {\n" +
+            "  experimental-features = [ \"nix-command\" \"flakes\" ];\n" +
+            $"  substituters = {SeedPlaceholders.NixTrustedSubstituters};\n" +
+            $"  trusted-public-keys = {SeedPlaceholders.NixTrustedPublicKeys};\n" +
+            "};";
+
+        return ModuleTemplate.Create(
+                SeedIds.NixFlakeSettingsTemplate,
+                "NixFlakeSettings",
+                true,
+                ModuleType.Generic,
+                [Architecture.X86Linux, Architecture.Aarch64Linux])
+            .Tap(t => t.ChangeContent(content, definitions))
+            .Tap(t => t.AddModuleTest("nix-flake-settings-test"))
+            .Tap(t =>
+            {
+                var test = t.Tests.Single(x => x.Name == "nix-flake-settings-test");
+                var testContent =
+                    "substitutersSet = { expr = NixTrustedSubstituters != []; expected = true; };\n" +
+                    "publicKeysSet = { expr = NixTrustedPublicKeys != []; expected = true; };";
+                t.ChangeModuleTest(
+                    test.Id,
+                    testContent,
+                    [SeedPlaceholders.NixTrustedSubstituters, SeedPlaceholders.NixTrustedPublicKeys]);
+            });
+    }
+
+    // Reduces build times and prevents unbounded store growth on a long-running machine.
+    // max-jobs and cores control parallelism; auto-optimise-store deduplicates store paths
+    // on every build; the GC runs weekly and keeps the last 7 days of results.
+    // Applies to every system in the configuration via sharedModules.
+    private static Result<ModuleTemplate> CreateNixBuildOptimisationTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(
+                SeedIds.NixBuildOptimisationTemplate,
+                SeedPlaceholders.NixMaxJobs,
+                SeedPlaceholders.NixMaxJobs,
+                UserInputType.Text,
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text),
+            new(
+                SeedIds.NixBuildOptimisationTemplate,
+                SeedPlaceholders.NixCores,
+                SeedPlaceholders.NixCores,
+                UserInputType.Text,
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text)
+        };
+
+        var content =
+            "nix = {\n" +
+            "  settings = {\n" +
+            $"    max-jobs = {SeedPlaceholders.NixMaxJobs};\n" +
+            $"    cores = {SeedPlaceholders.NixCores};\n" +
+            "    auto-optimise-store = true;\n" +
+            "  };\n" +
+            "  gc = {\n" +
+            "    automatic = true;\n" +
+            "    dates = \"weekly\";\n" +
+            "    options = \"--delete-older-than 7d\";\n" +
+            "  };\n" +
+            "};";
+
+        return ModuleTemplate.Create(
+                SeedIds.NixBuildOptimisationTemplate,
+                "NixBuildOptimisation",
+                true,
+                ModuleType.Generic,
+                [Architecture.X86Linux, Architecture.Aarch64Linux])
+            .Tap(t => t.ChangeContent(content, definitions))
+            .Tap(t => t.AddModuleTest("nix-build-optimisation-test"))
+            .Tap(t =>
+            {
+                var test = t.Tests.Single(x => x.Name == "nix-build-optimisation-test");
+                var testContent =
+                    "maxJobsPositive = { expr = NixMaxJobs > 0; expected = true; };\n" +
+                    "coresPositive = { expr = NixCores > 0; expected = true; };";
+                t.ChangeModuleTest(
+                    test.Id,
+                    testContent,
+                    [SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixCores]);
+            });
     }
 }

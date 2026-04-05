@@ -1,0 +1,35 @@
+@using Humanizer
+@using PhoeNix.WebAPP.Helpers
+
+<MudExpansionPanel>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.MonitorHeart" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">Status</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Status.MachineState.Humanize()</MudText>
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        <MudGrid Class="pt-2">
+            <MudItem xs="12" sm="6" md="3">
+                <MudText Typo="Typo.caption">State</MudText>
+                <MudText Typo="Typo.body1">@Status.MachineState.Humanize()</MudText>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudText Typo="Typo.caption">Last Provisioned</MudText>
+                <MudText Typo="Typo.body1">@Status.LastProvisioned.FormatDateTime()</MudText>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudText Typo="Typo.caption">Last Orchestrated</MudText>
+                <MudText Typo="Typo.body1">@Status.LastOrchestrated.FormatDateTime()</MudText>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudText Typo="Typo.caption">Last Configured</MudText>
+                <MudText Typo="Typo.body1">@Status.LastConfigured.FormatDateTime()</MudText>
+            </MudItem>
+        </MudGrid>
+    </ChildContent>
+</MudExpansionPanel>

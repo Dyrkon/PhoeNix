@@ -8,9 +8,9 @@ public sealed class HardwareProbeOptions
 
     public string ProbeCommand { get; init; } = "nixos-facter";
 
-    public int ConnectTimeoutSeconds { get; init; } = 10;
+    public int ConnectTimeoutSeconds { get; init; } = 30;
 
-    public int ProbeTimeoutSeconds { get; init; } = 60;
+    public int ProbeTimeoutSeconds { get; init; } = 120;
 
     public bool DisableHostKeyChecking { get; init; } = true;
 }

@@ -1,6 +1,8 @@
 @page "/machines/{machineId:guid}"
 @using Humanizer
 @using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.Components.Machines
+@using PhoeNix.WebAPP.Helpers
 
 <MudStack Spacing="3">
     @if (_isLoading)
@@ -37,7 +39,8 @@
 
                     <MudItem xs="12" sm="6" md="4">
                         <MudText Typo="Typo.caption">Enabled</MudText>
-                        <MudChip T="string" Color="@(_machine.Enabled ? Color.Success : Color.Default)"
+                        <MudChip T="string"
+                                 Color="@(_machine.Enabled ? Color.Success : Color.Default)"
                                  Variant="Variant.Filled"
                                  Size="Size.Small">
                             @(_machine.Enabled ? "Enabled" : "Disabled")
@@ -46,7 +49,7 @@
 
                     <MudItem xs="12" sm="6" md="4">
                         <MudText Typo="Typo.caption">MAC Address</MudText>
-                        <MudText Typo="Typo.body1">@FormatMacAddress(_machine.MacAddress)</MudText>
+                        <MudText Typo="Typo.body1">@_machine.MacAddress.FormatMacAddress()</MudText>
                     </MudItem>
 
                     <MudItem xs="12" sm="6" md="4">
@@ -68,210 +71,30 @@
         </MudCard>
 
         <MudExpansionPanels MultiExpansion="true" Elevation="0">
-            <MudExpansionPanel Text="Status">
-                <MudGrid Class="pt-2">
-                    <MudItem xs="12" sm="6" md="3">
-                        <MudText Typo="Typo.caption">State</MudText>
-                        <MudText Typo="Typo.body1">@_machine.MachineStatus.MachineState.Humanize()</MudText>
-                    </MudItem>
 
-                    <MudItem xs="12" sm="6" md="3">
-                        <MudText Typo="Typo.caption">Last Provisioned</MudText>
-                        <MudText Typo="Typo.body1">@FormatDateTime(_machine.MachineStatus.LastProvisioned)</MudText>
-                    </MudItem>
+            <MachineStatusPanel Status="@_machine.MachineStatus"/>
 
-                    <MudItem xs="12" sm="6" md="3">
-                        <MudText Typo="Typo.caption">Last Orchestrated</MudText>
-                        <MudText Typo="Typo.body1">@FormatDateTime(_machine.MachineStatus.LastOrchestrated)</MudText>
-                    </MudItem>
+            <MachineDeploymentSnapshotPanel Snapshot="@_machine.DeploymentSnapshot"/>
 
-                    <MudItem xs="12" sm="6" md="3">
-                        <MudText Typo="Typo.caption">Last Configured</MudText>
-                        <MudText Typo="Typo.body1">@FormatDateTime(_machine.MachineStatus.LastConfigured)</MudText>
-                    </MudItem>
-                </MudGrid>
+            <MachineHardwarePanels Hardware="@_machine.HardwareProfile"/>
+
+            <MudExpansionPanel Disabled="@(_machine.SoftwareSnapshot is null)">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Terminal" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Software Snapshot</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    @if (_machine.SoftwareSnapshot is not null)
+                    {
+                        <MudText Typo="Typo.body1" Class="pt-2">
+                            Software snapshot is present.
+                        </MudText>
+                    }
+                </ChildContent>
             </MudExpansionPanel>
 
-            <MudExpansionPanel Text="Deployment Snapshot" Disabled="@(_machine.DeploymentSnapshot is null)">
-                @if (_machine.DeploymentSnapshot is not null)
-                {
-                    <MudGrid Class="pt-2 mb-4">
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Installed configuration</MudText>
-                            <MudText Typo="Typo.body2">@_machine.DeploymentSnapshot.ConfigurationTitle</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Installed system</MudText>
-                            <MudText Typo="Typo.body2">@_machine.DeploymentSnapshot.SystemName</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">IP Address</MudText>
-                            <MudText Typo="Typo.body1">@_machine.DeploymentSnapshot.IpAddress</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Provisioned At</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatDateTime(_machine.DeploymentSnapshot.ProvisionedAtUtc)</MudText>
-                        </MudItem>
-                    </MudGrid>
-
-                    <MudTable Items="@_machine.DeploymentSnapshot.DeploymentDiskBindings" Dense="true" Hover="true">
-                        <HeaderContent>
-                            <MudTh>Index</MudTh>
-                            <MudTh>Stable Device Path</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Index">@context.Index</MudTd>
-                            <MudTd DataLabel="Stable Device Path">@context.StableDevicePath</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="CPU" Disabled="@(_machine.HardwareProfile is null)">
-                @if (_machine.HardwareProfile is not null)
-                {
-                    <MudGrid Class="pt-2">
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Vendor</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatString(_machine.HardwareProfile.CpuProfile.Vendor)</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Model</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatString(_machine.HardwareProfile.CpuProfile.Model)</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Core Count</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatInt(_machine.HardwareProfile.CpuProfile.CoreCount)</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="3">
-                            <MudText Typo="Typo.caption">Thread Count</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatInt(_machine.HardwareProfile.CpuProfile.ThreadCount)</MudText>
-                        </MudItem>
-                    </MudGrid>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="Memory" Disabled="@(_machine.HardwareProfile is null)">
-                @if (_machine.HardwareProfile is not null)
-                {
-                    <MudGrid Class="pt-2 mb-4">
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudText Typo="Typo.caption">Total Memory</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatBytes(_machine.HardwareProfile.MemoryProfile.TotalBytes)</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudText Typo="Typo.caption">Slot Count</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatInt(_machine.HardwareProfile.MemoryProfile.SlotCount)</MudText>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudText Typo="Typo.caption">Occupied Slots</MudText>
-                            <MudText
-                                Typo="Typo.body1">@FormatInt(_machine.HardwareProfile.MemoryProfile.OccupiedSlotCount)</MudText>
-                        </MudItem>
-                    </MudGrid>
-
-                    <MudTable Items="@_machine.HardwareProfile.MemoryProfile.MemoryModuleProfiles" Dense="true"
-                              Hover="true">
-                        <HeaderContent>
-                            <MudTh>Slot</MudTh>
-                            <MudTh>Size</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Slot">@FormatString(context.Slot)</MudTd>
-                            <MudTd DataLabel="Size">@FormatBytes(context.SizeBytes)</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="GPUs"
-                               Disabled="@(_machine.HardwareProfile is null || _machine.HardwareProfile.GpuProfiles.Count == 0)">
-                @if (_machine.HardwareProfile is not null)
-                {
-                    <MudTable Items="@_machine.HardwareProfile.GpuProfiles" Dense="true" Hover="true">
-                        <HeaderContent>
-                            <MudTh>Vendor</MudTh>
-                            <MudTh>Model</MudTh>
-                            <MudTh>VRAM</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Vendor">@FormatString(context.Vendor)</MudTd>
-                            <MudTd DataLabel="Model">@FormatString(context.Model)</MudTd>
-                            <MudTd DataLabel="VRAM">@FormatBytes(context.VramBytes)</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="Disks"
-                               Disabled="@(_machine.HardwareProfile is null || _machine.HardwareProfile.DiskProfiles.Count == 0)">
-                @if (_machine.HardwareProfile is not null)
-                {
-                    <MudTable Items="@_machine.HardwareProfile.DiskProfiles" Dense="true" Hover="true">
-                        <HeaderContent>
-                            <MudTh>Stable Device Path</MudTh>
-                            <MudTh>Kernel Device Path</MudTh>
-                            <MudTh>Vendor</MudTh>
-                            <MudTh>Model</MudTh>
-                            <MudTh>Bus</MudTh>
-                            <MudTh>Size</MudTh>
-                            <MudTh>Rotational</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Stable Device Path">@FormatString(context.StableDevicePath)</MudTd>
-                            <MudTd DataLabel="Kernel Device Path">@FormatString(context.KernelDevicePath)</MudTd>
-                            <MudTd DataLabel="Vendor">@FormatString(context.Vendor)</MudTd>
-                            <MudTd DataLabel="Model">@FormatString(context.Model)</MudTd>
-                            <MudTd DataLabel="Bus">@FormatString(context.BusType)</MudTd>
-                            <MudTd DataLabel="Size">@FormatBytes(context.SizeBytes)</MudTd>
-                            <MudTd DataLabel="Rotational">@FormatBool(context.IsRotational)</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="Peripherals"
-                               Disabled="@(_machine.HardwareProfile is null || _machine.HardwareProfile.PeripheralProfiles.Count == 0)">
-                @if (_machine.HardwareProfile is not null)
-                {
-                    <MudTable Items="@_machine.HardwareProfile.PeripheralProfiles" Dense="true" Hover="true">
-                        <HeaderContent>
-                            <MudTh>Kind</MudTh>
-                            <MudTh>Name</MudTh>
-                            <MudTh>Connected</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Kind">@context.PeripheralKind.ToString()</MudTd>
-                            <MudTd DataLabel="Name">@FormatString(context.Name)</MudTd>
-                            <MudTd DataLabel="Connected">@FormatBool(context.IsConnected)</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudExpansionPanel>
-
-            <MudExpansionPanel Text="Software Snapshot" Disabled="@(_machine.SoftwareSnapshot is null)">
-                @if (_machine.SoftwareSnapshot is not null)
-                {
-                    <MudText Typo="Typo.body1" Class="pt-2">
-                        Software snapshot is present.
-                    </MudText>
-                }
-            </MudExpansionPanel>
         </MudExpansionPanels>
     }
 </MudStack>
