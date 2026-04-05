@@ -28,6 +28,21 @@ internal sealed class ModuleTemplateRepository : RepositoryBase<ModuleTemplate, 
             .ToListAsync(token);
     }
 
+    public async Task<IReadOnlyList<ModuleTemplate>> GetByIdsAsync(
+        IReadOnlyCollection<ModuleTemplateId> ids,
+        CancellationToken token)
+    {
+        if (ids.Count == 0)
+            return [];
+
+        return await DbContext.ModuleTemplates
+            .Include(m => m.EditableValueTypes)
+            .Include(m => m.Tests)
+            .Where(m => ids.Contains(m.Id))
+            .OrderBy(m => m.Name)
+            .ToListAsync(token);
+    }
+
     public override Task<ModuleTemplate?> GetByIdAsync(ModuleTemplateId templateId, CancellationToken token)
     {
         return DbContext.ModuleTemplates

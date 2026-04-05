@@ -18,6 +18,7 @@ public static class DependencyInjection
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
+        services.AddScoped<IConfigurationReadRepository, ConfigurationReadRepository>();
         services.AddScoped<IModuleTemplateRepository, ModuleTemplateRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMachineRepository, MachineRepository>();
@@ -49,8 +50,7 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
-                // TODO the DB shouldn't be in TMP folder
-                var dbName = Path.Combine(Path.GetTempPath(),
+                var dbName = Path.Combine("/var/lib/phoenix/db",
                     configuration.GetConnectionString("PhoeNix") ?? "phoenix.db");
                 options.UseSqlite($"Data Source={dbName}");
                 options.AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>());

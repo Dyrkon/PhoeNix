@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Application.Configurations.Queries;
+using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Domain.Entities.Configurations;
 using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
+using CreateConfigurationRequest = PhoeNix.Application.Models.Configurations.CreateConfigurationRequest;
 
 namespace Phoenix.Presentation.Configurations;
 
@@ -44,10 +46,11 @@ public sealed class ConfigurationsModule : ICarterModule
     }
 
     private static async Task<IResult> GetConfigurations(
+        [AsParameters] ListConfigurationsRequest request,
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetConfigurationsQuery(), cancellationToken);
+        var result = await sender.Send(new ListConfigurationsQuery(request), cancellationToken);
         return result.AsHttpResult();
     }
 
@@ -56,8 +59,10 @@ public sealed class ConfigurationsModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetConfigurationByIdQuery(new ConfigurationId(configurationId)),
+        var result = await sender.Send(
+            new GetConfigurationByIdQuery(new ConfigurationId(configurationId)),
             cancellationToken);
+
         return result.AsHttpResult();
     }
 
@@ -77,8 +82,11 @@ public sealed class ConfigurationsModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var command =
-            new UpdateConfigurationCommand(new ConfigurationId(configurationId), request.Title, request.Description);
+        var command = new UpdateConfigurationCommand(
+            new ConfigurationId(configurationId),
+            request.Title,
+            request.Description);
+
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
@@ -88,8 +96,7 @@ public sealed class ConfigurationsModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var command =
-            new ExportConfigurationCommand(new ConfigurationId(configurationId));
+        var command = new ExportConfigurationCommand(new ConfigurationId(configurationId));
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

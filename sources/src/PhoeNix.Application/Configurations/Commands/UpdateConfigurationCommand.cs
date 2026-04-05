@@ -14,7 +14,8 @@ public sealed record UpdateConfigurationCommand(
     string Description) : ICommand<ConfigurationResponse>;
 
 internal sealed class UpdateConfigurationHandler(
-    IConfigurationRepository configurationRepository)
+    IConfigurationRepository configurationRepository,
+    IModuleTemplateRepository moduleTemplateRepository)
     : ICommandHandler<UpdateConfigurationCommand, ConfigurationResponse>
 {
     public async Task<Result<ConfigurationResponse>> Handle(
@@ -33,6 +34,15 @@ internal sealed class UpdateConfigurationHandler(
         if (result.IsFailure)
             return Result.Failure<ConfigurationResponse>(result.Error);
 
-        return ConfigurationMappings.MapConfigurationToDto(configuration);
+        var moduleTemplateIds = configuration.Modules
+            .Select(x => x.ModuleTemplateId)
+            .Distinct()
+            .ToList();
+
+        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
+
+        var templatesById = moduleTemplates.ToDictionary(x => x.Id);
+
+        return ConfigurationMappings.MapConfigurationToDto(configuration, templatesById);
     }
 }

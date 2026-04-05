@@ -1,0 +1,57 @@
+@using PhoeNix.Application.Models.Configurations
+@using PhoeNix.Domain.Enums
+
+<MudCard Outlined="true" Class="pa-0">
+    <MudCardContent Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon
+                    Icon="@(Module.TemplateType == ModuleType.Generic ? Icons.Material.Filled.Share : Icons.Material.Filled.Memory)"
+                    Color="Color.Default"
+                    Size="Size.Small"/>
+                <MudText Typo="Typo.subtitle1">@Module.TemplateName</MudText>
+            </MudStack>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                @if (Module.RequiresSetupBindings)
+                {
+                    <MudTooltip Text="Requires setup bindings">
+                        <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" Color="Color.Warning"/>
+                    </MudTooltip>
+                }
+                <MudChip T="string"
+                         Color="@(Module.Enabled ? Color.Success : Color.Default)"
+                         Variant="Variant.Filled"
+                         Size="Size.Small">
+                    @(Module.Enabled ? "Enabled" : "Disabled")
+                </MudChip>
+            </MudStack>
+        </MudStack>
+
+        @if (Module.Entries.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No entries configured.</MudText>
+        }
+        else
+        {
+            <MudTable Items="@Module.Entries" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Kind</MudTh>
+                    <MudTh>Value</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">
+                        <MudText Typo="Typo.body2">@context.Name</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Kind">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@context.Kind</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Value">
+                        <MudText Typo="Typo.body2" Style="word-break: break-all;">@ResolveEntryValue(context)</MudText>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudCardContent>
+</MudCard>

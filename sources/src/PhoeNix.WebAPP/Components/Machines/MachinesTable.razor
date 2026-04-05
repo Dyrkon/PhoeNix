@@ -72,7 +72,7 @@
                 <CellTemplate>
                     <MudChip Color="@(context.Item.Enabled ? Color.Success : Color.Default)"
                              Variant="Variant.Filled"
-                             Size="Size.Small">
+                             Size="Size.Small" T="string">
                         @(context.Item.Enabled ? "Enabled" : "Disabled")
                     </MudChip>
                 </CellTemplate>

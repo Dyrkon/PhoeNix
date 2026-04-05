@@ -1,0 +1,50 @@
+@using PhoeNix.Domain.Enums
+
+<MudCard Outlined="true">
+    <MudCardContent>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-1">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Default"/>
+                <MudText Typo="Typo.h6">@System.Name</MudText>
+            </MudStack>
+
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
+                @System.Architecture.ToArchitectureString()
+            </MudChip>
+        </MudStack>
+
+        <MudDivider Class="mb-3"/>
+
+        @if (System.Modules.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No modules configured for this system.</MudText>
+        }
+        else
+        {
+            <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                @foreach (var module in System.Modules)
+                {
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Typo="Typo.body1">@module.TemplateName</MudText>
+                                <MudChip T="string"
+                                         Color="@(module.Enabled ? Color.Success : Color.Default)"
+                                         Variant="Variant.Text"
+                                         Size="Size.Small">
+                                    @(module.Enabled ? "Enabled" : "Disabled")
+                                </MudChip>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
+                                </MudText>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <ConfiguredModuleCard Module="@module"/>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        }
+    </MudCardContent>
+</MudCard>

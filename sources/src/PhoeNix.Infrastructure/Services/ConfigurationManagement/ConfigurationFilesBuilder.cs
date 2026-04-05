@@ -16,7 +16,7 @@ public class ConfigurationFilesBuilder(
             $"{s.Id.ToStringWithPrefix()} = import ./{confLayout.SystemPath(s.Id, s.Architecture)} {{ inherit inputs sharedModules lib; }};\n");
 
         var sharedModulesList = configurationBuild.CommonModules.Aggregate("",
-            (current, m) => current + $"./{confLayout.SharedModulePath(m.Id)}");
+            (current, m) => current + $" ./{confLayout.SharedModulePath(m.Id)}");
 
         var checksPaths = string.Empty;
 

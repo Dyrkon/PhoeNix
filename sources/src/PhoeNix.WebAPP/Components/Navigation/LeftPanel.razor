@@ -9,12 +9,16 @@
         </MudDrawerHeader>
     }
     <MudNavMenu>
-        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Article" IconColor="Color.Primary">Nix
-            configurations
-        </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary"
                     OnClick="NavigationManager.NavigateToMachineIndex">
             Machines
+        </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary">
+            Setup sessions
+        </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Article" IconColor="Color.Primary"
+                    OnClick="NavigationManager.NavigateToConfigurationIndex">Nix
+            configurations
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.AutoAwesomeMotion"
                     IconColor="Color.Primary">Templates

@@ -3,7 +3,6 @@ using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
-using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Configurations.Queries;
@@ -11,7 +10,8 @@ namespace PhoeNix.Application.Configurations.Queries;
 public sealed record GetConfigurationByIdQuery(ConfigurationId ConfigurationId) : IQuery<ConfigurationResponse>;
 
 internal sealed class GetConfigurationByIdHandler(
-    IConfigurationRepository configurationRepository)
+    IConfigurationRepository configurationRepository,
+    IModuleTemplateRepository moduleTemplateRepository)
     : IQueryHandler<GetConfigurationByIdQuery, ConfigurationResponse>
 {
     public async Task<Result<ConfigurationResponse>> Handle(
@@ -22,8 +22,23 @@ internal sealed class GetConfigurationByIdHandler(
             request.ConfigurationId,
             cancellationToken);
 
-        return configuration
-            .EnsureNotNull(ConfigurationErrors.NotFound(request.ConfigurationId))
-            .Map(ConfigurationMappings.MapConfigurationToDto);
+        if (configuration is null)
+            return Result.Failure<ConfigurationResponse>(
+                ConfigurationErrors.NotFound(request.ConfigurationId));
+
+        var moduleTemplateIds = configuration.Modules
+            .Select(module => module.ModuleTemplateId)
+            .Concat(configuration.SystemSpecifications.SelectMany(system => system.Modules.Select(module => module.ModuleTemplateId)))
+            .Distinct()
+            .ToList();
+
+        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(
+            moduleTemplateIds,
+            cancellationToken);
+
+        var templatesById = moduleTemplates.ToDictionary(template => template.Id);
+
+        return Result.Success(
+            ConfigurationMappings.MapConfigurationToDto(configuration, templatesById));
     }
 }

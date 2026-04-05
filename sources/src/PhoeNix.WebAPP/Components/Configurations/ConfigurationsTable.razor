@@ -1,5 +1,51 @@
-<h3>ConfigurationTable</h3>
+@using MudBlazor
 
-@code {
-    
-}
+<MudPaper Class="pa-4" Elevation="0">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h6">Configurations</MudText>
+
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       OnClick="OpenCreateDialogAsync"/>
+    </MudStack>
+
+    <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
+        <MudTextField T="string"
+                      Value="_search"
+                      ValueChanged="OnSearchChangedAsync"
+                      Label="Search"
+                      Placeholder="Search by title or description"
+                      Immediate="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true"/>
+    </MudStack>
+
+    <MudDataGrid T="ConfigurationTableRow"
+                 @ref="_dataGrid"
+                 ServerData="LoadServerDataAsync"
+                 Dense="true"
+                 Hover="true"
+                 ReadOnly="true"
+                 Filterable="false"
+                 SortMode="SortMode.Single"
+                 Elevation="0"
+                 RowClick="OnRowClickAsync">
+
+        <Columns>
+            <PropertyColumn Property="x => x.Title" Title="Title" Sortable="true"/>
+            <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true"/>
+        </Columns>
+
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="pa-4">
+                No configurations found.
+            </MudText>
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudDataGridPager T="ConfigurationTableRow"/>
+        </PagerContent>
+    </MudDataGrid>
+</MudPaper>

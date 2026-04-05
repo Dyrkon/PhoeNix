@@ -1,0 +1,56 @@
+@using PhoeNix.Application.Models.Machines
+@using PhoeNix.WebAPP.Helpers
+
+<MudExpansionPanel Disabled="@(Snapshot is null)">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.CloudDone" Size="Size.Small"/>
+            <MudText Typo="Typo.body1">Deployment Snapshot</MudText>
+            @if (Snapshot is not null)
+            {
+                <MudText Typo="Typo.caption"
+                         Class="mud-text-secondary">@Snapshot.ConfigurationTitle / @Snapshot.SystemName</MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <ChildContent>
+        @if (Snapshot is not null)
+        {
+            <MudGrid Class="pt-2 mb-4">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Installed Configuration</MudText>
+                    <MudText Typo="Typo.body2">@Snapshot.ConfigurationTitle</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Installed System</MudText>
+                    <MudText Typo="Typo.body2">@Snapshot.SystemName</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">IP Address</MudText>
+                    <MudText Typo="Typo.body1">@Snapshot.IpAddress</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.caption">Provisioned At</MudText>
+                    <MudText Typo="Typo.body1">@Snapshot.ProvisionedAtUtc.FormatDateTime()</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudTable Items="@Snapshot.DeploymentDiskBindings" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Index</MudTh>
+                    <MudTh>Stable Device Path</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Index">@context.Index</MudTd>
+                    <MudTd DataLabel="Stable Device Path">
+                        <MudText Typo="Typo.body2" Style="word-break: break-all;">@context.StableDevicePath</MudText>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+

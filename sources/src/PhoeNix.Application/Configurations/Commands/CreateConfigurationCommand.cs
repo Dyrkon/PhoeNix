@@ -3,6 +3,7 @@ using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -22,9 +23,12 @@ internal sealed class CreateConfigurationHandler(
     {
         var configurationId = new ConfigurationId(Guid.NewGuid());
 
+
         var result = Configuration.Create(configurationId, request.Title, request.Description)
             .Tap(configurationRepository.Add)
-            .Map(ConfigurationMappings.MapConfigurationToDto);
+            .Map(configuration =>
+                ConfigurationMappings.MapConfigurationToDto(configuration,
+                    new Dictionary<ModuleTemplateId, ModuleTemplate>()));
 
         return Task.FromResult(result);
     }

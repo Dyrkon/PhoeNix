@@ -1,10 +1,10 @@
 using Humanizer;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Models.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.Extensions;
 using Architecture = PhoeNix.Domain.Enums.Architecture;
 
@@ -17,7 +17,7 @@ public partial class MachinesTable : ComponentBase
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    [Parameter] public IEnumerable<ConfigurationListResponse> Configurations { get; set; } = [];
+    [Parameter] public List<ConfigurationListResponse> Configurations { get; set; } = [];
 
     private MudDataGrid<MachineTableRow>? _dataGrid;
 
