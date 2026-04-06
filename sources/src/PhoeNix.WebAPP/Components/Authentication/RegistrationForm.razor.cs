@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Components.Authentication;
@@ -42,7 +43,7 @@ public partial class RegistrationForm : ComponentBase
         }
 
         UserState.SetCurrentUser(result.Value);
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateToHome();
     }
 
     private sealed class RegistrationModel

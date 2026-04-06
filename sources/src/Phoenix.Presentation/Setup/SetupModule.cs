@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Application.Setup.Queries;
+using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
@@ -21,11 +22,18 @@ public sealed class SetupModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/setup/session/start", StartSetupSession)
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces<string>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
         app.MapPost("/setup/session/{sessionId:guid}/machine/{machineId:guid}/start", StartMachineProvisioning)
             .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        app.MapGet("/setup/sessions", GetSetupSessions)
+            .Produces<PagedResponse<SetupSessionListResponse>>(StatusCodes.Status200OK);
+
+        app.MapGet("/setup/session/{sessionId:guid}", GetSetupSessionDetail)
+            .Produces<SetupSessionDetailResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/v1/boot/{mac}", ProvideMachineBootDetails)
@@ -87,6 +95,31 @@ public sealed class SetupModule : ICarterModule
             new SystemId(request.SystemId));
 
         var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> GetSetupSessions(
+        int page,
+        int pageSize,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new GetSetupSessions(new SetupSessionsRequest(page == 0 ? 1 : page, pageSize == 0 ? 10 : pageSize, null)),
+            cancellationToken);
+
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> GetSetupSessionDetail(
+        Guid sessionId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new GetSetupSessionDetail(new SetupSessionId(sessionId)),
+            cancellationToken);
+
         return result.AsHttpResult();
     }
 
@@ -207,7 +240,7 @@ public sealed class SetupModule : ICarterModule
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(
-            new GetSetupStatusQuery(
+            new GetSetupMachineStatusQuery(
                 new SetupSessionId(sessionId),
                 new MachineId(machineId)),
             cancellationToken);

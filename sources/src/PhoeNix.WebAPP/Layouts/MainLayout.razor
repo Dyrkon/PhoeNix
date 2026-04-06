@@ -5,17 +5,19 @@
 @inject IAuthenticationApiClient AuthenticationApiClient
 
 <CascadingValue Value="_userState">
-    <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
-    <MudPopoverProvider/>
-    <MudDialogProvider/>
-    <MudSnackbarProvider/>
-    <MudLayout>
-        <LeftPanel></LeftPanel>
-        <AppBar></AppBar>
-        <MudMainContent Class="pt-4" style="min-height: 96vh">
-            <MudContainer MaxWidth="MaxWidth.False" Class="mt-2 h-100">
-                @Body
-            </MudContainer>
-        </MudMainContent>
-    </MudLayout>
+    <CascadingValue Value="_setupSessionsState">
+        <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
+        <MudPopoverProvider/>
+        <MudDialogProvider/>
+        <MudSnackbarProvider/>
+        <MudLayout>
+            <LeftPanel></LeftPanel>
+            <AppBar></AppBar>
+            <MudMainContent Class="pt-4" style="min-height: 96vh">
+                <MudContainer MaxWidth="MaxWidth.False" Class="mt-2 h-100">
+                    @Body
+                </MudContainer>
+            </MudMainContent>
+        </MudLayout>
+    </CascadingValue>
 </CascadingValue>

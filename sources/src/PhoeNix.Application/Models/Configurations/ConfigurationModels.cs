@@ -17,12 +17,11 @@ public enum ConfigurationSortField
 }
 
 public sealed record ListConfigurationsRequest(
-    ConfigurationSortField SortField = ConfigurationSortField.Title,
     int Page = 1,
-    int PageSize = 10,
+    int PageSize = 15,
     string? Search = null,
-    SortDirection SortDirection = SortDirection.Ascending)
-    : ListRequestBase(Page, PageSize, Search, SortDirection);
+    ConfigurationSortField SortField = ConfigurationSortField.Title,
+    SortDirection SortDirection = SortDirection.Ascending);
 
 public sealed record ConfigurationResponse(
     Guid Id,

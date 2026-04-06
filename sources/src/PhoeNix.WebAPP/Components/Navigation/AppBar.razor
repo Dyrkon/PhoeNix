@@ -1,2 +1,22 @@
 <MudAppBar Color="Color.Primary" Fixed="false" Elevation="1" Style="height: 4vh">
+    <MudSpacer/>
+
+    @if (SetupSessionsState.ActiveSession is { } session)
+    {
+        <MudTooltip Text="@($"Session started {session.StartTime.ToLocalTime():yyyy-MM-dd HH:mm:ss}")">
+            <MudChip T="string"
+                     Icon="@Icons.Material.Filled.SettingsEthernet"
+                     Color="Color.Warning"
+                     Variant="Variant.Filled"
+                     Size="Size.Small"
+                     Href="@($"/setup/{session.SessionId}")"
+                     Class="mr-2">
+                Setup active — @session.TargetsDone/@session.TargetsTotal done
+                @if (session.TargetsFailed > 0)
+                {
+                    <text>, @session.TargetsFailed failed</text>
+                }
+            </MudChip>
+        </MudTooltip>
+    }
 </MudAppBar>

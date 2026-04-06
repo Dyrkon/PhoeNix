@@ -10,15 +10,11 @@ using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Systems;
 
-public class SystemsModule : CarterModule
+public class SystemsModule : ICarterModule
 {
-    public SystemsModule() : base("/systems")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-    }
-
-    public override void AddRoutes(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/{configurationId:guid}/system/{systemId:guid}/validate", ValidateSystem)
+        app.MapGet("/systems/{configurationId:guid}/system/{systemId:guid}/validate", ValidateSystem)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
     }

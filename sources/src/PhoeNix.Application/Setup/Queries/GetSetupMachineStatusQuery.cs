@@ -7,14 +7,14 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Setup.Queries;
 
-public record GetSetupStatusQuery(SetupSessionId SessionId, MachineId MachineId) : IQuery<SetupStatusResponse>;
+public record GetSetupMachineStatusQuery(SetupSessionId SessionId, MachineId MachineId) : IQuery<SetupStatusResponse>;
 
 internal sealed class GetMachineStatusQueryHandler(
     ISetupSessionRepository setupSessionRepository)
-    : IQueryHandler<GetSetupStatusQuery, SetupStatusResponse>
+    : IQueryHandler<GetSetupMachineStatusQuery, SetupStatusResponse>
 {
     public async Task<Result<SetupStatusResponse>> Handle(
-        GetSetupStatusQuery request,
+        GetSetupMachineStatusQuery request,
         CancellationToken cancellationToken)
     {
         var session = await setupSessionRepository.GetByIdAsync(request.SessionId, cancellationToken);

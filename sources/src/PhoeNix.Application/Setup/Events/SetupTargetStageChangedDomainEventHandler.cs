@@ -4,7 +4,7 @@ using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Events;
 
-namespace PhoeNix.Application.Setup.EventHandlers;
+namespace PhoeNix.Application.Setup.Events;
 
 internal sealed class SetupTargetStageChangedDomainEventHandler(
     ISender sender,

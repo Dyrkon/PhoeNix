@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Models.Machines;
+using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.Extensions;
@@ -31,12 +32,12 @@ public partial class MachinesTable : ComponentBase
     {
         var request = new ListMachinesRequest(
             MapSortField(state),
-            _enabled,
-            _architecture,
-            _machineState,
             state.Page + 1,
             state.PageSize,
             _search,
+            _enabled,
+            _architecture,
+            _machineState,
             MapSortDirection(state));
 
         var response = await MachinesApiClient.GetMachinesAsync(request);
@@ -148,7 +149,7 @@ public partial class MachinesTable : ComponentBase
         };
     }
 
-    private static PhoeNix.Common.Models.SortDirection MapSortDirection(GridState<MachineTableRow> state)
+    private static Common.Models.SortDirection MapSortDirection(GridState<MachineTableRow> state)
     {
         var sortDefinition = state.SortDefinitions.FirstOrDefault();
 

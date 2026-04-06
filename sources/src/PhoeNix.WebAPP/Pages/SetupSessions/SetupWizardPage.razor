@@ -1,0 +1,244 @@
+@page "/setup/new"
+@using PhoeNix.WebAPP.Extensions
+@using PhoeNix.Domain.Enums
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.h4">New Setup Session</MudText>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="/setup">
+            Back to sessions
+        </MudButton>
+    </MudStack>
+
+    @if (_sessionStartError is not null)
+    {
+        <MudAlert Severity="Severity.Error">
+            Session failed to start: @_sessionStartError
+            <MudText Typo="Typo.body2">You will not be able to register machines until this is resolved.</MudText>
+        </MudAlert>
+    }
+
+    <MudCard>
+        <MudCardContent>
+            <MudStepper @bind-ActiveIndex="_activeStep"
+                        Linear="true"
+                        Color="Color.Primary"
+                        CompletedStepColor="Color.Success"
+                        CurrentStepColor="Color.Primary">
+
+                <ActionContent Context="stepper">
+                    @if (_activeStep < 4)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                       Color="Color.Default"
+                                       Disabled="@(_activeStep == 0)"
+                                       OnClick="@(() => stepper.PreviousStepAsync())"/>
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@(!CanAdvance)"
+                                   EndIcon="@(_activeStep == 3 ? Icons.Material.Filled.Check : Icons.Material.Filled.ArrowForward)"
+                                   OnClick="@(() => NextStepAsync(stepper))">
+                            @(_activeStep == 3 ? "Confirm" : "Next")
+                        </MudButton>
+                    }
+                </ActionContent>
+
+                <ChildContent>
+                    <MudStep Title="Select Machines" Icon="@Icons.Material.Filled.Computer">
+                        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                            Select the machines you want to provision in this session.
+                        </MudText>
+
+                        @if (_machinesLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto my-4"/>
+                        }
+                        else
+                        {
+                            <MudDataGrid T="MachineSelectionRow"
+                                         Items="@_availableMachines"
+                                         MultiSelection="true"
+                                         @bind-SelectedItems="_selectedMachineItems"
+                                         Dense="true"
+                                         Hover="true"
+                                         Elevation="0">
+                                <Columns>
+                                    <SelectColumn T="MachineSelectionRow"/>
+                                    <PropertyColumn Property="x => x.Title" Title="Title"/>
+                                    <PropertyColumn Property="x => x.MacAddress.ToMacFormat()" Title="MAC Address"/>
+                                    <PropertyColumn Property="x => x.Architecture.ToArchitectureString()"
+                                                    Title="Architecture"/>
+                                </Columns>
+                                <NoRecordsContent>
+                                    <MudText Typo="Typo.body2" Class="pa-4">No machines available.</MudText>
+                                </NoRecordsContent>
+                            </MudDataGrid>
+                        }
+                    </MudStep>
+
+                    <MudStep Title="Select Configurations" Icon="@Icons.Material.Filled.FolderOpen">
+                        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                            Select which configurations to use. Only systems within these configurations
+                            will be available for machine assignment.
+                        </MudText>
+
+                        @if (_configurationsLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto my-4"/>
+                        }
+                        else
+                        {
+                            <MudDataGrid T="ConfigurationSelectionRow"
+                                         Items="@_availableConfigurations"
+                                         MultiSelection="true"
+                                         @bind-SelectedItems="_selectedConfigurationItems"
+                                         Dense="true"
+                                         Hover="true"
+                                         Elevation="0">
+                                <Columns>
+                                    <SelectColumn T="ConfigurationSelectionRow"/>
+                                    <PropertyColumn Property="x => x.Title" Title="Title"/>
+                                    <PropertyColumn Property="x => x.Description" Title="Description"/>
+                                </Columns>
+                                <NoRecordsContent>
+                                    <MudText Typo="Typo.body2" Class="pa-4">No configurations available.</MudText>
+                                </NoRecordsContent>
+                            </MudDataGrid>
+                        }
+                    </MudStep>
+
+                    <MudStep Title="Assign Systems" Icon="@Icons.Material.Filled.Settings">
+                        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                            Choose which NixOS system to install on each machine.
+                        </MudText>
+
+                        @if (_configurationsDetailLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto my-4"/>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="3">
+                                @foreach (var assignment in _machineAssignments)
+                                {
+                                    <MudCard Outlined="true">
+                                        <MudCardContent>
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
+                                                      Class="mb-3">
+                                                <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small"/>
+                                                <MudText Typo="Typo.subtitle1">@assignment.MachineTitle</MudText>
+                                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                    @assignment.MacAddress.ToMacFormat()
+                                                </MudText>
+                                            </MudStack>
+
+                                            <MudSelect T="SystemOption?"
+                                                       Label="System"
+                                                       Value="assignment.SelectedSystem"
+                                                       ValueChanged="s => OnSystemSelected(assignment, s)"
+                                                       Variant="Variant.Outlined"
+                                                       Dense="true"
+                                                       ToStringFunc="@(s => s is null ? string.Empty : s.DisplayName)">
+                                                @foreach (var system in _availableSystems)
+                                                {
+                                                    <MudSelectItem T="SystemOption?" Value="@system">
+                                                        @system.DisplayName
+                                                    </MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            </MudStack>
+                        }
+                    </MudStep>
+
+                    <MudStep Title="Review" Icon="@Icons.Material.Filled.Checklist">
+                        <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+                            Confirm what will be installed on each machine. Once started this cannot be changed.
+                        </MudText>
+
+                        <MudTable Items="@_machineAssignments" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Machine</MudTh>
+                                <MudTh>MAC Address</MudTh>
+                                <MudTh>Configuration</MudTh>
+                                <MudTh>System</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Machine">@context.MachineTitle</MudTd>
+                                <MudTd DataLabel="MAC Address">@context.MacAddress.ToMacFormat()</MudTd>
+                                <MudTd DataLabel="Configuration">
+                                    @(context.SelectedSystem?.ConfigurationTitle ?? "-")
+                                </MudTd>
+                                <MudTd DataLabel="System">@(context.SelectedSystem?.SystemName ?? "-")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudStep>
+
+                    <MudStep Title="Start" Icon="@Icons.Material.Filled.RocketLaunch">
+                        @if (_sessionStarting)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
+                                <MudProgressCircular Indeterminate="true" Size="Size.Large"
+                                                     Color="Color.Primary"/>
+                                <MudText Typo="Typo.body1">Waiting for session to be ready...</MudText>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    The bootstrap image is still being built. This will unblock automatically.
+                                </MudText>
+                            </MudStack>
+                        }
+                        else if (_registering)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
+                                <MudProgressCircular Indeterminate="true" Size="Size.Large"
+                                                     Color="Color.Primary"/>
+                                <MudText Typo="Typo.body1">@_registerStatus</MudText>
+                            </MudStack>
+                        }
+                        else if (_registerError is not null)
+                        {
+                            <MudStack Spacing="2" Class="py-4">
+                                <MudAlert Severity="Severity.Error" Dense="true">@_registerError</MudAlert>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    The session has been started. You can retry or go directly to the session.
+                                </MudText>
+                                <MudStack Row="true" Spacing="2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                               OnClick="RegisterMachinesAsync">
+                                        Retry
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" OnClick="NavigateToSession">
+                                        Go to session
+                                    </MudButton>
+                                </MudStack>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
+                                <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Size="Size.Large"
+                                         Color="Color.Primary"/>
+                                <MudText Typo="Typo.body1">Ready to start provisioning.</MudText>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    The PXE host is running. Machines will boot from the network once powered on.
+                                </MudText>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Large"
+                                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                                           OnClick="RegisterMachinesAsync">
+                                    Register Machines and Start
+                                </MudButton>
+                            </MudStack>
+                        }
+                    </MudStep>
+
+                </ChildContent>
+            </MudStepper>
+        </MudCardContent>
+    </MudCard>
+</MudStack>

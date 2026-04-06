@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.Extensions;
 
 namespace PhoeNix.WebAPP.Helpers;
@@ -31,6 +32,12 @@ internal static class MachineDisplayFormatters
             true => "Yes",
             false => "No"
         };
+    }
+
+    public static string FormatArchitectureString(this string value)
+    {
+        var result = Enum.TryParse(value, true, out Architecture architecture);
+        return !result ? "Unknown" : architecture.ToArchitectureString();
     }
 
     public static string FormatDateTime(this DateTime? value)
