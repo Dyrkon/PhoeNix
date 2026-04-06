@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Components.Authentication;
@@ -39,7 +40,7 @@ public partial class LoginForm : ComponentBase
             return;
         }
 
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateToHome();
     }
 
     private sealed class LoginModel

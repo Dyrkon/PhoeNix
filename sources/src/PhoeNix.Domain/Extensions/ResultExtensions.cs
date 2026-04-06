@@ -1,3 +1,4 @@
+using PhoeNix.Common.Models;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Domain.Extensions;
@@ -179,6 +180,15 @@ public static class ResultExtensions
     public static Result<TIn> EnsureNotNull<TIn>(this TIn? obj, Error? error = null)
     {
         return obj is null ? Result.Failure<TIn>(error ?? Error.NullValue) : Result.Success(obj);
+    }
+
+    public static async Task<Result<PagedResponse<TIn>>> EnsurePagedNotEmpty<TIn>(this Task<PagedResponse<TIn>> objTask,
+        Error? error = null)
+    {
+        var obj = await objTask;
+        return obj.Items is []
+            ? Result.Failure<PagedResponse<TIn>>(error ?? Error.NullValue)
+            : Result.Success(obj);
     }
 
     public static Result<TIn> Ensure<TIn>(this Result<TIn> result, Func<TIn, bool> predicate, Error error)

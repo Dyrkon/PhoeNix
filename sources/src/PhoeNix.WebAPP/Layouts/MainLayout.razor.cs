@@ -11,15 +11,19 @@ public partial class MainLayout
 {
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IAuthenticationInvalidationNotifier AuthenticationInvalidationNotifier { get; set; } = null!;
+    [Inject] private ISetupApiClient SetupApiClient { get; set; } = null!;
 
     private bool _isDarkMode;
     private MudTheme? _theme;
     private readonly UserState _userState = new();
+    private SetupSessionsState _setupSessionsState = null!;
 
     protected override async Task OnInitializedAsync()
     {
         _userState.Changed += OnUserStateChanged;
         AuthenticationInvalidationNotifier.AuthenticationInvalidated += OnAuthenticationInvalidated;
+
+        _setupSessionsState = new SetupSessionsState(SetupApiClient);
 
         _theme = new MudTheme
         {

@@ -1,0 +1,132 @@
+@page "/setup/{sessionId:guid}"
+@using Humanizer
+@using PhoeNix.WebAPP.Components.SetupSessions
+
+<MudStack Spacing="3">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+    }
+    else if (_session is null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">Setup session could not be loaded.</MudAlert>
+    }
+    else
+    {
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">Setup Session</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @_session.SessionId.ToString()
+                </MudText>
+            </MudStack>
+
+            <MudStack Row="true" Spacing="2">
+                @if (_isActive)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="OpenCancelDialogAsync">
+                        Cancel Session
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/setup">
+                    Back to sessions
+                </MudButton>
+            </MudStack>
+        </MudStack>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4">Session Information</MudText>
+
+                <MudGrid>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudText Typo="Typo.caption">Started</MudText>
+                        <MudText
+                            Typo="Typo.body1">@_session.StartTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudText Typo="Typo.caption">Status</MudText>
+                        <MudChip T="string"
+                                 Color="@(_isActive ? Color.Warning : _hasFailed ? Color.Error : Color.Success)"
+                                 Variant="Variant.Filled"
+                                 Size="Size.Small">
+                            @(_isActive ? "Active" : _hasFailed ? "Completed with errors" : "Completed")
+                        </MudChip>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudText Typo="Typo.caption">Machines</MudText>
+                        <MudText Typo="Typo.body1">
+                            @_doneMachines/@_session.Targets.Count done
+                            @if (_failedMachines > 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Error" Inline="true">
+                                    (@_failedMachines failed)
+                                </MudText>
+                            }
+                        </MudText>
+                    </MudItem>
+
+                    @if (_session.CredentialsExpireAt.HasValue)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudText Typo="Typo.caption">Credentials Expire</MudText>
+                            <MudText
+                                Typo="Typo.body1">@_session.CredentialsExpireAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                        </MudItem>
+                    }
+                </MudGrid>
+
+                @if (_isActive)
+                {
+                    <MudProgressLinear Value="@_progressPercent"
+                                       Color="Color.Primary"
+                                       Rounded="true"
+                                       Class="mt-4"
+                                       Style="height: 8px;"/>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
+                        Auto-refreshing every 5 seconds
+                    </MudText>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudExpansionPanels MultiExpansion="true" Elevation="0">
+            @foreach (var target in _session.Targets)
+            {
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@StageIcon(target.SetupStage)" Size="Size.Small"
+                                     Color="@StageColor(target.SetupStage)"/>
+                            <MudText
+                                Typo="Typo.body1">@(target.SelectedConfiguration ?? target.MachineId.ToString())</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@target.SelectedSystem</MudText>
+                            <MudChip T="string"
+                                     Color="@StageColor(target.SetupStage)"
+                                     Variant="Variant.Text"
+                                     Size="Size.Small">
+                                @target.SetupStage.Humanize()
+                            </MudChip>
+                            @if (target.LastErrorCode is not null)
+                            {
+                                <MudChip T="string" Color="Color.Error" Variant="Variant.Text" Size="Size.Small">
+                                    Error
+                                </MudChip>
+                            }
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        <SetupTargetCard Target="@target"/>
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+</MudStack>

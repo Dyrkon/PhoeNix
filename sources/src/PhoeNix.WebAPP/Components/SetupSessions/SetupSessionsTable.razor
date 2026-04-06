@@ -1,0 +1,67 @@
+@using PhoeNix.Application.Models.Setup
+
+<MudPaper Class="pa-4" Elevation="0">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h6">Setup Sessions</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/setup/new">
+            New Session
+        </MudButton>
+    </MudStack>
+
+    <MudDataGrid T="SetupSessionTableRow"
+                 @ref="_dataGrid"
+                 ServerData="LoadServerDataAsync"
+                 Dense="true"
+                 Hover="true"
+                 ReadOnly="true"
+                 Filterable="false"
+                 SortMode="SortMode.None"
+                 Elevation="0"
+                 RowClick="OnRowClickAsync">
+
+        <Columns>
+            <PropertyColumn Property="x => x.StartTime" Title="Started"/>
+            <PropertyColumn Property="x => x.TargetsTotal" Title="Machines"/>
+            <TemplateColumn Title="Progress">
+                <CellTemplate>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.body2">
+                            @context.Item.TargetsDone/@context.Item.TargetsTotal done
+                        </MudText>
+                        @if (context.Item.TargetsFailed > 0)
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Text">
+                                @context.Item.TargetsFailed failed
+                            </MudChip>
+                        }
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Status">
+                <CellTemplate>
+                    @{
+                        var isActive = context.Item.TargetsDone + context.Item.TargetsFailed < context.Item.TargetsTotal;
+                    }
+                    <MudChip T="string"
+                             Color="@(isActive ? Color.Warning : context.Item.TargetsFailed > 0 ? Color.Error : Color.Success)"
+                             Size="Size.Small"
+                             Variant="Variant.Filled">
+                        @(isActive ? "Active" : context.Item.TargetsFailed > 0 ? "Completed with errors" : "Completed")
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="pa-4">No setup sessions found.</MudText>
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudDataGridPager T="SetupSessionTableRow"/>
+        </PagerContent>
+    </MudDataGrid>
+</MudPaper>

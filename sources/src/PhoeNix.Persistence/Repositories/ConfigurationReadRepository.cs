@@ -4,6 +4,7 @@ using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Persistence.Extensions;
 
 namespace PhoeNix.Persistence.Repositories;
 
@@ -59,6 +60,19 @@ public sealed class ConfigurationReadRepository(
         var templatesById = moduleTemplates.ToDictionary(template => template.Id);
 
         return ConfigurationMappings.MapConfigurationToDto(configuration, templatesById);
+    }
+
+    public async Task<IReadOnlyList<Configuration>> GetByIdsAsync(IReadOnlyCollection<ConfigurationId> ids,
+        CancellationToken token)
+    {
+        if (ids.Count == 0)
+            return [];
+
+        return await dbContext.Configurations
+            .AddIncludeStatements()
+            .Where(m => ids.Contains(m.Id))
+            .OrderBy(m => m.Title)
+            .ToListAsync(token);
     }
 
     private static IQueryable<Configuration> ApplyFilters(

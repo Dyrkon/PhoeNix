@@ -4,6 +4,11 @@ namespace PhoeNix.WebAPP.Extensions;
 
 public static class NavigationExtensions
 {
+    public static void NavigateToHome(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo("/");
+    }
+
     public static void NavigateToLogin(this NavigationManager navigationManager)
     {
         navigationManager.NavigateTo("/login");
@@ -32,5 +37,15 @@ public static class NavigationExtensions
     public static void NavigateToConfigurationDetail(this NavigationManager navigationManager, Guid configurationId)
     {
         navigationManager.NavigateTo($"/configurations/{configurationId}");
+    }
+
+    public static void NavigateToSetupSessions(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/setup");
+    }
+
+    public static void NavigateToSetupSessionDetail(this NavigationManager navigationManager, Guid setupSessionId)
+    {
+        navigationManager.NavigateTo($"/setup/{setupSessionId}");
     }
 }

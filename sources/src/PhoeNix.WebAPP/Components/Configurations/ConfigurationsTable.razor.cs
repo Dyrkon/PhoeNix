@@ -23,10 +23,10 @@ public partial class ConfigurationsTable : ComponentBase
         CancellationToken cancellationToken)
     {
         var request = new ListConfigurationsRequest(
-            MapSortField(state),
             state.Page + 1,
             state.PageSize,
             _search,
+            MapSortField(state),
             MapSortDirection(state));
 
         var response = await ConfigurationsApiClient.GetConfigurationsAsync(request, cancellationToken);

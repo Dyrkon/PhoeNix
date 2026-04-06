@@ -57,10 +57,10 @@ public sealed class MachineReadRepository(
     {
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var search = request.Search.Trim().ToLower();
+            var search = request.Search?.Trim().ToLower();
 
             query = query.Where(machine =>
-                machine.Title.ToLower().Contains(search));
+                machine.Title.ToLower().Contains(search ?? ""));
         }
 
         if (request.Enabled.HasValue)

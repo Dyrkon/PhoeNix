@@ -13,4 +13,8 @@ public interface IConfigurationReadRepository
     Task<ConfigurationResponse?> GetByIdAsync(
         ConfigurationId configurationId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Configuration>> GetByIdsAsync(
+        IReadOnlyCollection<ConfigurationId> ids,
+        CancellationToken token);
 }

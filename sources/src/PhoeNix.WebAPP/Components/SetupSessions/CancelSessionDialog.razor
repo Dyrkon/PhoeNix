@@ -1,0 +1,33 @@
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning"/>
+            <MudText Typo="Typo.h6">Cancel Setup Session</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            @if (RunningMachineCount > 0)
+            {
+                <text>
+                    <strong>@RunningMachineCount @(RunningMachineCount == 1 ? "machine is" : "machines are")</strong>
+                    still being provisioned. Cancelling the session will stop the PXE boot host and
+                    those machines may be left in an incomplete state.
+                </text>
+            }
+            else
+            {
+                <text>All machines have finished. Cancelling will stop the session and the PXE boot host.</text>
+            }
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+            This action cannot be undone.
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Keep Running</MudButton>
+        <MudButton OnClick="Confirm" Color="Color.Error" Variant="Variant.Filled">
+            Cancel Session
+        </MudButton>
+    </DialogActions>
+</MudDialog>

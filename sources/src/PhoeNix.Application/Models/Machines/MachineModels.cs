@@ -14,14 +14,13 @@ public record CreateMachineRequest(
 
 public sealed record ListMachinesRequest(
     MachineSortField SortField = MachineSortField.Title,
+    int Page = 1,
+    int PageSize = 15,
+    string? Search = null,
     bool? Enabled = null,
     Architecture? Architecture = null,
     MachineState? MachineState = null,
-    int Page = 1,
-    int PageSize = 10,
-    string? Search = null,
-    SortDirection SortDirection = SortDirection.Ascending)
-    : ListRequestBase(Page, PageSize, Search, SortDirection);
+    SortDirection SortDirection = SortDirection.Ascending);
 
 public record MachineListResponse(
     Guid Id,

@@ -1,0 +1,97 @@
+@using Humanizer
+@using static PhoeNix.WebAPP.Pages.SetupSessions.SetupSessionDetail
+
+<MudStack Spacing="3">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">Machine</MudText>
+            <MudLink Href="@($"/machines/{Target.MachineId}")" Typo="Typo.body2">
+                @Target.MachineId
+            </MudLink>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">Configuration</MudText>
+            @if (Target.SelectedConfigurationId.HasValue && Target.SelectedConfiguration is not null)
+            {
+                <MudLink Href="@($"/configurations/{Target.SelectedConfigurationId}")" Typo="Typo.body2">
+                    @Target.SelectedConfiguration
+                </MudLink>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">-</MudText>
+            }
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">System</MudText>
+            <MudText Typo="Typo.body2">@(Target.SelectedSystem ?? "-")</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">IP Address</MudText>
+            <MudText Typo="Typo.body2">@(Target.IpAddress ?? "-")</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">Stage</MudText>
+            <MudChip T="string"
+                     Color="@StageColor(Target.SetupStage)"
+                     Variant="Variant.Filled"
+                     Size="Size.Small">
+                @Target.SetupStage.Humanize()
+            </MudChip>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudText Typo="Typo.caption">Last Transition</MudText>
+            <MudText Typo="Typo.body2">
+                @(Target.LastTransitionTime.HasValue
+                    ? Target.LastTransitionTime.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                    : "-")
+            </MudText>
+        </MudItem>
+    </MudGrid>
+
+    @if (Target.LastErrorCode is not null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.body2">
+                    <strong>@Target.LastErrorCode</strong>
+                    @if (Target.LastErrorSource is not null)
+                    {
+                        <text> (from @Target.LastErrorSource)</text>
+                    }
+                </MudText>
+                @if (Target.LastErrorDescription is not null)
+                {
+                    <MudText Typo="Typo.body2">@Target.LastErrorDescription</MudText>
+                }
+                @if (Target.LastErrorAt.HasValue)
+                {
+                    <MudText Typo="Typo.caption">
+                        @Target.LastErrorAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                    </MudText>
+                }
+            </MudStack>
+        </MudAlert>
+    }
+
+    @if (Target.DiskAssignments.Count > 0)
+    {
+        <MudTable Items="@Target.DiskAssignments" Dense="true" Hover="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Rank</MudTh>
+                <MudTh>Disk Path</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Rank">@context.Index</MudTd>
+                <MudTd DataLabel="Disk Path">
+                    <MudText Typo="Typo.body2" Style="word-break: break-all;">@context.DiskIdPath</MudText>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudStack>

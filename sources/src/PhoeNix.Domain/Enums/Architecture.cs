@@ -23,6 +23,7 @@ public static class ArchitectureEnumExtension
             case Architecture.Aarch64Darwin:
                 return "aarch64-darwin";
         }
-        return "x86_64-linux"; 
+
+        return "x86_64-linux";
     }
-} 
+}

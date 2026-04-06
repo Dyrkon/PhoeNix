@@ -1,6 +1,10 @@
+using PhoeNix.Application.Models.Setup;
+using PhoeNix.Common.Models;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Models;
+using SetupStatusResponse = PhoeNix.Application.Models.Setup.SetupStatusResponse;
+using StartMachineSetupRequest = PhoeNix.Application.Models.Setup.StartMachineSetupRequest;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
 
@@ -32,6 +36,25 @@ public sealed class SetupApiClient(HttpClient httpClient, IAuthenticationInvalid
     {
         return GetAsync<SetupStatusResponse>(
             $"setup/session/{sessionId}/machine/{machineId}/status",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<Common.Models.PagedResponse<SetupSessionListResponse>>> GetSessionsAsync(
+        int page = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<Common.Models.PagedResponse<SetupSessionListResponse>>(
+            $"setup/sessions?page={page}&pageSize={pageSize}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<SetupSessionDetailResponse>> GetSessionDetailAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<SetupSessionDetailResponse>(
+            $"setup/session/{sessionId}",
             cancellationToken);
     }
 
