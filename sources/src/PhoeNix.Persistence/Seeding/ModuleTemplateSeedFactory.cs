@@ -33,21 +33,24 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName,
+                "\"machineone\"",
                 UserInputType.Text,
-                EntryBindingKind.UserProvided, EntryValueKind.Text),
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.StateVersion,
-                SeedPlaceholders.StateVersion,
+                "\"25.11\"",
                 UserInputType.Text,
-                EntryBindingKind.UserProvided, EntryValueKind.Text),
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.RootAuthorizedKeys,
-                SeedPlaceholders.RootAuthorizedKeys,
+                "[ \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\n\" ]",
                 UserInputType.Text,
-                EntryBindingKind.UserProvided, EntryValueKind.Text)
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text)
         };
 
         var content =
@@ -88,7 +91,7 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.DiskoEfiExt4Template,
                 SeedPlaceholders.InstallDisk,
-                SeedPlaceholders.InstallDisk,
+                "\"/dev/sda\"",
                 UserInputType.Text,
                 EntryBindingKind.RankedDiskCandidate,
                 EntryValueKind.Text,
@@ -149,15 +152,17 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.PrometheusTemplate,
                 SeedPlaceholders.MetricsPort,
-                SeedPlaceholders.MetricsPort,
+                "9100",
                 UserInputType.Text,
-                EntryBindingKind.UserProvided, EntryValueKind.Text),
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text),
             new(
                 SeedIds.PrometheusTemplate,
                 SeedPlaceholders.OpenFirewall,
-                SeedPlaceholders.OpenFirewall,
+                "true",
                 UserInputType.Text,
-                EntryBindingKind.UserProvided, EntryValueKind.Text)
+                EntryBindingKind.UserProvided,
+                EntryValueKind.Text)
         };
 
         var content =
@@ -204,7 +209,7 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.TimezoneSyncTemplate,
                 SeedPlaceholders.Timezone,
-                SeedPlaceholders.Timezone,
+                "\"Europe/Prague\"",
                 UserInputType.Text,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text)
@@ -231,9 +236,6 @@ internal static class ModuleTemplateSeedFactory
             });
     }
 
-    // Enables flakes and the new nix CLI, configures the official binary cache and the
-    // nix-community cache so the build host doesn't have to recompile cached derivations.
-    // Applies to every system in the configuration via sharedModules.
     private static Result<ModuleTemplate> CreateNixFlakeSettingsTemplate()
     {
         var definitions = new List<EntryValueDefinition>
@@ -241,14 +243,14 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.NixFlakeSettingsTemplate,
                 SeedPlaceholders.NixTrustedSubstituters,
-                SeedPlaceholders.NixTrustedSubstituters,
+                "[ \"https://cache.nixos.org\" \"https://nix-community.cachix.org\" ]",
                 UserInputType.Text,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text),
             new(
                 SeedIds.NixFlakeSettingsTemplate,
                 SeedPlaceholders.NixTrustedPublicKeys,
-                SeedPlaceholders.NixTrustedPublicKeys,
+                "[ \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\" \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\" ]",
                 UserInputType.Text,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text)
@@ -282,10 +284,6 @@ internal static class ModuleTemplateSeedFactory
             });
     }
 
-    // Reduces build times and prevents unbounded store growth on a long-running machine.
-    // max-jobs and cores control parallelism; auto-optimise-store deduplicates store paths
-    // on every build; the GC runs weekly and keeps the last 7 days of results.
-    // Applies to every system in the configuration via sharedModules.
     private static Result<ModuleTemplate> CreateNixBuildOptimisationTemplate()
     {
         var definitions = new List<EntryValueDefinition>
@@ -293,14 +291,14 @@ internal static class ModuleTemplateSeedFactory
             new(
                 SeedIds.NixBuildOptimisationTemplate,
                 SeedPlaceholders.NixMaxJobs,
-                SeedPlaceholders.NixMaxJobs,
+                "\"auto\"",
                 UserInputType.Text,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text),
             new(
                 SeedIds.NixBuildOptimisationTemplate,
                 SeedPlaceholders.NixCores,
-                SeedPlaceholders.NixCores,
+                "1",
                 UserInputType.Text,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text)

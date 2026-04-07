@@ -9,7 +9,10 @@
                     Icon="@(Module.TemplateType == ModuleType.Generic ? Icons.Material.Filled.Share : Icons.Material.Filled.Memory)"
                     Color="Color.Default"
                     Size="Size.Small"/>
-                <MudText Typo="Typo.subtitle1">@Module.TemplateName</MudText>
+                <MudLink Typo="Typo.subtitle1" Href="@($"/templates/{Module.ModuleTemplateId}")" Class="d-flex align-center">
+                    @Module.TemplateName
+                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Class="ml-1"/>
+                </MudLink>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">

@@ -48,4 +48,14 @@ public static class NavigationExtensions
     {
         navigationManager.NavigateTo($"/setup/{setupSessionId}");
     }
+    
+    public static void NavigateToTemplates(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/templates");
+    }
+
+    public static void NavigateToTemplatesDetail(this NavigationManager navigationManager, Guid templateId)
+    {
+        navigationManager.NavigateTo($"/templates/{templateId}");
+    }
 }

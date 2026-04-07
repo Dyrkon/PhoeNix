@@ -27,7 +27,9 @@
                     <MudExpansionPanel>
                         <TitleContent>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudText Typo="Typo.body1">@module.TemplateName</MudText>
+                                <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")" @onclick:stopPropagation="true">
+                                    @module.TemplateName
+                                </MudLink>
                                 <MudChip T="string"
                                          Color="@(module.Enabled ? Color.Success : Color.Default)"
                                          Variant="Variant.Text"

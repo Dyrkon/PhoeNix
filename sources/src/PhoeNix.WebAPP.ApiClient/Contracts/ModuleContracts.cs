@@ -1,3 +1,4 @@
+using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.WebAPP.ApiClient.Contracts;
@@ -117,3 +118,27 @@ public sealed record UpdateModuleTemplateRequest(
     List<Architecture>? SupportedArchitectures,
     List<ModuleTemplateEntryValueDefinitionModel>? EditableValueTypes,
     List<ModuleTemplateTestUpsertModel>? Tests);
+
+public sealed record ListModuleTemplatesRequest(
+    ModuleTemplateSortField SortField = ModuleTemplateSortField.Name,
+    int Page = 1,
+    int PageSize = 15,
+    string? Search = null,
+    bool? Enabled = null,
+    ModuleType? Type = null,
+    SortDirection SortDirection = SortDirection.Ascending);
+
+public enum ModuleTemplateSortField
+{
+    Name = 0,
+    Type = 1,
+    Enabled = 2
+}
+
+public sealed record ModuleScaffoldingResponse(
+    NixModuleScaffoldingDto Module,
+    IReadOnlyList<NixTestScaffoldingDto> Tests);
+
+public sealed record NixModuleScaffoldingDto(string Prefix, string Suffix);
+
+public sealed record NixTestScaffoldingDto(string TestName, string Prefix, string Suffix);

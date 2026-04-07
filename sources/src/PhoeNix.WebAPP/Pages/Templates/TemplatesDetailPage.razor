@@ -1,0 +1,332 @@
+@page "/templates/{templateId:guid}"
+@using Humanizer
+@using PhoeNix.Domain.Enums
+
+<MudStack Spacing="3">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+    }
+    else if (_template is null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            Module template could not be loaded.
+        </MudAlert>
+    }
+    else
+    {
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h4">@_template.Name</MudText>
+
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                    <MudButton OnClick="@(() => _viewMode = ViewMode.Overview)"
+                               Variant="@(_viewMode == ViewMode.Overview ? Variant.Filled : Variant.Outlined)">
+                        Overview
+                    </MudButton>
+                    <MudButton OnClick="@(() => _viewMode = ViewMode.Code)"
+                               Variant="@(_viewMode == ViewMode.Code ? Variant.Filled : Variant.Outlined)">
+                        Code
+                    </MudButton>
+                </MudButtonGroup>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Href="@($"/templates/{TemplateId}/edit")">
+                    Edit Template
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/templates">
+                    Back to templates
+                </MudButton>
+            </MudStack>
+        </MudStack>
+
+        @if (_viewMode == ViewMode.Overview)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-4">Template Information</MudText>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Name</MudText>
+                            <MudText Typo="Typo.body1">@_template.Name</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Type</MudText>
+                            <MudChip T="string"
+                                     Color="@(_template.Type == ModuleType.System ? Color.Primary : Color.Default)"
+                                     Variant="Variant.Filled"
+                                     Size="Size.Small">
+                                @_template.Type.Humanize()
+                            </MudChip>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Enabled</MudText>
+                            <MudChip T="string"
+                                     Color="@(_template.Enabled ? Color.Success : Color.Default)"
+                                     Variant="Variant.Filled"
+                                     Size="Size.Small">
+                                @(_template.Enabled ? "Enabled" : "Disabled")
+                            </MudChip>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Requires Setup Bindings</MudText>
+                            <MudChip T="string"
+                                     Color="@(_template.RequiresSetupBindings ? Color.Warning : Color.Default)"
+                                     Variant="Variant.Filled"
+                                     Size="Size.Small">
+                                @(_template.RequiresSetupBindings ? "Yes" : "No")
+                            </MudChip>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Supported Architectures</MudText>
+                            <MudText Typo="Typo.body1">
+                                @(string.Join(", ", _template.SupportedArchitectures.Select(a => a.ToArchitectureString())))
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                <MudExpansionPanel IsInitiallyExpanded="true" Disabled="@(_template.EditableValueTypes.Count == 0)">
+                    <TitleContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small"/>
+                            <MudText Typo="Typo.body1">Entry Value Definitions (@_template.EditableValueTypes.Count)</MudText>
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        @if (_template.EditableValueTypes.Count > 0)
+                        {
+                            <MudSimpleTable Dense="true" Hover="true" Class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Placeholder</th>
+                                        <th>Value Kind</th>
+                                        <th>Input Type</th>
+                                        <th>Binding Kind</th>
+                                        <th>Default</th>
+                                        <th>Options</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in _template.EditableValueTypes)
+                                    {
+                                        <tr>
+                                            <td>@entry.Name</td>
+                                            <td><code>@entry.Placeholder</code></td>
+                                            <td>@entry.ValueKind.Humanize()</td>
+                                            <td>@entry.InputType.Humanize()</td>
+                                            <td>@entry.BindingKind.Humanize()</td>
+                                            <td>@(entry.DefaultValue ?? "-")</td>
+                                            <td>
+                                                @if (entry.Options is { Count: > 0 })
+                                                {
+                                                    @string.Join(", ", entry.Options)
+                                                }
+                                                else
+                                                {
+                                                    @("-")
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    </ChildContent>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Disabled="@(_template.Tests.Count == 0)">
+                    <TitleContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small"/>
+                            <MudText Typo="Typo.body1">Tests (@_template.Tests.Count)</MudText>
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        @if (_template.Tests.Count > 0)
+                        {
+                            <MudSimpleTable Dense="true" Hover="true" Class="mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Variables</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var test in _template.Tests)
+                                    {
+                                        <tr>
+                                            <td>@test.Name</td>
+                                            <td>
+                                                @if (test.VariableNames.Count > 0)
+                                                {
+                                                    @string.Join(", ", test.VariableNames)
+                                                }
+                                                else
+                                                {
+                                                    @("-")
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
+        else
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">Module Content</MudText>
+                    <MudStack Row="true" Spacing="1">
+                        <MudChip T="string" Style="background-color: #9E9E9E; color: white;" Size="Size.Small">
+                            Scaffolding
+                        </MudChip>
+                        @if (_template.EditableValueTypes.Count > 0)
+                        {
+                            <MudChip T="string" Style="background-color: #FFA500; color: white;" Size="Size.Small">
+                                Value
+                            </MudChip>
+                            <MudChip T="string" Style="background-color: #9E9E9E; color: white;" Size="Size.Small">
+                                (Name)
+                            </MudChip>
+                        }
+                    </MudStack>
+                </MudStack>
+                @if (string.IsNullOrWhiteSpace(_template.Content))
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        No content defined for this template.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" md="@(_template.EditableValueTypes.Count > 0 ? 7 : 12)">
+                            <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
+                                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@GetHighlightedModuleContent()</pre>
+                            </MudPaper>
+                        </MudItem>
+                        @if (_template.EditableValueTypes.Count > 0)
+                        {
+                            <MudItem xs="12" md="5">
+                                <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">Entry Values (@_template.EditableValueTypes.Count)</MudText>
+                                    <MudDivider Class="mb-2"/>
+                                    <MudStack Spacing="2">
+                                        @foreach (var entry in _template.EditableValueTypes)
+                                        {
+                                            <MudPaper Class="pa-2" Elevation="0" Style="background-color: var(--mud-palette-background-grey);">
+                                                <MudStack Spacing="0">
+                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                        <MudText Typo="Typo.body2" Style="color: #FFA500; font-weight: 600; font-family: monospace;">@entry.Placeholder</MudText>
+                                                        <MudText Typo="Typo.body2" Style="color: #9E9E9E;">(@entry.Name)</MudText>
+                                                    </MudStack>
+                                                    <MudStack Row="true" Spacing="1" Class="mt-1">
+                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.ValueKind.Humanize()</MudChip>
+                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.InputType.Humanize()</MudChip>
+                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.BindingKind.Humanize()</MudChip>
+                                                    </MudStack>
+                                                </MudStack>
+                                            </MudPaper>
+                                        }
+                                    </MudStack>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </MudPaper>
+
+            @if (_template.Tests.Count > 0)
+            {
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                        <MudText Typo="Typo.h6">Tests (@_template.Tests.Count)</MudText>
+                        <MudStack Row="true" Spacing="1">
+                            <MudChip T="string" Style="background-color: #9E9E9E; color: white;" Size="Size.Small">
+                                Scaffolding
+                            </MudChip>
+                            <MudChip T="string" Style="background-color: #4CAF50; color: white;" Size="Size.Small">
+                                Variable
+                            </MudChip>
+                        </MudStack>
+                    </MudStack>
+                    <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                        @foreach (var test in _template.Tests)
+                        {
+                            <MudExpansionPanel>
+                                <TitleContent>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small"/>
+                                        <MudText Typo="Typo.body1">@test.Name</MudText>
+                                        @if (test.VariableNames.Count > 0)
+                                        {
+                                            <MudText Typo="Typo.caption" Class="ml-2">
+                                                (@test.VariableNames.Count variable@(test.VariableNames.Count != 1 ? "s" : ""))
+                                            </MudText>
+                                        }
+                                    </MudStack>
+                                </TitleContent>
+                                <ChildContent>
+                                    @if (string.IsNullOrWhiteSpace(test.Content))
+                                    {
+                                        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+                                            No content defined for this test.
+                                        </MudAlert>
+                                    }
+                                    else
+                                    {
+                                        <MudGrid Class="mt-2">
+                                            <MudItem xs="12" md="@(test.VariableNames.Count > 0 ? 7 : 12)">
+                                                <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
+                                                    <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@GetHighlightedTestContent(test)</pre>
+                                                </MudPaper>
+                                            </MudItem>
+                                            @if (test.VariableNames.Count > 0)
+                                            {
+                                                <MudItem xs="12" md="5">
+                                                    <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                                                            <MudChip T="string" Style="background-color: #4CAF50; color: white;" Size="Size.Small">
+                                                                Variable
+                                                            </MudChip>
+                                                            <MudText Typo="Typo.subtitle2">Test Variables (@test.VariableNames.Count)</MudText>
+                                                        </MudStack>
+                                                        <MudDivider Class="mb-2"/>
+                                                        <MudStack Spacing="1">
+                                                            @foreach (var variable in test.VariableNames)
+                                                            {
+                                                                <MudText Typo="Typo.body2" Style="color: #4CAF50; font-family: monospace;">@variable</MudText>
+                                                            }
+                                                        </MudStack>
+                                                    </MudPaper>
+                                                </MudItem>
+                                            }
+                                        </MudGrid>
+                                    }
+                                </ChildContent>
+                            </MudExpansionPanel>
+                        }
+                    </MudExpansionPanels>
+                </MudPaper>
+            }
+        }
+    }
+</MudStack>

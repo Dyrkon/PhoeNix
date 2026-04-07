@@ -36,7 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
-        services.AddScoped<INixBuildMaterializer, NixBuildMaterializer>();
+        services.AddSingleton<INixBuildMaterializer, NixBuildMaterializer>();
         services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
         services.AddScoped<ISetupSshKeyProvider, SetupSshKeyProvider>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
@@ -12,6 +13,47 @@ namespace PhoeNix.Infrastructure.Services.ConfigurationManagement;
 
 public class NixBuildMaterializer : INixBuildMaterializer
 {
+    public NixModuleScaffolding GetModuleScaffolding(ModuleType type, string? argsImportValue = "./values.nix")
+    {
+        var config = type == ModuleType.System ? "config, " : string.Empty;
+
+        var prefix =
+            $"{{ inputs, pkgs, lib, system, {config}... }}: let\n" +
+            $"  args = import {argsImportValue};\n" +
+            "in { ";
+
+        var suffix = " }";
+
+        return new NixModuleScaffolding(prefix, suffix);
+    }
+
+    public NixTestScaffolding GetTestScaffolding(string testName, string? testedModule = "./module.nix",
+        string? argsInputLocation = "./values.nix")
+    {
+        var prefix =
+            "{ inputs, pkgs, ... }: let\n" +
+            "  inherit (pkgs) lib;\n" +
+            "  inherit inputs;\n" +
+            "  inherit (lib) runTests;\n" +
+            $"  testedModule = import {testedModule} {{ inherit lib inputs pkgs; }};\n" +
+            "  testResults = lib.runTests { ";
+
+        var suffix =
+            " };\n" +
+            $"  args = import {argsInputLocation};\n" +
+            "in\n" +
+            $"pkgs.runCommand \"{testName}\" {{ failures = builtins.toJSON testResults; }} ''\n" +
+            "if [ \"$failures\" = \"[]\" ]; then\n" +
+            "  echo \"All tests passed!\";\n" +
+            "  touch $out;\n" +
+            "else\n" +
+            "  printf '%s' \"$failures\";\n" +
+            "  exit 1\n" +
+            "fi''";
+
+        return new NixTestScaffolding(prefix, suffix);
+    }
+
     private string BuildFollow(FollowInput followInput)
     {
         return $"{followInput.FollowName}.follows = \"{followInput.FollowValue}\";";
@@ -183,23 +225,10 @@ public class NixBuildMaterializer : INixBuildMaterializer
         foreach (var pair in placeholders)
             outputContent = outputContent.Replace(pair.Value, $"args.{pair.Key}");
 
-        var moduleTestContent =
-            "{ inputs, pkgs, ... }: let\n" +
-            "  inherit (pkgs) lib;\n" +
-            "  inherit inputs;\n" +
-            "  inherit (lib) runTests;\n" +
-            $"  testedModule = import {testedModulePathPlaceholder} {{ inherit lib inputs pkgs; }};\n" +
-            $"  testResults = lib.runTests {{ {outputContent} }};\n" +
-            $"  args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix;\n" +
-            "in\n" +
-            $"pkgs.runCommand \"{test.Name}\" {{ failures = builtins.toJSON testResults; }} ''\n" +
-            "if [ \"$failures\" = \"[]\" ]; then\n" +
-            "  echo \"All tests passed!\";\n" +
-            "  touch $out;\n" +
-            "else\n" +
-            "  printf '%s' \"$failures\";\n" +
-            "  exit 1\n" +
-            "fi''";
+        var moduleTestScaffolding = GetTestScaffolding(test.Name, testedModulePathPlaceholder,
+            $"{inputsLocationPlaceholder}/{moduleValuesName}.nix");
+
+        var moduleTestContent = $"{moduleTestScaffolding.Prefix} {outputContent} {moduleTestScaffolding.Suffix}";
 
         return new ModuleTestBuildResult(
             test.Id,
@@ -225,13 +254,11 @@ public class NixBuildMaterializer : INixBuildMaterializer
 
         inputs += " }";
 
-        var config = moduleTemplate.Type == ModuleType.System ? "config, " : string.Empty;
         var inputsLocationPlaceholder = Guid.NewGuid().ToString();
 
-        var moduleContent =
-            $"{{ inputs, pkgs, lib, system, {config}... }}: let\n" +
-            $"  args = import {inputsLocationPlaceholder}/{moduleValuesName}.nix;\n" +
-            $"in {{ {outputContent} }}";
+        var scaffolding =
+            GetModuleScaffolding(moduleTemplate.Type, $"{inputsLocationPlaceholder}/{moduleValuesName}.nix");
+        var moduleContent = $"{scaffolding.Prefix} {outputContent} {scaffolding.Suffix}";
 
         var moduleTests = moduleTemplate.Tests
             .Select(t => BuildModuleTest(t, moduleValuesName))
