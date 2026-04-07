@@ -5,7 +5,8 @@ namespace PhoeNix.WebAPP.ApiClient.Abstractions;
 
 public interface IModulesApiClient
 {
-    Task<ApiResult<IReadOnlyList<ModuleTemplateListResponse>>> GetModuleTemplatesAsync(
+    Task<ApiResult<PagedResponse<ModuleTemplateListResponse>>> GetModuleTemplatesAsync(
+        ListModuleTemplatesRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ApiResult<ModuleTemplateResponse>> GetModuleTemplateByIdAsync(
@@ -19,5 +20,9 @@ public interface IModulesApiClient
     Task<ApiResult> UpdateModuleTemplateAsync(
         Guid moduleTemplateId,
         UpdateModuleTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult<ModuleScaffoldingResponse>> GetModuleScaffoldingAsync(
+        Guid moduleTemplateId,
         CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,84 @@
-<h3>TemplatesTable</h3>
+@using Humanizer
+@using PhoeNix.Domain.Enums
 
-@code {
-    
-}
+<MudPaper Class="pa-4" Elevation="0">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h6">Module Templates</MudText>
+    </MudStack>
+
+    <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
+        <MudTextField T="string"
+                      Value="_search"
+                      ValueChanged="OnSearchChangedAsync"
+                      Label="Search"
+                      Placeholder="Name"
+                      Immediate="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true"/>
+
+        <MudSelect T="bool?" Value="_enabled" ValueChanged="OnEnabledChangedAsync" Label="Enabled" Clearable="true">
+            <MudSelectItem Value="@((bool?)true)">Enabled</MudSelectItem>
+            <MudSelectItem Value="@((bool?)false)">Disabled</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="ModuleType?" Value="_moduleType" ValueChanged="OnModuleTypeChangedAsync"
+                   Label="Type" Clearable="true">
+            @foreach (var moduleType in Enum.GetValues<ModuleType>())
+            {
+                <MudSelectItem Value="@((ModuleType?)moduleType)">
+                    @moduleType.Humanize()
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+
+    <MudDataGrid T="ModuleTemplateTableRow"
+                 @ref="_dataGrid"
+                 ServerData="LoadServerDataAsync"
+                 Dense="true"
+                 Hover="true"
+                 ReadOnly="true"
+                 Filterable="false"
+                 SortMode="SortMode.Single"
+                 Elevation="0"
+                 RowClick="OnRowClickAsync">
+
+        <Columns>
+            <PropertyColumn Property="x => x.Name" Title="Name" Sortable="true"/>
+
+            <TemplateColumn Title="Type" Sortable="true">
+                <CellTemplate>
+                    <MudChip Color="@(context.Item.Type == ModuleType.System ? Color.Primary : Color.Default)"
+                             Variant="Variant.Filled"
+                             Size="Size.Small" T="string">
+                        @context.Item.Type.Humanize()
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <TemplateColumn Title="Enabled" Sortable="true">
+                <CellTemplate>
+                    <MudChip Color="@(context.Item.Enabled ? Color.Success : Color.Default)"
+                             Variant="Variant.Filled"
+                             Size="Size.Small" T="string">
+                        @(context.Item.Enabled ? "Enabled" : "Disabled")
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <PropertyColumn Property="x => x.ArchitecturesDisplay" Title="Architectures" Sortable="false"/>
+            <PropertyColumn Property="x => x.EntryDefinitionsCount" Title="Entry Definitions" Sortable="false"/>
+        </Columns>
+
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="pa-4">
+                No module templates found.
+            </MudText>
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudDataGridPager T="ModuleTemplateTableRow"/>
+        </PagerContent>
+    </MudDataGrid>
+</MudPaper>

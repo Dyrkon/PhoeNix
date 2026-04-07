@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Modules.Queries;
 using PhoeNix.Domain.Entities.Modules;
@@ -36,13 +37,19 @@ public sealed class ModulesModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/{moduleTemplateId:guid}/scaffolding", GetModuleScaffolding)
+            .WithName("GetModuleScaffolding")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetModuleTemplates(
+        [AsParameters] ListModuleTemplatesRequest request,
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetModuleTemplatesQuery(), cancellationToken);
+        var result = await sender.Send(new ListModuleTemplatesQuery(request), cancellationToken);
         return result.AsHttpResult();
     }
 
@@ -77,6 +84,16 @@ public sealed class ModulesModule : ICarterModule
             request.Enabled, request.Type,
             request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
         var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> GetModuleScaffolding(
+        Guid moduleTemplateId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetModuleScaffoldingQuery(new ModuleTemplateId(moduleTemplateId)),
+            cancellationToken);
         return result.AsHttpResult();
     }
 }

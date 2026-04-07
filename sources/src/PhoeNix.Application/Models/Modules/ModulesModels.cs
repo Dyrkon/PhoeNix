@@ -99,3 +99,15 @@ public sealed record ModuleValueResponse(
 public sealed record ModuleValueListResponse(
     Guid Id,
     bool Enabled);
+
+public sealed record ModuleScaffoldingResponse(
+    NixModuleScaffoldingDto Module,
+    IReadOnlyList<NixTestScaffoldingDto> Tests);
+
+public sealed record NixModuleScaffoldingDto(string Prefix, string Suffix);
+
+public sealed record NixTestScaffoldingDto(string TestName, string Prefix, string Suffix);
+
+public record NixModuleScaffolding(string Prefix, string Suffix);
+
+public record NixTestScaffolding(string Prefix, string Suffix);

@@ -1,5 +1,6 @@
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.ApiClient.Helpers;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;
@@ -7,10 +8,12 @@ namespace PhoeNix.WebAPP.ApiClient.Clients;
 public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInvalidationNotifier notifier)
     : ApiClientBase(httpClient, notifier), IModulesApiClient
 {
-    public Task<ApiResult<IReadOnlyList<ModuleTemplateListResponse>>> GetModuleTemplatesAsync(
+    public Task<ApiResult<PagedResponse<ModuleTemplateListResponse>>> GetModuleTemplatesAsync(
+        ListModuleTemplatesRequest request,
         CancellationToken cancellationToken = default)
     {
-        return GetAsync<IReadOnlyList<ModuleTemplateListResponse>>("modules", cancellationToken);
+        var queryString = QueryStringBuilder.BuildFrom(request);
+        return GetAsync<PagedResponse<ModuleTemplateListResponse>>($"modules{queryString}", cancellationToken);
     }
 
     public Task<ApiResult<ModuleTemplateResponse>> GetModuleTemplateByIdAsync(
@@ -33,5 +36,12 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         CancellationToken cancellationToken = default)
     {
         return PutAsync($"modules/{moduleTemplateId}", request, cancellationToken);
+    }
+
+    public Task<ApiResult<ModuleScaffoldingResponse>> GetModuleScaffoldingAsync(
+        Guid moduleTemplateId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<ModuleScaffoldingResponse>($"modules/{moduleTemplateId}/scaffolding", cancellationToken);
     }
 }
