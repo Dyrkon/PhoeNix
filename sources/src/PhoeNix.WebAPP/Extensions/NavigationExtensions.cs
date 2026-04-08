@@ -44,11 +44,16 @@ public static class NavigationExtensions
         navigationManager.NavigateTo($"/setup");
     }
 
+    public static void NavigateToNewSetupSessions(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/setup/new");
+    }
+
     public static void NavigateToSetupSessionDetail(this NavigationManager navigationManager, Guid setupSessionId)
     {
         navigationManager.NavigateTo($"/setup/{setupSessionId}");
     }
-    
+
     public static void NavigateToTemplates(this NavigationManager navigationManager)
     {
         navigationManager.NavigateTo($"/templates");
@@ -57,5 +62,10 @@ public static class NavigationExtensions
     public static void NavigateToTemplatesDetail(this NavigationManager navigationManager, Guid templateId)
     {
         navigationManager.NavigateTo($"/templates/{templateId}");
+    }
+
+    public static void NavigateToTemplateCreator(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo("/templates/new");
     }
 }

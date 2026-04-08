@@ -1,0 +1,186 @@
+@using Humanizer
+@using MudBlazor
+@using PhoeNix.Common.Models
+@using PhoeNix.Domain.Enums
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="3">
+                <MudTextField T="string"
+                              @bind-Value="Model.Name"
+                              Label="Name"
+                              Required="true"
+                              RequiredError="Name is required."
+                              HelperText="Display name for the entry"/>
+
+                <MudTextField T="string"
+                              @bind-Value="Model.Placeholder"
+                              Label="Placeholder"
+                              Required="true"
+                              RequiredError="Placeholder is required."
+                              HelperText="Text to be replaced in module content (e.g., $$HOSTNAME$$)"/>
+
+                <MudSelect T="UserInputType"
+                           @bind-Value="Model.InputType"
+                           Label="Input Type"
+                           Required="true"
+                           HelperText="How the user will input the value">
+                    @foreach (var inputType in Enum.GetValues<UserInputType>())
+                    {
+                        <MudSelectItem Value="@inputType">
+                            @inputType.Humanize()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="EntryBindingKind"
+                           @bind-Value="Model.BindingKind"
+                           Label="Binding Kind"
+                           Required="true"
+                           HelperText="How the value is bound">
+                    @foreach (var bindingKind in Enum.GetValues<EntryBindingKind>())
+                    {
+                        <MudSelectItem Value="@bindingKind">
+                            @bindingKind.Humanize()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (Model.BindingKind == EntryBindingKind.RankedDiskCandidate)
+                {
+                    <MudNumericField T="int?"
+                                     @bind-Value="Model.BindingIndex"
+                                     Label="Binding Index"
+                                     Required="true"
+                                     Min="0"
+                                     HelperText="Rank index for disk candidate selection"/>
+                }
+
+                <MudSelect T="EntryValueKind"
+                           @bind-Value="Model.ValueKind"
+                           Label="Value Kind"
+                           Required="true"
+                           HelperText="Type of value expected">
+                    @foreach (var valueKind in Enum.GetValues<EntryValueKind>())
+                    {
+                        <MudSelectItem Value="@valueKind">
+                            @valueKind.Humanize()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (Model.ValueKind == EntryValueKind.IntegerRange)
+                {
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudNumericField T="int?"
+                                             @bind-Value="Model.IntegerMin"
+                                             Label="Minimum"
+                                             Required="true"
+                                             RequiredError="Minimum is required for integer range."/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField T="int?"
+                                             @bind-Value="Model.IntegerMax"
+                                             Label="Maximum"
+                                             Required="true"
+                                             RequiredError="Maximum is required for integer range."/>
+                        </MudItem>
+                    </MudGrid>
+                }
+
+                @if (Model.ValueKind == EntryValueKind.DecimalRange)
+                {
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudNumericField T="decimal?"
+                                             @bind-Value="Model.DecimalMin"
+                                             Label="Minimum"
+                                             Required="true"
+                                             RequiredError="Minimum is required for decimal range."/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField T="decimal?"
+                                             @bind-Value="Model.DecimalMax"
+                                             Label="Maximum"
+                                             Required="true"
+                                             RequiredError="Maximum is required for decimal range."/>
+                        </MudItem>
+                    </MudGrid>
+                }
+
+                @if (Model.ValueKind == EntryValueKind.SingleChoice)
+                {
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.body2">Options</MudText>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudTextField T="string"
+                                          @bind-Value="_newOption"
+                                          Label="New Option"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Style="flex: 1;"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Color="Color.Primary"
+                                           OnClick="AddOption"
+                                           Disabled="@string.IsNullOrWhiteSpace(_newOption)"/>
+                        </MudStack>
+                        @if (Model.Options.Count > 0)
+                        {
+                            <MudChipSet T="string" ReadOnly="false">
+                                @foreach (var option in Model.Options)
+                                {
+                                    <MudChip T="string"
+                                             Value="@option"
+                                             Color="Color.Primary"
+                                             Variant="Variant.Outlined"
+                                             OnClose="@(() => RemoveOption(option))">
+                                        @option
+                                    </MudChip>
+                                }
+                            </MudChipSet>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                At least one option is required for single choice.
+                            </MudText>
+                        }
+                    </MudStack>
+                }
+
+                <MudCheckBox T="bool"
+                             @bind-Value="Model.AllowLowerValue"
+                             Label="Allow Lower Value"
+                             Color="Color.Primary"/>
+
+                <MudTextField T="string"
+                              @bind-Value="Model.DefaultValue"
+                              Label="Default Value"
+                              HelperText="Optional default value"/>
+
+                @if (Model.AllowLowerValue)
+                {
+                    <MudTextField T="string"
+                                  @bind-Value="Model.DefaultLowerValue"
+                                  Label="Default Lower Value"
+                                  HelperText="Optional default lower value (for ranges)"/>
+                }
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">
+            Cancel
+        </MudButton>
+
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting">
+            @(IsEditMode ? "Update" : "Add")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

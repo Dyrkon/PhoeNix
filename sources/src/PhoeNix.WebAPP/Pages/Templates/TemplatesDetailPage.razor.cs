@@ -18,6 +18,14 @@ public partial class TemplatesDetailPage : ComponentBase
     private bool _isLoading = true;
     private ViewMode _viewMode = ViewMode.Overview;
 
+    private bool _moduleScaffoldingExpanded = false;
+    private HashSet<Guid> _testScaffoldingExpanded = new();
+
+    private MarkupString _modulePrefix;
+    private MarkupString _moduleContent;
+    private MarkupString _moduleSuffix;
+    private Dictionary<Guid, (MarkupString Prefix, MarkupString Content, MarkupString Suffix)> _testParts = new();
+
     protected override async Task OnParametersSetAsync()
     {
         _isLoading = true;
@@ -41,70 +49,88 @@ public partial class TemplatesDetailPage : ComponentBase
 
         _template = templateResponse.Value;
         _scaffolding = scaffoldingResponse.IsSuccess ? scaffoldingResponse.Value : null;
+        _moduleScaffoldingExpanded = false;
+        _testScaffoldingExpanded = new HashSet<Guid>();
+
+        ComputeHighlightedParts();
+
         _isLoading = false;
     }
 
-    private IEnumerable<(string Name, string Placeholder)> GetEntryValuePairs()
+    private void ComputeHighlightedParts()
     {
         if (_template is null)
-            return [];
+            return;
 
-        return _template.EditableValueTypes
+        var entryPairs = _template.EditableValueTypes
             .Where(e => !string.IsNullOrEmpty(e.Name))
-            .Select(e => (e.Name, e.Placeholder));
-    }
-
-    private MarkupString GetHighlightedModuleContent()
-    {
-        if (_template is null || string.IsNullOrWhiteSpace(_template.Content))
-            return new MarkupString(string.Empty);
-
-        var entryPairs = GetEntryValuePairs().ToList();
+            .Select(e => (e.Name, e.Placeholder))
+            .ToList();
 
         if (_scaffolding is null)
         {
-            var formatted = NixCodeFormatter.Format(_template.Content);
-            var highlighted = NixCodeHighlighter.HighlightEntryValues(formatted, entryPairs);
-            return new MarkupString(highlighted);
+            _modulePrefix = new MarkupString(string.Empty);
+            _moduleContent = new MarkupString(NixCodeHighlighter.HighlightEntryValues(
+                NixCodeFormatter.Format(_template.Content), entryPairs));
+            _moduleSuffix = new MarkupString(string.Empty);
         }
-
-        var (formattedPrefix, prefixEndIndent) = NixCodeFormatter.Format(_scaffolding.Module.Prefix, 0);
-        var (formattedContent, contentEndIndent) = NixCodeFormatter.Format(_template.Content, prefixEndIndent);
-        var (formattedSuffix, _) = NixCodeFormatter.Format(_scaffolding.Module.Suffix, contentEndIndent);
-
-        var styledPrefix = NixCodeHighlighter.WrapAsScaffolding(formattedPrefix);
-        var styledContent = NixCodeHighlighter.HighlightEntryValues(formattedContent, entryPairs);
-        var styledSuffix = NixCodeHighlighter.WrapAsScaffolding(formattedSuffix);
-
-        var combined = styledPrefix + "\n" + styledContent + "\n" + styledSuffix;
-        return new MarkupString(combined);
-    }
-
-    private MarkupString GetHighlightedTestContent(ModuleTemplateTestResponse test)
-    {
-        if (string.IsNullOrWhiteSpace(test.Content))
-            return new MarkupString(string.Empty);
-
-        var testScaffolding = _scaffolding?.Tests.FirstOrDefault(t => t.TestName == test.Name);
-
-        if (testScaffolding is null)
+        else
         {
-            var formatted = NixCodeFormatter.Format(test.Content);
-            var highlighted = NixCodeHighlighter.HighlightVariables(formatted, test.VariableNames);
-            return new MarkupString(highlighted);
+            var (formattedPrefix, prefixEndIndent) = NixCodeFormatter.Format(_scaffolding.Module.Prefix, 0);
+            var (formattedContent, contentEndIndent) = NixCodeFormatter.Format(_template.Content, prefixEndIndent);
+            var (formattedSuffix, _) = NixCodeFormatter.Format(_scaffolding.Module.Suffix, contentEndIndent);
+
+            _modulePrefix = new MarkupString(NixCodeHighlighter.WrapAsScaffolding(formattedPrefix));
+            _moduleContent = new MarkupString(NixCodeHighlighter.HighlightEntryValues(formattedContent, entryPairs));
+            _moduleSuffix = new MarkupString(NixCodeHighlighter.WrapAsScaffolding(formattedSuffix));
         }
 
-        var (formattedPrefix, prefixEndIndent) = NixCodeFormatter.Format(testScaffolding.Prefix, 0);
-        var (formattedContent, contentEndIndent) = NixCodeFormatter.Format(test.Content, prefixEndIndent);
-        var (formattedSuffix, _) = NixCodeFormatter.Format(testScaffolding.Suffix, contentEndIndent);
+        _testParts = new Dictionary<Guid, (MarkupString Prefix, MarkupString Content, MarkupString Suffix)>();
 
-        var styledPrefix = NixCodeHighlighter.WrapAsScaffolding(formattedPrefix);
-        var styledContent = NixCodeHighlighter.HighlightVariables(formattedContent, test.VariableNames);
-        var styledSuffix = NixCodeHighlighter.WrapAsScaffolding(formattedSuffix);
+        foreach (var test in _template.Tests)
+        {
+            var testScaffolding = _scaffolding?.Tests.FirstOrDefault(t => t.TestName == test.Name);
 
-        var combined = styledPrefix + "\n" + styledContent + "\n" + styledSuffix;
-        return new MarkupString(combined);
+            if (testScaffolding is null)
+            {
+                var formatted = NixCodeFormatter.Format(test.Content);
+                var highlighted = NixCodeHighlighter.HighlightVariables(formatted, test.VariableNames);
+                _testParts[test.Id] = (new MarkupString(string.Empty), new MarkupString(highlighted), new MarkupString(string.Empty));
+            }
+            else
+            {
+                var (formattedPrefix, prefixEndIndent) = NixCodeFormatter.Format(testScaffolding.Prefix, 0);
+                var (formattedContent, contentEndIndent) = NixCodeFormatter.Format(test.Content, prefixEndIndent);
+                var (formattedSuffix, _) = NixCodeFormatter.Format(testScaffolding.Suffix, contentEndIndent);
+
+                _testParts[test.Id] = (
+                    new MarkupString(NixCodeHighlighter.WrapAsScaffolding(formattedPrefix)),
+                    new MarkupString(NixCodeHighlighter.HighlightVariables(formattedContent, test.VariableNames)),
+                    new MarkupString(NixCodeHighlighter.WrapAsScaffolding(formattedSuffix))
+                );
+            }
+        }
     }
+
+    private void ToggleModuleScaffolding()
+    {
+        _moduleScaffoldingExpanded = !_moduleScaffoldingExpanded;
+    }
+
+    private void ToggleTestScaffolding(Guid testId)
+    {
+        if (!_testScaffoldingExpanded.Add(testId))
+            _testScaffoldingExpanded.Remove(testId);
+    }
+
+    private bool IsTestScaffoldingExpanded(Guid testId) => _testScaffoldingExpanded.Contains(testId);
+
+    private bool HasModuleScaffolding =>
+        _scaffolding is not null &&
+        (!string.IsNullOrEmpty(_scaffolding.Module.Prefix) || !string.IsNullOrEmpty(_scaffolding.Module.Suffix));
+
+    private bool HasTestScaffolding(ModuleTemplateTestResponse test) =>
+        _scaffolding?.Tests.Any(t => t.TestName == test.Name) == true;
 
     private enum ViewMode
     {

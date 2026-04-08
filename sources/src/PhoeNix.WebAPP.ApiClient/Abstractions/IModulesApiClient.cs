@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Models;
 
@@ -24,5 +25,10 @@ public interface IModulesApiClient
 
     Task<ApiResult<ModuleScaffoldingResponse>> GetModuleScaffoldingAsync(
         Guid moduleTemplateId,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult<ModuleScaffoldingResponse>> GetScaffoldingPreviewAsync(
+        ModuleType type,
+        List<string> testNames,
         CancellationToken cancellationToken = default);
 }

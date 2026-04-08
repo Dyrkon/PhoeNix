@@ -33,3 +33,5 @@ public sealed record UpdateModuleTemplateRequest(
     IReadOnlyList<Architecture> SupportedArchitectures,
     IReadOnlyList<ModuleTemplateEntryValueDefinitionModel> EditableValueTypes,
     IReadOnlyList<ModuleTemplateTestUpsertModel> Tests);
+
+public sealed record GetScaffoldingPreviewRequest(ModuleType Type, string? TestNames);
