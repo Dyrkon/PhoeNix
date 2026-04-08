@@ -27,7 +27,7 @@ public sealed class ModulesModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPost(string.Empty, CreateModuleTemplate)
+        group.MapPost("/templates/new", CreateModuleTemplate)
             .WithName("CreateModuleTemplate")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
@@ -42,6 +42,10 @@ public sealed class ModulesModule : ICarterModule
             .WithName("GetModuleScaffolding")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/scaffolding/preview", GetScaffoldingPreview)
+            .WithName("GetScaffoldingPreview")
+            .Produces(StatusCodes.Status200OK);
     }
 
     private static async Task<IResult> GetModuleTemplates(
@@ -94,6 +98,19 @@ public sealed class ModulesModule : ICarterModule
     {
         var result = await sender.Send(new GetModuleScaffoldingQuery(new ModuleTemplateId(moduleTemplateId)),
             cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> GetScaffoldingPreview(
+        [AsParameters] GetScaffoldingPreviewRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var testNames = string.IsNullOrWhiteSpace(request.TestNames)
+            ? []
+            : request.TestNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        var result = await sender.Send(new GetScaffoldingPreviewQuery(request.Type, testNames), cancellationToken);
         return result.AsHttpResult();
     }
 }

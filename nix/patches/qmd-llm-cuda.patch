@@ -1,0 +1,71 @@
+diff --git a/src/llm.ts b/src/llm.ts
+index 485ca7b..355d023 100644
+--- a/src/llm.ts
++++ b/src/llm.ts
+@@ -552,40 +552,49 @@ export class LlamaCpp implements LLM {
+    */
+   private async ensureLlama(): Promise<Llama> {
+     if (!this.llama) {
+-      // Allow override via QMD_LLAMA_GPU: "false" | "off" | "none" forces CPU
+       const gpuOverride = (process.env.QMD_LLAMA_GPU ?? "").toLowerCase();
+       const forceCpu = ["false", "off", "none", "disable", "disabled", "0"].includes(gpuOverride);
++      const forceCuda = ["cuda", "nvidia", "gpu", "1", "true", "on"].includes(gpuOverride);
+ 
+-      const loadLlama = async (gpu: "auto" | false) =>
+-        await getLlama({
+-          build: "autoAttempt",
++      if (forceCpu) {
++        this.llama = await getLlama({
++          gpu: false,
++          build: "auto",
++          logLevel: LlamaLogLevel.error,
++        });
++      } else if (forceCuda) {
++        this.llama = await getLlama({
++          gpu: "cuda",
++          build: "never",
+           logLevel: LlamaLogLevel.error,
+-          gpu,
+         });
+-
+-      let llama: Llama;
+-      if (forceCpu) {
+-        llama = await loadLlama(false);
+       } else {
+         try {
+-          llama = await loadLlama("auto");
+-        } catch (err) {
+-          // GPU backend (e.g. Vulkan on headless/driverless machines) can throw at init.
+-          // Fall back to CPU so qmd still works.
++          this.llama = await getLlama({
++            gpu: "cuda",
++            build: "never",
++            logLevel: LlamaLogLevel.error,
++          });
++        } catch (cudaErr) {
+           process.stderr.write(
+-            `QMD Warning: GPU init failed (${err instanceof Error ? err.message : String(err)}), falling back to CPU.\n`
++            `QMD Warning: CUDA init failed (${cudaErr instanceof Error ? cudaErr.message : String(cudaErr)}), falling back to CPU.\n`
+           );
+-          llama = await loadLlama(false);
++
++          this.llama = await getLlama({
++            gpu: false,
++            build: "auto",
++            logLevel: LlamaLogLevel.error,
++          });
+         }
+       }
+ 
+-      if (llama.gpu === false) {
++      if (this.llama.gpu === false) {
+         process.stderr.write(
+           "QMD Warning: no GPU acceleration, running on CPU (slow). Run 'qmd status' for details.\n"
+         );
+       }
+-      this.llama = llama;
+     }
++
+     return this.llama;
+   }
+ 

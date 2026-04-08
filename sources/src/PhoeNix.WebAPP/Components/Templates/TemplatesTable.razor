@@ -1,5 +1,6 @@
 @using Humanizer
 @using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.Extensions
 
 <MudPaper Class="pa-4" Elevation="0">
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -31,6 +32,10 @@
                 </MudSelectItem>
             }
         </MudSelect>
+
+        <MudIconButton OnClick="NavigationManager.NavigateToTemplateCreator"
+                       Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary"></MudIconButton>
     </MudStack>
 
     <MudDataGrid T="ModuleTemplateTableRow"
@@ -43,7 +48,6 @@
                  SortMode="SortMode.Single"
                  Elevation="0"
                  RowClick="OnRowClickAsync">
-
         <Columns>
             <PropertyColumn Property="x => x.Name" Title="Name" Sortable="true"/>
 

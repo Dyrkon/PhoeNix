@@ -220,7 +220,31 @@
                     <MudGrid>
                         <MudItem xs="12" md="@(_template.EditableValueTypes.Count > 0 ? 7 : 12)">
                             <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
-                                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@GetHighlightedModuleContent()</pre>
+                                @if (HasModuleScaffolding)
+                                {
+                                    <div @onclick="ToggleModuleScaffolding"
+                                         style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                        <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                                 Size="Size.Small" Style="color: #9E9E9E;"/>
+                                        <span>prefix scaffolding</span>
+                                    </div>
+                                    <MudCollapse Expanded="_moduleScaffoldingExpanded">
+                                        <pre style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_modulePrefix</pre>
+                                    </MudCollapse>
+                                }
+                                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleContent</pre>
+                                @if (HasModuleScaffolding)
+                                {
+                                    <MudCollapse Expanded="_moduleScaffoldingExpanded">
+                                        <pre style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleSuffix</pre>
+                                    </MudCollapse>
+                                    <div @onclick="ToggleModuleScaffolding"
+                                         style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                        <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                                 Size="Size.Small" Style="color: #9E9E9E;"/>
+                                        <span>suffix scaffolding</span>
+                                    </div>
+                                }
                             </MudPaper>
                         </MudItem>
                         @if (_template.EditableValueTypes.Count > 0)
@@ -293,10 +317,36 @@
                                     }
                                     else
                                     {
+                                        var testParts = _testParts.GetValueOrDefault(test.Id);
+                                        var testScaffoldingExpanded = IsTestScaffoldingExpanded(test.Id);
                                         <MudGrid Class="mt-2">
                                             <MudItem xs="12" md="@(test.VariableNames.Count > 0 ? 7 : 12)">
                                                 <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
-                                                    <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@GetHighlightedTestContent(test)</pre>
+                                                    @if (HasTestScaffolding(test))
+                                                    {
+                                                        <div @onclick="@(() => ToggleTestScaffolding(test.Id))"
+                                                             style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                                            <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                                                     Size="Size.Small" Style="color: #9E9E9E;"/>
+                                                            <span>prefix scaffolding</span>
+                                                        </div>
+                                                        <MudCollapse Expanded="testScaffoldingExpanded">
+                                                            <pre style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Prefix</pre>
+                                                        </MudCollapse>
+                                                    }
+                                                    <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Content</pre>
+                                                    @if (HasTestScaffolding(test))
+                                                    {
+                                                        <MudCollapse Expanded="testScaffoldingExpanded">
+                                                            <pre style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Suffix</pre>
+                                                        </MudCollapse>
+                                                        <div @onclick="@(() => ToggleTestScaffolding(test.Id))"
+                                                             style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                                            <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                                                     Size="Size.Small" Style="color: #9E9E9E;"/>
+                                                            <span>suffix scaffolding</span>
+                                                        </div>
+                                                    }
                                                 </MudPaper>
                                             </MudItem>
                                             @if (test.VariableNames.Count > 0)

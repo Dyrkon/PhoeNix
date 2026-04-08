@@ -4,12 +4,7 @@
 
 <MudPaper Class="pa-4" Elevation="0">
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-        <MudText Typo="Typo.h6">Machines</MudText>
-
-        <MudIconButton Icon="@Icons.Material.Filled.Add"
-                       Color="Color.Primary"
-                       Size="Size.Medium"
-                       OnClick="OpenCreateDialogAsync"/>
+        <MudText Typo="Typo.h6">Machine Inventory</MudText>
     </MudStack>
 
     <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
@@ -47,6 +42,11 @@
                 </MudSelectItem>
             }
         </MudSelect>
+
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       OnClick="OpenCreateDialogAsync"/>
     </MudStack>
 
     <MudDataGrid T="MachineTableRow"

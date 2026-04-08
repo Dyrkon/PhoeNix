@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Helpers;
@@ -27,7 +28,7 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         CreateModuleTemplateRequest request,
         CancellationToken cancellationToken = default)
     {
-        return PostAsync("modules", request, cancellationToken);
+        return PostAsync("modules/templates/new", request, cancellationToken);
     }
 
     public Task<ApiResult> UpdateModuleTemplateAsync(
@@ -43,5 +44,15 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         CancellationToken cancellationToken = default)
     {
         return GetAsync<ModuleScaffoldingResponse>($"modules/{moduleTemplateId}/scaffolding", cancellationToken);
+    }
+
+    public Task<ApiResult<ModuleScaffoldingResponse>> GetScaffoldingPreviewAsync(
+        ModuleType type,
+        List<string> testNames,
+        CancellationToken cancellationToken = default)
+    {
+        var testNamesParam = testNames.Count > 0 ? string.Join(",", testNames) : string.Empty;
+        var url = $"modules/scaffolding/preview?type={type}&testNames={Uri.EscapeDataString(testNamesParam)}";
+        return GetAsync<ModuleScaffoldingResponse>(url, cancellationToken);
     }
 }

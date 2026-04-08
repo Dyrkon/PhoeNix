@@ -25,18 +25,18 @@ public static class NixCodeHighlighter
         var encoded = WebUtility.HtmlEncode(content);
 
         var entriesList = entries
-            .Where(e => !string.IsNullOrEmpty(e.Name))
-            .OrderByDescending(e => e.Name.Length)
+            .Where(e => !string.IsNullOrEmpty(e.Placeholder) || !string.IsNullOrEmpty(e.Name))
+            .OrderByDescending(e => (string.IsNullOrEmpty(e.Placeholder) ? e.Name : e.Placeholder).Length)
             .ToList();
 
         foreach (var (name, placeholder) in entriesList)
         {
-            var escapedName = Regex.Escape(WebUtility.HtmlEncode(name));
-            var pattern = $@"\b{escapedName}\b";
+            var searchTerm = !string.IsNullOrEmpty(placeholder) ? placeholder : name;
+            var escapedTerm = Regex.Escape(WebUtility.HtmlEncode(searchTerm));
+            var pattern = $@"\b{escapedTerm}\b";
 
-            var displayPlaceholder = !string.IsNullOrEmpty(placeholder) ? placeholder : name;
             var placeholderHtml =
-                $"<span style=\"color: {PlaceholderColor}; font-weight: bold;\">{WebUtility.HtmlEncode(displayPlaceholder)}</span>";
+                $"<span style=\"color: {PlaceholderColor}; font-weight: bold;\">{WebUtility.HtmlEncode(searchTerm)}</span>";
             var nameHtml =
                 $"<span style=\"color: {NameColor};\"> ({WebUtility.HtmlEncode(name)})</span>";
 

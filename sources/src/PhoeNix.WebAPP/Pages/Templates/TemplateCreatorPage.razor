@@ -1,0 +1,362 @@
+@page "/templates/new"
+@using Humanizer
+@using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.ApiClient.Contracts
+@using PhoeNix.WebAPP.Helpers
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.h4">Create Module Template</MudText>
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="/templates">
+            Back to templates
+        </MudButton>
+    </MudStack>
+
+    @if (_validationErrors.Count > 0)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2">
+            <MudText Typo="Typo.body2">Please fix the following errors:</MudText>
+            <MudList T="string" Dense="true">
+                @foreach (var error in _validationErrors)
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Error" IconColor="Color.Error">
+                        @error
+                    </MudListItem>
+                }
+            </MudList>
+        </MudAlert>
+    }
+
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-4">Template Information</MudText>
+
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudTextField T="string"
+                                  @bind-Value="_name"
+                                  Label="Name"
+                                  Required="true"
+                                  Variant="Variant.Outlined"/>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="2">
+                    <MudCheckBox T="bool"
+                                 @bind-Value="_enabled"
+                                 Label="Enabled"
+                                 Color="Color.Primary"/>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="ModuleType"
+                               Value="_moduleType"
+                               ValueChanged="OnModuleTypeChanged"
+                               Label="Type"
+                               Required="true"
+                               Variant="Variant.Outlined">
+                        @foreach (var moduleType in Enum.GetValues<ModuleType>())
+                        {
+                            <MudSelectItem Value="@moduleType">
+                                @moduleType.Humanize()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="Architecture"
+                               SelectedValues="_selectedArchitectures"
+                               SelectedValuesChanged="OnArchitecturesChanged"
+                               Label="Architectures"
+                               MultiSelection="true"
+                               Required="true"
+                               Variant="Variant.Outlined"
+                               MultiSelectionTextFunc="@(selected => string.Join(", ", selected.Select(s => s.FormatArchitectureString())))">
+                        @foreach (var architecture in Enum.GetValues<Architecture>())
+                        {
+                            <MudSelectItem Value="@architecture">
+                                @architecture.ToArchitectureString()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard>
+        <MudCardContent>
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudText Typo="Typo.h6">Module Content</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddEntryDialogAsync">
+                    Add Entry
+                </MudButton>
+            </MudStack>
+
+            <MudGrid>
+                <MudItem xs="12" md="@(_entries.Count > 0 ? 7 : 12)">
+                    <MudStack Spacing="0">
+                        @if (_moduleScaffolding is not null)
+                        {
+                            <div @onclick="ToggleModuleScaffolding"
+                                 style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 4px 4px 0 0; border: 1px solid var(--mud-palette-lines-default); border-bottom: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                         Size="Size.Small"/>
+                                <span>prefix scaffolding</span>
+                            </div>
+                            <MudCollapse Expanded="_moduleScaffoldingExpanded">
+                                <MudPaper Class="pa-2" Elevation="0"
+                                          Style="background-color: var(--mud-palette-background-gray); border: 1px solid var(--mud-palette-lines-default); border-top: none; border-bottom: none;">
+                                    <pre
+                                        style="margin: 0; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.75rem; color: var(--mud-palette-text-secondary); white-space: pre-wrap; word-break: break-all;">@_moduleScaffolding.Prefix</pre>
+                                </MudPaper>
+                            </MudCollapse>
+                        }
+
+                        <MudTextField T="string"
+                                      @bind-Value="_moduleContent"
+                                      Label="Module Code"
+                                      Variant="Variant.Outlined"
+                                      Lines="15"
+                                      Style="@($"font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;{(_moduleScaffolding is not null ? " border-radius: 0;" : "")}")"/>
+
+                        @if (_moduleScaffolding is not null)
+                        {
+                            <MudCollapse Expanded="_moduleScaffoldingExpanded">
+                                <MudPaper Class="pa-2" Elevation="0"
+                                          Style="background-color: var(--mud-palette-background-gray); border: 1px solid var(--mud-palette-lines-default); border-top: none; border-bottom: none;">
+                                    <pre
+                                        style="margin: 0; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.75rem; color: var(--mud-palette-text-secondary); white-space: pre-wrap; word-break: break-all;">@_moduleScaffolding.Suffix</pre>
+                                </MudPaper>
+                            </MudCollapse>
+                            <div @onclick="ToggleModuleScaffolding"
+                                 style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 0 0 4px 4px; border: 1px solid var(--mud-palette-lines-default); border-top: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                         Size="Size.Small"/>
+                                <span>suffix scaffolding</span>
+                            </div>
+                        }
+                    </MudStack>
+                </MudItem>
+
+                @if (_entries.Count > 0)
+                {
+                    <MudItem xs="12" md="5">
+                        <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">Entry Definitions (@_entries.Count)</MudText>
+                            <MudDivider Class="mb-2"/>
+                            <MudList T="EntryEditorModel" Dense="true">
+                                @foreach (var entry in _entries)
+                                {
+                                    <MudListItem T="EntryEditorModel">
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween"
+                                                  AlignItems="AlignItems.Center" Style="width: 100%;">
+                                            <MudStack Spacing="0">
+                                                <MudText Typo="Typo.body2"
+                                                         Style="font-weight: 600;">@entry.Name</MudText>
+                                                <MudText Typo="Typo.caption"
+                                                         Style="color: #FFA500; font-family: monospace;">@entry.Placeholder</MudText>
+                                                <MudStack Row="true" Spacing="1" Class="mt-1">
+                                                    <MudChip T="string" Size="Size.Small"
+                                                             Variant="Variant.Outlined">@entry.ValueKind.Humanize()</MudChip>
+                                                    <MudChip T="string" Size="Size.Small"
+                                                             Variant="Variant.Outlined">@entry.BindingKind.Humanize()</MudChip>
+                                                </MudStack>
+                                            </MudStack>
+                                            <MudStack Row="true" Spacing="0">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenEditEntryDialogAsync(entry))"/>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               OnClick="@(() => RemoveEntry(entry))"/>
+                                            </MudStack>
+                                        </MudStack>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard>
+        <MudCardContent>
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudText Typo="Typo.h6">Tests (@_tests.Count)</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddTestAsync">
+                    Add Test
+                </MudButton>
+            </MudStack>
+
+            @if (_tests.Count > 0)
+            {
+                <MudGrid>
+                    <MudItem xs="12" md="3">
+                        <MudList T="TestEditorModel"
+                                 Dense="true"
+                                 @bind-SelectedValue="_selectedTest"
+                                 Color="Color.Primary">
+                            @foreach (var test in _tests)
+                            {
+                                <MudListItem T="TestEditorModel" Value="@test">
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center"
+                                              Style="width: 100%;">
+                                        <MudText
+                                            Typo="Typo.body2">@(string.IsNullOrWhiteSpace(test.Name) ? "(unnamed)" : test.Name)</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => RemoveTestAsync(test))"
+                                                       OnClickStopPropagation="true"/>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudItem>
+
+                    @if (_selectedTest is not null)
+                    {
+                        var testScaffolding = GetTestScaffolding(_selectedTest.Name);
+                        var testScaffoldingExpanded = IsTestScaffoldingExpanded(_selectedTest.Id);
+                        var availablePlaceholders = GetAvailablePlaceholders();
+                        <MudItem xs="12" md="9">
+                            <MudStack Spacing="3">
+                                <MudTextField T="string"
+                                              Value="_selectedTest.Name"
+                                              ValueChanged="@(v => OnTestNameChangedAsync(_selectedTest, v))"
+                                              Label="Test Name"
+                                              Variant="Variant.Outlined"
+                                              Required="true"
+                                              DebounceInterval="500"/>
+
+                                <MudGrid>
+                                    <MudItem xs="12" md="@(availablePlaceholders.Count > 0 ? 8 : 12)">
+                                        <MudStack Spacing="0">
+                                            @if (testScaffolding is not null)
+                                            {
+                                                <div @onclick="@(() => ToggleTestScaffolding(_selectedTest.Id))"
+                                                     style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 4px 4px 0 0; border: 1px solid var(--mud-palette-lines-default); border-bottom: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                                    <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                                             Size="Size.Small"/>
+                                                    <span>prefix scaffolding</span>
+                                                </div>
+                                                <MudCollapse Expanded="testScaffoldingExpanded">
+                                                    <MudPaper Class="pa-2" Elevation="0"
+                                                              Style="background-color: var(--mud-palette-background-gray); border: 1px solid var(--mud-palette-lines-default); border-top: none; border-bottom: none;">
+                                                        <pre
+                                                            style="margin: 0; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.75rem; color: var(--mud-palette-text-secondary); white-space: pre-wrap; word-break: break-all;">@testScaffolding.Prefix</pre>
+                                                    </MudPaper>
+                                                </MudCollapse>
+                                            }
+
+                                            <MudTextField T="string"
+                                                          @bind-Value="_selectedTest.Content"
+                                                          Label="Test Code"
+                                                          Variant="Variant.Outlined"
+                                                          Lines="10"
+                                                          Style="@($"font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;{(testScaffolding is not null ? " border-radius: 0;" : "")}")"/>
+
+                                            @if (testScaffolding is not null)
+                                            {
+                                                <MudCollapse Expanded="testScaffoldingExpanded">
+                                                    <MudPaper Class="pa-2" Elevation="0"
+                                                              Style="background-color: var(--mud-palette-background-gray); border: 1px solid var(--mud-palette-lines-default); border-top: none; border-bottom: none;">
+                                                        <pre
+                                                            style="margin: 0; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.75rem; color: var(--mud-palette-text-secondary); white-space: pre-wrap; word-break: break-all;">@testScaffolding.Suffix</pre>
+                                                    </MudPaper>
+                                                </MudCollapse>
+                                                <div @onclick="@(() => ToggleTestScaffolding(_selectedTest.Id))"
+                                                     style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 0 0 4px 4px; border: 1px solid var(--mud-palette-lines-default); border-top: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
+                                                    <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                                             Size="Size.Small"/>
+                                                    <span>suffix scaffolding</span>
+                                                </div>
+                                            }
+                                        </MudStack>
+                                    </MudItem>
+
+                                    @if (availablePlaceholders.Count > 0)
+                                    {
+                                        <MudItem xs="12" md="4">
+                                            <MudPaper Class="pa-3" Elevation="1">
+                                                <MudText Typo="Typo.subtitle2" Class="mb-2">Variables (from entries)
+                                                </MudText>
+                                                <MudSelect T="string"
+                                                           MultiSelection="true"
+                                                           SelectedValues="_selectedTest.VariableNames"
+                                                           SelectedValuesChanged="OnSelectedVariablesChanged"
+                                                           Label="Select Placeholders"
+                                                           Variant="Variant.Outlined"
+                                                           Margin="Margin.Dense"
+                                                           MultiSelectionTextFunc="@(selected => $"{selected.Count()} selected")">
+                                                    @foreach (var placeholder in availablePlaceholders)
+                                                    {
+                                                        <MudSelectItem T="string" Value="@placeholder">
+                                                            @placeholder
+                                                        </MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                                @if (_selectedTest.VariableNames.Count > 0)
+                                                {
+                                                    <MudChipSet T="string" Class="mt-2">
+                                                        @foreach (var variable in _selectedTest.VariableNames)
+                                                        {
+                                                            <MudChip T="string"
+                                                                     Value="@variable"
+                                                                     Color="Color.Success"
+                                                                     Size="Size.Small"
+                                                                     Variant="Variant.Outlined">
+                                                                @variable
+                                                            </MudChip>
+                                                        }
+                                                    </MudChipSet>
+                                                }
+                                            </MudPaper>
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+                            </MudStack>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    No tests defined. Click "Add Test" to create a test for this module.
+                </MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   OnClick="ValidateForm">
+            Validate
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="SubmitAsync"
+                   Disabled="_isSubmitting">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+            }
+            Create Template
+        </MudButton>
+    </MudStack>
+</MudStack>

@@ -9,6 +9,13 @@
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
+
+    qmd-src = {
+      url = "github:tobi/qmd/c2f3a4037204066455662492518384c9f3a4d247";
+      flake = false;
+    };
+
+    bun2nix.url = "github:nix-community/bun2nix";
   };
 
   outputs = inputs @ {
@@ -19,7 +26,14 @@
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = import nixpkgs {inherit system;};
+        pkgs = import nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            cudaSupport = true;
+          };
+        };
+
         lib = pkgs.lib;
 
         project = {
@@ -31,33 +45,55 @@
           dotnetRuntime = pkgs.dotnetCorePackages.aspnetcore_10_0;
         };
 
-        csprojSrc = import ./nix/lib/csprojFileset/default.nix {inherit pkgs project;};
+        csprojSrc = import ./nix/lib/csprojFileset/default.nix {
+          inherit pkgs project;
+        };
 
         packages = rec {
-          solution = import ./nix/packages/solution/default.nix {inherit pkgs lib project csprojSrc;};
-          webapi = import ./nix/packages/webapi/default.nix {inherit pkgs lib project csprojSrc;};
-          webapp = import ./nix/packages/webapp/default.nix {inherit pkgs lib project csprojSrc;};
+          solution = import ./nix/packages/solution/default.nix {
+            inherit pkgs lib project csprojSrc;
+          };
+
+          webapi = import ./nix/packages/webapi/default.nix {
+            inherit pkgs lib project csprojSrc;
+          };
+
+          webapp = import ./nix/packages/webapp/default.nix {
+            inherit pkgs lib project csprojSrc;
+          };
+
+          qmd = import ./nix/packages/qmd/default.nix {
+            inherit pkgs lib;
+            qmd-src = inputs.qmd-src;
+            bun2nix = inputs.bun2nix.packages.${system}.default;
+          };
 
           default = webapp;
         };
 
-        webapiTest = import ./nix/packages/tests/webapi-test/default.nix {inherit pkgs lib project csprojSrc;};
-        webappTest = import ./nix/packages/tests/webapp-test/default.nix {inherit pkgs lib project csprojSrc;};
+        webapiTest = import ./nix/packages/tests/webapi-test/default.nix {
+          inherit pkgs lib project csprojSrc;
+        };
+
+        webappTest = import ./nix/packages/tests/webapp-test/default.nix {
+          inherit pkgs lib project csprojSrc;
+        };
 
         devShell = import ./nix/shells/default/default.nix {
           inherit pkgs lib project;
+          qmd = packages.qmd;
           runtimeDeps = [];
         };
 
-        pc = import ./nix/process-compose/default.nix {inherit pkgs lib project;};
+        pc = import ./nix/process-compose/default.nix {
+          inherit pkgs lib project;
+        };
       in {
         formatter = pkgs.alejandra;
 
-        packages =
-          packages
-          // {
-            process-compose-config = pc.configPackage;
-          };
+        packages = packages // {
+          process-compose-config = pc.configPackage;
+        };
 
         devShells.default = devShell;
 
