@@ -28,13 +28,14 @@ public abstract class EntryValue
     public abstract EntryValueKind Kind { get; }
 
     public string Value { get; set; } = string.Empty;
+
+    public virtual string GetNixExpression() => Value;
 }
 
 public sealed record EntryValueDefinition(
     ModuleTemplateId ModuleTemplateId,
     string Name,
     string Placeholder,
-    UserInputType InputType,
     EntryBindingKind BindingKind,
     EntryValueKind ValueKind,
     string? DefaultValue = null,

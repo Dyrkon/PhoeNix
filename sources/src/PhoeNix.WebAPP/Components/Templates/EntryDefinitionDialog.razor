@@ -19,20 +19,7 @@
                               Label="Placeholder"
                               Required="true"
                               RequiredError="Placeholder is required."
-                              HelperText="Text to be replaced in module content (e.g., $$HOSTNAME$$)"/>
-
-                <MudSelect T="UserInputType"
-                           @bind-Value="Model.InputType"
-                           Label="Input Type"
-                           Required="true"
-                           HelperText="How the user will input the value">
-                    @foreach (var inputType in Enum.GetValues<UserInputType>())
-                    {
-                        <MudSelectItem Value="@inputType">
-                            @inputType.Humanize()
-                        </MudSelectItem>
-                    }
-                </MudSelect>
+                              HelperText="Valid Nix identifier used in module content and args (e.g. hostname, diskDevice)"/>
 
                 <MudSelect T="EntryBindingKind"
                            @bind-Value="Model.BindingKind"
@@ -150,15 +137,52 @@
                     </MudStack>
                 }
 
+                @if (Model.ValueKind == EntryValueKind.List)
+                {
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.body2">Default Items</MudText>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudTextField T="string"
+                                          @bind-Value="_newListItem"
+                                          Label="New Item"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Style="flex: 1;"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Color="Color.Primary"
+                                           OnClick="AddListItem"
+                                           Disabled="@string.IsNullOrWhiteSpace(_newListItem)"/>
+                        </MudStack>
+                        @if (Model.DefaultListItems.Count > 0)
+                        {
+                            <MudChipSet T="string" ReadOnly="false">
+                                @foreach (var item in Model.DefaultListItems)
+                                {
+                                    <MudChip T="string"
+                                             Value="@item"
+                                             Color="Color.Primary"
+                                             Variant="Variant.Outlined"
+                                             OnClose="@(() => RemoveListItem(item))">
+                                        @item
+                                    </MudChip>
+                                }
+                            </MudChipSet>
+                        }
+                    </MudStack>
+                }
+
                 <MudCheckBox T="bool"
                              @bind-Value="Model.AllowLowerValue"
                              Label="Allow Lower Value"
                              Color="Color.Primary"/>
 
-                <MudTextField T="string"
-                              @bind-Value="Model.DefaultValue"
-                              Label="Default Value"
-                              HelperText="Optional default value"/>
+                @if (Model.ValueKind != EntryValueKind.List)
+                {
+                    <MudTextField T="string"
+                                  @bind-Value="Model.DefaultValue"
+                                  Label="Default Value"
+                                  HelperText="Optional default value"/>
+                }
 
                 @if (Model.AllowLowerValue)
                 {

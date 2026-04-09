@@ -6,7 +6,6 @@ namespace Phoenix.Presentation.Contracts;
 public sealed record EntryValueDefinitionRequest(
     string Name,
     string Placeholder,
-    UserInputType InputType,
     EntryBindingKind BindingKind,
     int? BindingIndex);
 

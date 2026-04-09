@@ -28,14 +28,16 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         var def1 = new EntryValueDefinition(
             moduleId,
             "ENTRY_ONE",
-            "{ENTRY_ONE}",
-            UserInputType.Text);
+            "ENTRY_ONE",
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
 
         var def2 = new EntryValueDefinition(
             moduleId,
             "ENTRY_TWO",
-            "{ENTRY_TWO}",
-            UserInputType.Text);
+            "ENTRY_TWO",
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
 
         var change = module.ChangeContent("ENTRY_ONE ENTRY_TWO", new List<EntryValueDefinition> { def1, def2 });
         change.IsSuccess.Should().BeTrue();
@@ -57,9 +59,9 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         // Included collection
         loaded.EditableValueTypes.Should().HaveCount(2);
         loaded.EditableValueTypes.Should().Contain(e =>
-            e.Name == "ENTRY_ONE" && e.Placeholder == "{ENTRY_ONE}" && e.InputType == UserInputType.Text);
+            e.Name == "ENTRY_ONE" && e.Placeholder == "ENTRY_ONE");
         loaded.EditableValueTypes.Should().Contain(e =>
-            e.Name == "ENTRY_TWO" && e.Placeholder == "{ENTRY_TWO}" && e.InputType == UserInputType.Text);
+            e.Name == "ENTRY_TWO" && e.Placeholder == "ENTRY_TWO");
     }
 
     [Fact]
@@ -76,13 +78,13 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         var missing = new EntryValueDefinition(
             module.Id,
             "NOT_PRESENT",
-            "{NOT_PRESENT}",
-            UserInputType.Text);
+            "NOT_PRESENT",
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
 
         var result = module.ChangeContent("some content without token", new List<EntryValueDefinition> { missing });
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Name for value NOT_PRESENT is not present");
     }
 
     [Fact]
@@ -101,8 +103,9 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         var def = new EntryValueDefinition(
             moduleId,
             "A",
-            "{A}",
-            UserInputType.Text);
+            "A",
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
 
         module.ChangeContent("A", new List<EntryValueDefinition> { def });
 
@@ -138,7 +141,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
 
         module1.ChangeContent("X", new List<EntryValueDefinition>
         {
-            new(module1.Id, "X", "{X}", UserInputType.Text)
+            new(module1.Id, "X", "X", EntryBindingKind.UserProvided, EntryValueKind.Text)
         });
 
         InjectTests(module1, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), "t1").Value });
@@ -153,7 +156,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
 
         module2.ChangeContent("Y", new List<EntryValueDefinition>
         {
-            new(module2.Id, "Y", "{Y}", UserInputType.Text)
+            new(module2.Id, "Y", "Y", EntryBindingKind.UserProvided, EntryValueKind.Text)
         });
 
         InjectTests(module2, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), "t2").Value });

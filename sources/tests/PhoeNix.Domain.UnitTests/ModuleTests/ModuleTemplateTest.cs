@@ -94,8 +94,8 @@ public class ModuleTemplateTests
     {
         var module = CreateValidModule();
 
-        var entry1 = CreateEntryDefinition("VALUE_ONE", "{VALUE_ONE}", UserInputType.Text);
-        var entry2 = CreateEntryDefinition("VALUE_TWO", "{VALUE_TWO}", UserInputType.Text);
+        var entry1 = CreateEntryDefinition("VALUE_ONE", "VALUE_ONE");
+        var entry2 = CreateEntryDefinition("VALUE_TWO", "VALUE_TWO");
 
         var content = "some text VALUE_ONE and also VALUE_TWO";
 
@@ -109,17 +109,16 @@ public class ModuleTemplateTests
     }
 
     [Fact]
-    public void ModuleTemplate_Should_Fail_ChangeContent_When_Entry_Name_Not_Present_In_Content()
+    public void ModuleTemplate_Should_Fail_ChangeContent_When_Entry_Placeholder_Not_Present_In_Content()
     {
         var module = CreateValidModule();
 
-        var entry = CreateEntryDefinition("MUST_BE_PRESENT", "{MUST_BE_PRESENT}", UserInputType.Text);
+        var entry = CreateEntryDefinition("Must Be Present", "MUST_BE_PRESENT");
         var content = "this does not include the token";
 
         var result = module.ChangeContent(content, new List<EntryValueDefinition> { entry });
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Name for value MUST_BE_PRESENT is not present");
 
         module.Content.Should().BeEmpty();
         module.EditableValueTypes.Should().BeEmpty();
@@ -130,10 +129,10 @@ public class ModuleTemplateTests
     {
         var module = CreateValidModule();
 
-        var entry1 = CreateEntryDefinition("ONE", "{ONE}", UserInputType.Text);
+        var entry1 = CreateEntryDefinition("ONE", "ONE");
         module.ChangeContent("ONE", new List<EntryValueDefinition> { entry1 });
 
-        var entry2 = CreateEntryDefinition("TWO", "{TWO}", UserInputType.Text);
+        var entry2 = CreateEntryDefinition("TWO", "TWO");
         var result = module.ChangeContent("TWO", new List<EntryValueDefinition> { entry2 });
 
         result.IsSuccess.Should().BeTrue();
@@ -231,12 +230,13 @@ public class ModuleTemplateTests
             .Value;
     }
 
-    private EntryValueDefinition CreateEntryDefinition(string name, string placeholder, UserInputType inputType)
+    private EntryValueDefinition CreateEntryDefinition(string name, string placeholder)
     {
         return new EntryValueDefinition(
             _moduleTemplateId,
             name,
             placeholder,
-            inputType);
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
     }
 }

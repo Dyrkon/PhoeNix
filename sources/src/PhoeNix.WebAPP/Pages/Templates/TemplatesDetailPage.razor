@@ -114,7 +114,6 @@
                                         <th>Name</th>
                                         <th>Placeholder</th>
                                         <th>Value Kind</th>
-                                        <th>Input Type</th>
                                         <th>Binding Kind</th>
                                         <th>Default</th>
                                         <th>Options</th>
@@ -127,9 +126,8 @@
                                             <td>@entry.Name</td>
                                             <td><code>@entry.Placeholder</code></td>
                                             <td>@entry.ValueKind.Humanize()</td>
-                                            <td>@entry.InputType.Humanize()</td>
                                             <td>@entry.BindingKind.Humanize()</td>
-                                            <td>@(entry.DefaultValue ?? "-")</td>
+                                            <td>@GetDefaultValueDisplay(entry)</td>
                                             <td>
                                                 @if (entry.Options is { Count: > 0 })
                                                 {
@@ -264,7 +262,6 @@
                                                     </MudStack>
                                                     <MudStack Row="true" Spacing="1" Class="mt-1">
                                                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.ValueKind.Humanize()</MudChip>
-                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.InputType.Humanize()</MudChip>
                                                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.BindingKind.Humanize()</MudChip>
                                                     </MudStack>
                                                 </MudStack>

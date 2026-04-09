@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
@@ -15,6 +15,8 @@ public partial class TemplateCreatorPage : ComponentBase
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Parameter] public Guid? TemplateId { get; set; }
 
     private string _name = string.Empty;
     private bool _enabled = true;
@@ -36,7 +38,10 @@ public partial class TemplateCreatorPage : ComponentBase
     private bool _moduleScaffoldingExpanded = false;
     private readonly HashSet<Guid> _testScaffoldingExpanded = new();
 
-    private void ToggleModuleScaffolding() => _moduleScaffoldingExpanded = !_moduleScaffoldingExpanded;
+    private void ToggleModuleScaffolding()
+    {
+        _moduleScaffoldingExpanded = !_moduleScaffoldingExpanded;
+    }
 
     private void ToggleTestScaffolding(Guid testId)
     {
@@ -44,10 +49,66 @@ public partial class TemplateCreatorPage : ComponentBase
             _testScaffoldingExpanded.Remove(testId);
     }
 
-    private bool IsTestScaffoldingExpanded(Guid testId) => _testScaffoldingExpanded.Contains(testId);
+    private bool IsTestScaffoldingExpanded(Guid testId)
+    {
+        return _testScaffoldingExpanded.Contains(testId);
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        if (TemplateId.HasValue)
+        {
+            var result = await ModulesApiClient.GetModuleTemplateByIdAsync(TemplateId.Value);
+
+            if (result.IsSuccess && result.Value is not null)
+            {
+                var t = result.Value;
+                _name = t.Name;
+                _enabled = t.Enabled;
+                _moduleType = t.Type;
+                _selectedArchitectures = t.SupportedArchitectures.ToList();
+                _moduleContent = t.Content;
+
+                _entries.Clear();
+                foreach (var e in t.EditableValueTypes)
+                    _entries.Add(new EntryEditorModel
+                    {
+                        Name = e.Name,
+                        Placeholder = e.Placeholder,
+                        BindingKind = e.BindingKind,
+                        ValueKind = e.ValueKind,
+                        DefaultValue = e.ValueKind == EntryValueKind.List ? null : e.DefaultValue,
+                        DefaultListItems = e.ValueKind == EntryValueKind.List && e.DefaultValue is not null
+                            ? JsonSerializer.Deserialize<List<string>>(e.DefaultValue) ?? []
+                            : [],
+                        DefaultLowerValue = e.DefaultLowerValue,
+                        IntegerMin = e.IntegerMin,
+                        IntegerMax = e.IntegerMax,
+                        DecimalMin = e.DecimalMin,
+                        DecimalMax = e.DecimalMax,
+                        AllowLowerValue = e.AllowLowerValue,
+                        Options = e.Options is not null ? [..e.Options] : [],
+                        BindingIndex = e.BindingIndex
+                    });
+
+                _tests.Clear();
+                foreach (var test in t.Tests)
+                    _tests.Add(new TestEditorModel
+                    {
+                        Id = test.Id,
+                        Name = test.Name,
+                        Content = test.Content,
+                        VariableNames = test.VariableNames.ToList()
+                    });
+
+                _selectedTest = _tests.FirstOrDefault();
+            }
+            else
+            {
+                Snackbar.Add("Failed to load template for editing.", Severity.Error);
+            }
+        }
+
         await FetchScaffoldingAsync();
     }
 
@@ -76,9 +137,7 @@ public partial class TemplateCreatorPage : ComponentBase
                 _moduleScaffolding = result.Value.Module;
                 _testScaffoldings.Clear();
                 foreach (var testScaffolding in result.Value.Tests)
-                {
                     _testScaffoldings[testScaffolding.TestName] = testScaffolding;
-                }
             }
         }
         finally
@@ -108,9 +167,7 @@ public partial class TemplateCreatorPage : ComponentBase
         var result = await dialog.Result;
 
         if (result is { Canceled: false, Data: EntryDefinitionDialog.EntryDefinitionModel model })
-        {
             _entries.Add(MapToEditorModel(model));
-        }
     }
 
     private async Task OpenEditEntryDialogAsync(EntryEditorModel entry)
@@ -138,10 +195,7 @@ public partial class TemplateCreatorPage : ComponentBase
         if (result is { Canceled: false, Data: EntryDefinitionDialog.EntryDefinitionModel model })
         {
             var index = _entries.IndexOf(entry);
-            if (index >= 0)
-            {
-                _entries[index] = MapToEditorModel(model);
-            }
+            if (index >= 0) _entries[index] = MapToEditorModel(model);
         }
     }
 
@@ -169,10 +223,7 @@ public partial class TemplateCreatorPage : ComponentBase
     {
         _tests.Remove(test);
 
-        if (_selectedTest == test)
-        {
-            _selectedTest = _tests.FirstOrDefault();
-        }
+        if (_selectedTest == test) _selectedTest = _tests.FirstOrDefault();
 
         await FetchScaffoldingAsync();
     }
@@ -203,20 +254,11 @@ public partial class TemplateCreatorPage : ComponentBase
     {
         _validationErrors.Clear();
 
-        if (string.IsNullOrWhiteSpace(_name))
-        {
-            _validationErrors.Add("Name is required.");
-        }
+        if (string.IsNullOrWhiteSpace(_name)) _validationErrors.Add("Name is required.");
 
-        if (!_selectedArchitectures.Any())
-        {
-            _validationErrors.Add("At least one architecture must be selected.");
-        }
+        if (!_selectedArchitectures.Any()) _validationErrors.Add("At least one architecture must be selected.");
 
-        if (string.IsNullOrWhiteSpace(_moduleContent))
-        {
-            _validationErrors.Add("Module content is required.");
-        }
+        if (string.IsNullOrWhiteSpace(_moduleContent)) _validationErrors.Add("Module content is required.");
 
         foreach (var entry in _entries)
         {
@@ -224,9 +266,7 @@ public partial class TemplateCreatorPage : ComponentBase
                 continue;
 
             if (!_moduleContent.Contains(entry.Placeholder))
-            {
                 _validationErrors.Add($"Placeholder '{entry.Placeholder}' not found in module content.");
-            }
         }
 
         var duplicateNames = _entries
@@ -235,10 +275,7 @@ public partial class TemplateCreatorPage : ComponentBase
             .Select(g => g.Key)
             .ToList();
 
-        foreach (var name in duplicateNames)
-        {
-            _validationErrors.Add($"Duplicate entry name: '{name}'.");
-        }
+        foreach (var name in duplicateNames) _validationErrors.Add($"Duplicate entry name: '{name}'.");
 
         var duplicatePlaceholders = _entries
             .GroupBy(e => e.Placeholder, StringComparer.OrdinalIgnoreCase)
@@ -247,29 +284,18 @@ public partial class TemplateCreatorPage : ComponentBase
             .ToList();
 
         foreach (var placeholder in duplicatePlaceholders)
-        {
             _validationErrors.Add($"Duplicate placeholder: '{placeholder}'.");
-        }
 
         foreach (var test in _tests)
         {
-            if (string.IsNullOrWhiteSpace(test.Name))
-            {
-                _validationErrors.Add("All tests must have a name.");
-            }
+            if (string.IsNullOrWhiteSpace(test.Name)) _validationErrors.Add("All tests must have a name.");
 
             if (string.IsNullOrWhiteSpace(test.Content))
-            {
                 _validationErrors.Add($"Test '{test.Name}' must have content.");
-            }
 
             foreach (var variable in test.VariableNames)
-            {
                 if (!string.IsNullOrWhiteSpace(test.Content) && !test.Content.Contains(variable))
-                {
                     _validationErrors.Add($"Variable '{variable}' not found in test '{test.Name}' content.");
-                }
-            }
         }
 
         var duplicateTestNames = _tests
@@ -279,53 +305,70 @@ public partial class TemplateCreatorPage : ComponentBase
             .Select(g => g.Key)
             .ToList();
 
-        foreach (var name in duplicateTestNames)
-        {
-            _validationErrors.Add($"Duplicate test name: '{name}'.");
-        }
+        foreach (var name in duplicateTestNames) _validationErrors.Add($"Duplicate test name: '{name}'.");
 
         if (_validationErrors.Count == 0)
-        {
             Snackbar.Add("Validation passed.", Severity.Success);
-        }
         else
-        {
             Snackbar.Add($"Validation failed with {_validationErrors.Count} error(s).", Severity.Warning);
-        }
     }
 
     private async Task SubmitAsync()
     {
         ValidateForm();
 
-        if (_validationErrors.Count > 0)
-        {
-            return;
-        }
+        if (_validationErrors.Count > 0) return;
 
         _isSubmitting = true;
 
         try
         {
-            var request = new CreateModuleTemplateRequest(
-                _name.Trim(),
-                _enabled,
-                _moduleType,
-                _moduleContent,
-                _selectedArchitectures.ToList(),
-                _entries.Select(MapToApiModel).ToList(),
-                _tests.Select(MapTestToApiModel).ToList());
-
-            var result = await ModulesApiClient.CreateModuleTemplateAsync(request);
-
-            if (result.IsFailure)
+            if (TemplateId.HasValue)
             {
-                Snackbar.Add($"Failed to create template: {result.Error?.Description ?? "Unknown error"}", Severity.Error);
-                return;
-            }
+                var request = new UpdateModuleTemplateRequest(
+                    _name.Trim(),
+                    _enabled,
+                    _moduleType,
+                    _moduleContent,
+                    _selectedArchitectures.ToList(),
+                    _entries.Select(MapToApiModel).ToList(),
+                    _tests.Select(MapTestToApiModel).ToList());
 
-            Snackbar.Add("Template created successfully.", Severity.Success);
-            NavigationManager.NavigateToTemplates();
+                var result = await ModulesApiClient.UpdateModuleTemplateAsync(TemplateId.Value, request);
+
+                if (result.IsFailure)
+                {
+                    Snackbar.Add($"Failed to update template: {result.Error?.Description ?? "Unknown error"}",
+                        Severity.Error);
+                    return;
+                }
+
+                Snackbar.Add("Template updated successfully.", Severity.Success);
+                NavigationManager.NavigateToTemplatesDetail(TemplateId.Value);
+            }
+            else
+            {
+                var request = new CreateModuleTemplateRequest(
+                    _name.Trim(),
+                    _enabled,
+                    _moduleType,
+                    _moduleContent,
+                    _selectedArchitectures.ToList(),
+                    _entries.Select(MapToApiModel).ToList(),
+                    _tests.Select(MapTestToApiModel).ToList());
+
+                var result = await ModulesApiClient.CreateModuleTemplateAsync(request);
+
+                if (result.IsFailure)
+                {
+                    Snackbar.Add($"Failed to create template: {result.Error?.Description ?? "Unknown error"}",
+                        Severity.Error);
+                    return;
+                }
+
+                Snackbar.Add("Template created successfully.", Severity.Success);
+                NavigationManager.NavigateToTemplates();
+            }
         }
         finally
         {
@@ -339,7 +382,6 @@ public partial class TemplateCreatorPage : ComponentBase
         {
             Name = model.Name,
             Placeholder = model.Placeholder,
-            InputType = model.InputType,
             BindingKind = model.BindingKind,
             ValueKind = model.ValueKind,
             IntegerMin = model.IntegerMin,
@@ -347,6 +389,7 @@ public partial class TemplateCreatorPage : ComponentBase
             DecimalMin = model.DecimalMin,
             DecimalMax = model.DecimalMax,
             Options = [..model.Options],
+            DefaultListItems = [..model.DefaultListItems],
             AllowLowerValue = model.AllowLowerValue,
             DefaultValue = model.DefaultValue,
             DefaultLowerValue = model.DefaultLowerValue,
@@ -360,7 +403,6 @@ public partial class TemplateCreatorPage : ComponentBase
         {
             Name = model.Name,
             Placeholder = model.Placeholder,
-            InputType = model.InputType,
             BindingKind = model.BindingKind,
             ValueKind = model.ValueKind,
             IntegerMin = model.IntegerMin,
@@ -368,6 +410,7 @@ public partial class TemplateCreatorPage : ComponentBase
             DecimalMin = model.DecimalMin,
             DecimalMax = model.DecimalMax,
             Options = [..model.Options],
+            DefaultListItems = [..model.DefaultListItems],
             AllowLowerValue = model.AllowLowerValue,
             DefaultValue = model.DefaultValue,
             DefaultLowerValue = model.DefaultLowerValue,
@@ -377,13 +420,16 @@ public partial class TemplateCreatorPage : ComponentBase
 
     private static ModuleTemplateEntryValueDefinitionModel MapToApiModel(EntryEditorModel model)
     {
+        var defaultValue = model.ValueKind == EntryValueKind.List
+            ? JsonSerializer.Serialize(model.DefaultListItems)
+            : model.DefaultValue;
+
         return new ModuleTemplateEntryValueDefinitionModel(
             model.Name,
             model.Placeholder,
-            model.InputType,
             model.BindingKind,
             model.ValueKind,
-            model.DefaultValue,
+            defaultValue,
             model.DefaultLowerValue,
             model.IntegerMin,
             model.IntegerMax,
@@ -397,7 +443,7 @@ public partial class TemplateCreatorPage : ComponentBase
     private static ModuleTemplateTestUpsertModel MapTestToApiModel(TestEditorModel model)
     {
         return new ModuleTemplateTestUpsertModel(
-            null,
+            model.Id,
             model.Name,
             model.Content,
             model.VariableNames);
@@ -407,7 +453,6 @@ public partial class TemplateCreatorPage : ComponentBase
     {
         public string Name { get; set; } = string.Empty;
         public string Placeholder { get; set; } = string.Empty;
-        public UserInputType InputType { get; set; } = UserInputType.Text;
         public EntryBindingKind BindingKind { get; set; } = EntryBindingKind.UserProvided;
         public EntryValueKind ValueKind { get; set; } = EntryValueKind.Text;
         public int? IntegerMin { get; set; }
@@ -415,6 +460,7 @@ public partial class TemplateCreatorPage : ComponentBase
         public decimal? DecimalMin { get; set; }
         public decimal? DecimalMax { get; set; }
         public List<string> Options { get; set; } = [];
+        public List<string> DefaultListItems { get; set; } = [];
         public bool AllowLowerValue { get; set; }
         public string? DefaultValue { get; set; }
         public string? DefaultLowerValue { get; set; }

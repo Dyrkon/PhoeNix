@@ -1,4 +1,5 @@
 @page "/templates/new"
+@page "/templates/{TemplateId:guid}/edit"
 @using Humanizer
 @using PhoeNix.Domain.Enums
 @using PhoeNix.WebAPP.ApiClient.Contracts
@@ -6,7 +7,7 @@
 
 <MudStack Spacing="3">
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.h4">Create Module Template</MudText>
+        <MudText Typo="Typo.h4">@(TemplateId.HasValue ? "Edit Module Template" : "Create Module Template")</MudText>
         <MudButton Variant="Variant.Outlined"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
                    Href="/templates">
@@ -356,7 +357,7 @@
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
             }
-            Create Template
+            @(TemplateId.HasValue ? "Save Changes" : "Create Template")
         </MudButton>
     </MudStack>
 </MudStack>
