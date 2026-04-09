@@ -32,8 +32,9 @@ public class ModuleMappingsTests
         var def = new EntryValueDefinition(
             id,
             "VALUE_ONE",
-            "{VALUE_ONE}",
-            UserInputType.Text);
+            "VALUE_ONE",
+            EntryBindingKind.UserProvided,
+            EntryValueKind.Text);
 
         module.ChangeContent("VALUE_ONE", new List<EntryValueDefinition> { def }).IsSuccess.Should().BeTrue();
 
@@ -46,7 +47,9 @@ public class ModuleMappingsTests
         dto.SupportedArchitectures.Should().ContainSingle().Which.Should().Be(Architecture.Aarch64Linux);
 
         dto.EditableValueTypes.Should().ContainSingle().Which.Should()
-            .BeEquivalentTo(new EntryValueDefinitionResponse("VALUE_ONE", "{VALUE_ONE}", UserInputType.Text));
+            .BeEquivalentTo(new EntryValueDefinitionResponse("VALUE_ONE", "VALUE_ONE",
+                EntryBindingKind.UserProvided, EntryValueKind.Text,
+                null, null, null, null, null, null, null, null, null));
     }
 
     [Fact]

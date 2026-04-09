@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using PhoeNix.Application.Models.Modules;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
@@ -94,6 +95,7 @@ internal static class ModuleEntryFactory
             EntryValueKind.IntegerRange => CreateIntegerRangeEntry(definition, requestEntry, entryValueId),
             EntryValueKind.DecimalRange => CreateDecimalRangeEntry(definition, requestEntry, entryValueId),
             EntryValueKind.SingleChoice => CreateSingleChoiceEntry(definition, requestEntry, entryValueId),
+            EntryValueKind.List => CreateListEntry(definition, requestEntry, entryValueId),
             _ => Result.Failure<EntryValue>(new Error("Modules.UnsupportedEntryKind",
                 $"Unsupported entry kind '{definition.ValueKind}'."))
         };
@@ -199,6 +201,21 @@ internal static class ModuleEntryFactory
                 options,
                 selectedValue)
             .Map<SingleChoiceValue, EntryValue>(x => x);
+    }
+
+    private static Result<EntryValue> CreateListEntry(
+        EntryValueDefinition definition,
+        ModuleEntryValueUpsertModel? requestEntry,
+        EntryValueId entryValueId)
+    {
+        IReadOnlyList<string> items = requestEntry?.ListItems is { Count: > 0 } provided
+            ? provided
+            : (!string.IsNullOrEmpty(definition.DefaultValue)
+                ? JsonSerializer.Deserialize<List<string>>(definition.DefaultValue) ?? []
+                : []);
+
+        return ListValue.Create(entryValueId, definition.Name, definition.Placeholder, items)
+            .Map<ListValue, EntryValue>(x => x);
     }
 
     private static int? ParseInt(string? value, string entryName, string source)

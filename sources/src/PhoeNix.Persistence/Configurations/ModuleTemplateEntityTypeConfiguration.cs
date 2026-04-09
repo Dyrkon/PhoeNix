@@ -60,10 +60,6 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
                 .IsRequired()
                 .HasMaxLength(100);
 
-            owned.Property(e => e.InputType)
-                .HasConversion<string>()
-                .IsRequired();
-
             owned.Property(e => e.BindingKind)
                 .HasConversion<string>()
                 .IsRequired();

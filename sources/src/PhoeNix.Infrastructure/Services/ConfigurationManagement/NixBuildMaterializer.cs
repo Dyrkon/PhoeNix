@@ -248,8 +248,28 @@ public class NixBuildMaterializer : INixBuildMaterializer
 
         foreach (var value in moduleValue.EditableValues)
         {
-            inputs += $"{value.Name} = {value.Value};";
-            outputContent = outputContent.Replace(value.Name, $"args.{value.Name}");
+            var definition = moduleTemplate.EditableValueTypes
+                .FirstOrDefault(v => v.Placeholder == value.Placeholder);
+
+            string? nixValue;
+            if (value.Value == string.Empty)
+            {
+                nixValue = definition?.DefaultValue;
+                if (nixValue is null && value.Kind == EntryValueKind.List)
+                    nixValue = "[ ]";
+            }
+            else
+            {
+                nixValue = value.GetNixExpression();
+            }
+
+            if (nixValue is null)
+                return Result.Failure<ModuleBuildResult>(new Error(
+                    "Modules.MissingEntryValue",
+                    $"Entry '{value.Placeholder}' has no value and no default value is configured."));
+
+            inputs += $"{value.Placeholder} = {nixValue};";
+            outputContent = outputContent.Replace(value.Placeholder, $"args.{value.Placeholder}");
         }
 
         inputs += " }";

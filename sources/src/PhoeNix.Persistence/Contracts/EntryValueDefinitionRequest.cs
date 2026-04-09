@@ -6,7 +6,6 @@ namespace PhoeNix.Persistence.Contracts;
 public sealed record EntryValueDefinitionRequest(
     string Name,
     string Placeholder,
-    UserInputType InputType,
     EntryBindingKind BindingKind,
     int? BindingIndex);
 

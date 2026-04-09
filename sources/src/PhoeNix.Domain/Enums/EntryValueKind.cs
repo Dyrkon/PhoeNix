@@ -5,5 +5,6 @@ public enum EntryValueKind
     Text = 1,
     IntegerRange = 2,
     DecimalRange = 3,
-    SingleChoice = 4
+    SingleChoice = 4,
+    List = 5
 }

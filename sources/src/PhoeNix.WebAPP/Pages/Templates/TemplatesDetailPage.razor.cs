@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.Helpers;
@@ -131,6 +133,25 @@ public partial class TemplatesDetailPage : ComponentBase
 
     private bool HasTestScaffolding(ModuleTemplateTestResponse test) =>
         _scaffolding?.Tests.Any(t => t.TestName == test.Name) == true;
+
+    private static string GetDefaultValueDisplay(EntryValueDefinitionResponse entry)
+    {
+        if (entry.ValueKind != EntryValueKind.List)
+            return entry.DefaultValue ?? "-";
+
+        if (string.IsNullOrEmpty(entry.DefaultValue))
+            return "-";
+
+        try
+        {
+            var items = JsonSerializer.Deserialize<List<string>>(entry.DefaultValue) ?? [];
+            return items.Count == 0 ? "(empty list)" : string.Join(", ", items);
+        }
+        catch
+        {
+            return entry.DefaultValue;
+        }
+    }
 
     private enum ViewMode
     {

@@ -13,7 +13,6 @@ public sealed record ModuleTemplateListResponse(
 public sealed record EntryValueDefinitionResponse(
     string Name,
     string Placeholder,
-    UserInputType InputType,
     EntryBindingKind BindingKind,
     EntryValueKind ValueKind,
     string? DefaultValue,
@@ -46,7 +45,6 @@ public sealed record ModuleTemplateResponse(
 public sealed record ModuleTemplateEntryValueDefinitionModel(
     string? Name,
     string? Placeholder,
-    UserInputType InputType,
     EntryBindingKind BindingKind,
     EntryValueKind ValueKind,
     string? DefaultValue,
@@ -74,7 +72,8 @@ public sealed record ModuleEntryValueUpsertModel(
     int? IntegerLowerValue,
     decimal? DecimalUpperValue,
     decimal? DecimalLowerValue,
-    string? SelectedValue);
+    string? SelectedValue,
+    IReadOnlyList<string>? ListItems = null);
 
 public sealed record EntryValueResponse(
     Guid Id,
@@ -90,7 +89,8 @@ public sealed record EntryValueResponse(
     decimal? DecimalMax,
     decimal? DecimalLowerValue,
     decimal? DecimalUpperValue,
-    IReadOnlyList<string>? Options);
+    IReadOnlyList<string>? Options,
+    IReadOnlyList<string>? ListItems = null);
 
 public sealed record ModuleValueResponse(
     Guid Id,

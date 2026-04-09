@@ -43,6 +43,7 @@ internal sealed class EntryValueEntityTypeConfiguration : IApplicationEntityType
             .HasValue<TextValue>(nameof(EntryValueKind.Text))
             .HasValue<IntegerRangeValue>(nameof(EntryValueKind.IntegerRange))
             .HasValue<DecimalRangeValue>(nameof(EntryValueKind.DecimalRange))
-            .HasValue<SingleChoiceValue>(nameof(EntryValueKind.SingleChoice));
+            .HasValue<SingleChoiceValue>(nameof(EntryValueKind.SingleChoice))
+            .HasValue<ListValue>(nameof(EntryValueKind.List));
     }
 }

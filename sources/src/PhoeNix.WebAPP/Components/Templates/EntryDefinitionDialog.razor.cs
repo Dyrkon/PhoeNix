@@ -17,6 +17,7 @@ public partial class EntryDefinitionDialog : ComponentBase
     private MudForm? _form;
     private bool _isSubmitting;
     private string _newOption = string.Empty;
+    private string _newListItem = string.Empty;
 
     private void AddOption()
     {
@@ -35,6 +36,21 @@ public partial class EntryDefinitionDialog : ComponentBase
     private void RemoveOption(string option)
     {
         Model.Options.Remove(option);
+    }
+
+    private void AddListItem()
+    {
+        if (string.IsNullOrWhiteSpace(_newListItem))
+            return;
+
+        var trimmed = _newListItem.Trim();
+        Model.DefaultListItems.Add(trimmed);
+        _newListItem = string.Empty;
+    }
+
+    private void RemoveListItem(string item)
+    {
+        Model.DefaultListItems.Remove(item);
     }
 
     private async Task SubmitAsync()
@@ -139,7 +155,6 @@ public partial class EntryDefinitionDialog : ComponentBase
     {
         public string Name { get; set; } = string.Empty;
         public string Placeholder { get; set; } = string.Empty;
-        public UserInputType InputType { get; set; } = UserInputType.Text;
         public EntryBindingKind BindingKind { get; set; } = EntryBindingKind.UserProvided;
         public EntryValueKind ValueKind { get; set; } = EntryValueKind.Text;
         public int? IntegerMin { get; set; }
@@ -147,6 +162,7 @@ public partial class EntryDefinitionDialog : ComponentBase
         public decimal? DecimalMin { get; set; }
         public decimal? DecimalMax { get; set; }
         public List<string> Options { get; set; } = [];
+        public List<string> DefaultListItems { get; set; } = [];
         public bool AllowLowerValue { get; set; }
         public string? DefaultValue { get; set; }
         public string? DefaultLowerValue { get; set; }
@@ -158,7 +174,6 @@ public partial class EntryDefinitionDialog : ComponentBase
             {
                 Name = Name,
                 Placeholder = Placeholder,
-                InputType = InputType,
                 BindingKind = BindingKind,
                 ValueKind = ValueKind,
                 IntegerMin = IntegerMin,
@@ -166,6 +181,7 @@ public partial class EntryDefinitionDialog : ComponentBase
                 DecimalMin = DecimalMin,
                 DecimalMax = DecimalMax,
                 Options = [..Options],
+                DefaultListItems = [..DefaultListItems],
                 AllowLowerValue = AllowLowerValue,
                 DefaultValue = DefaultValue,
                 DefaultLowerValue = DefaultLowerValue,

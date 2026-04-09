@@ -35,7 +35,6 @@ public static class ModuleMappings
         return new EntryValueDefinitionResponse(
             entryValue.Name,
             entryValue.Placeholder,
-            entryValue.InputType,
             entryValue.BindingKind,
             entryValue.ValueKind,
             entryValue.DefaultValue,
@@ -66,7 +65,6 @@ public static class ModuleMappings
             moduleTemplateId,
             model.Name,
             model.Placeholder,
-            model.InputType,
             model.BindingKind,
             model.ValueKind,
             model.DefaultValue,
@@ -107,15 +105,7 @@ public static class ModuleMappings
                 textValue.Placeholder,
                 textValue.Kind,
                 textValue.Value,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null),
+                null, null, null, null, null, null, null, null, null),
 
             IntegerRangeValue integerRangeValue => new EntryValueResponse(
                 integerRangeValue.Id.Value,
@@ -127,11 +117,7 @@ public static class ModuleMappings
                 integerRangeValue.Max,
                 integerRangeValue.LowerValue,
                 integerRangeValue.UpperValue,
-                null,
-                null,
-                null,
-                null,
-                null),
+                null, null, null, null, null),
 
             DecimalRangeValue decimalRangeValue => new EntryValueResponse(
                 decimalRangeValue.Id.Value,
@@ -139,10 +125,7 @@ public static class ModuleMappings
                 decimalRangeValue.Placeholder,
                 decimalRangeValue.Kind,
                 decimalRangeValue.Value,
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null,
                 decimalRangeValue.Min,
                 decimalRangeValue.Max,
                 decimalRangeValue.LowerValue,
@@ -155,15 +138,17 @@ public static class ModuleMappings
                 singleChoiceValue.Placeholder,
                 singleChoiceValue.Kind,
                 singleChoiceValue.Value,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null, null, null, null, null,
                 singleChoiceValue.Options.ToList()),
+
+            ListValue listValue => new EntryValueResponse(
+                listValue.Id.Value,
+                listValue.Name,
+                listValue.Placeholder,
+                listValue.Kind,
+                listValue.Value,
+                null, null, null, null, null, null, null, null, null,
+                listValue.GetItems().ToList()),
 
             _ => throw new InvalidOperationException($"Unsupported entry value type '{entryValue.GetType().Name}'.")
         };

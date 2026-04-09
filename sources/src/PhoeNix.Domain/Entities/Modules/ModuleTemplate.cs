@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
@@ -118,8 +119,16 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         return Result.Success();
     }
 
+    private static readonly Regex NixIdentifierRegex =
+        new(@"^[a-zA-Z_][a-zA-Z0-9_-]*$", RegexOptions.Compiled);
+
     private static Result ValidateEntryDefinition(EntryValueDefinition entry)
     {
+        if (!NixIdentifierRegex.IsMatch(entry.Placeholder))
+            return Result.Failure(new Error("Modules.PlaceholderNotNixValid",
+                $"Placeholder '{entry.Placeholder}' must be a valid Nix identifier " +
+                "(letters, digits, underscores, dashes; must not start with a digit)."));
+
         return entry.ValueKind switch
         {
             EntryValueKind.Text => Result.Success(),
