@@ -91,6 +91,10 @@
         <MudCardContent>
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                 <MudText Typo="Typo.h6">Module Content</MudText>
+                <MudSpacer></MudSpacer>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           OnClick="() => _moduleContent = NixCodeFormatter.Format(_moduleContent)">Format module code
+                </MudButton>
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
@@ -106,8 +110,9 @@
                         {
                             <div @onclick="ToggleModuleScaffolding"
                                  style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 4px 4px 0 0; border: 1px solid var(--mud-palette-lines-default); border-bottom: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                                         Size="Size.Small"/>
+                                <MudIcon
+                                    Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                    Size="Size.Small"/>
                                 <span>prefix scaffolding</span>
                             </div>
                             <MudCollapse Expanded="_moduleScaffoldingExpanded">
@@ -120,7 +125,9 @@
                         }
 
                         <MudTextField T="string"
-                                      @bind-Value="_moduleContent"
+                                      Value="_moduleContent"
+                                      ValueChanged="(string? v) => _moduleContent = v ?? string.Empty"
+                                      @onkeydown="HandleKeyDown"
                                       Label="Module Code"
                                       Variant="Variant.Outlined"
                                       Lines="15"
@@ -137,8 +144,9 @@
                             </MudCollapse>
                             <div @onclick="ToggleModuleScaffolding"
                                  style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 0 0 4px 4px; border: 1px solid var(--mud-palette-lines-default); border-top: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
-                                         Size="Size.Small"/>
+                                <MudIcon
+                                    Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                    Size="Size.Small"/>
                                 <span>suffix scaffolding</span>
                             </div>
                         }
@@ -249,8 +257,9 @@
                                             {
                                                 <div @onclick="@(() => ToggleTestScaffolding(_selectedTest.Id))"
                                                      style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 4px 4px 0 0; border: 1px solid var(--mud-palette-lines-default); border-bottom: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                                    <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                                                             Size="Size.Small"/>
+                                                    <MudIcon
+                                                        Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                                        Size="Size.Small"/>
                                                     <span>prefix scaffolding</span>
                                                 </div>
                                                 <MudCollapse Expanded="testScaffoldingExpanded">
@@ -280,8 +289,9 @@
                                                 </MudCollapse>
                                                 <div @onclick="@(() => ToggleTestScaffolding(_selectedTest.Id))"
                                                      style="cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--mud-palette-background-gray); border-radius: 0 0 4px 4px; border: 1px solid var(--mud-palette-lines-default); border-top: none; color: var(--mud-palette-text-secondary); font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                                    <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
-                                                             Size="Size.Small"/>
+                                                    <MudIcon
+                                                        Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                                        Size="Size.Small"/>
                                                     <span>suffix scaffolding</span>
                                                 </div>
                                             }

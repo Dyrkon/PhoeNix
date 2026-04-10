@@ -1,0 +1,38 @@
+@using PhoeNix.Domain.Enums
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="3">
+                <MudTextField T="string"
+                              @bind-Value="_name"
+                              Label="System Name"
+                              Required="true"
+                              RequiredError="Please enter a system name."
+                              Variant="Variant.Outlined"/>
+
+                <MudSelect T="Architecture"
+                           @bind-Value="_architecture"
+                           Label="Architecture"
+                           Required="true"
+                           Variant="Variant.Outlined"
+                           AnchorOrigin="Origin.BottomCenter">
+                    @foreach (Architecture arch in Enum.GetValues<Architecture>())
+                    {
+                        <MudSelectItem T="Architecture" Value="@arch">@arch.ToArchitectureString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting">
+            Add
+        </MudButton>
+    </DialogActions>
+</MudDialog>

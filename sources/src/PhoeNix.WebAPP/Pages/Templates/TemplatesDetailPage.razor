@@ -98,11 +98,13 @@
             </MudCard>
 
             <MudExpansionPanels MultiExpansion="true" Elevation="0">
-                <MudExpansionPanel IsInitiallyExpanded="true" Disabled="@(_template.EditableValueTypes.Count == 0)">
+                <MudExpansionPanel @bind-Expanded="_entriesExpanded"
+                                   Disabled="@(_template.EditableValueTypes.Count == 0)">
                     <TitleContent>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small"/>
-                            <MudText Typo="Typo.body1">Entry Value Definitions (@_template.EditableValueTypes.Count)</MudText>
+                            <MudText Typo="Typo.body1">Entry Value Definitions (@_template.EditableValueTypes.Count)
+                            </MudText>
                         </MudStack>
                     </TitleContent>
                     <ChildContent>
@@ -110,43 +112,43 @@
                         {
                             <MudSimpleTable Dense="true" Hover="true" Class="mt-2">
                                 <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Placeholder</th>
-                                        <th>Value Kind</th>
-                                        <th>Binding Kind</th>
-                                        <th>Default</th>
-                                        <th>Options</th>
-                                    </tr>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Placeholder</th>
+                                    <th>Value Kind</th>
+                                    <th>Binding Kind</th>
+                                    <th>Default</th>
+                                    <th>Options</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var entry in _template.EditableValueTypes)
-                                    {
-                                        <tr>
-                                            <td>@entry.Name</td>
-                                            <td><code>@entry.Placeholder</code></td>
-                                            <td>@entry.ValueKind.Humanize()</td>
-                                            <td>@entry.BindingKind.Humanize()</td>
-                                            <td>@GetDefaultValueDisplay(entry)</td>
-                                            <td>
-                                                @if (entry.Options is { Count: > 0 })
-                                                {
-                                                    @string.Join(", ", entry.Options)
-                                                }
-                                                else
-                                                {
-                                                    @("-")
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
+                                @foreach (var entry in _template.EditableValueTypes)
+                                {
+                                    <tr>
+                                        <td>@entry.Name</td>
+                                        <td><code>@entry.Placeholder</code></td>
+                                        <td>@entry.ValueKind.Humanize()</td>
+                                        <td>@entry.BindingKind.Humanize()</td>
+                                        <td>@GetDefaultValueDisplay(entry)</td>
+                                        <td>
+                                            @if (entry.Options is { Count: > 0 })
+                                            {
+                                                @string.Join(", ", entry.Options)
+                                            }
+                                            else
+                                            {
+                                                @("-")
+                                            }
+                                        </td>
+                                    </tr>
+                                }
                                 </tbody>
                             </MudSimpleTable>
                         }
                     </ChildContent>
                 </MudExpansionPanel>
 
-                <MudExpansionPanel Disabled="@(_template.Tests.Count == 0)">
+                <MudExpansionPanel @bind-Expanded="_testsExpanded" Disabled="@(_template.Tests.Count == 0)">
                     <TitleContent>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small"/>
@@ -158,28 +160,28 @@
                         {
                             <MudSimpleTable Dense="true" Hover="true" Class="mt-2">
                                 <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Variables</th>
-                                    </tr>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Variables</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var test in _template.Tests)
-                                    {
-                                        <tr>
-                                            <td>@test.Name</td>
-                                            <td>
-                                                @if (test.VariableNames.Count > 0)
-                                                {
-                                                    @string.Join(", ", test.VariableNames)
-                                                }
-                                                else
-                                                {
-                                                    @("-")
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
+                                @foreach (var test in _template.Tests)
+                                {
+                                    <tr>
+                                        <td>@test.Name</td>
+                                        <td>
+                                            @if (test.VariableNames.Count > 0)
+                                            {
+                                                @string.Join(", ", test.VariableNames)
+                                            }
+                                            else
+                                            {
+                                                @("-")
+                                            }
+                                        </td>
+                                    </tr>
+                                }
                                 </tbody>
                             </MudSimpleTable>
                         }
@@ -217,29 +219,35 @@
                 {
                     <MudGrid>
                         <MudItem xs="12" md="@(_template.EditableValueTypes.Count > 0 ? 7 : 12)">
-                            <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
+                            <MudPaper Class="pa-3" Elevation="1"
+                                      Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
                                 @if (HasModuleScaffolding)
                                 {
                                     <div @onclick="ToggleModuleScaffolding"
                                          style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                        <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                                                 Size="Size.Small" Style="color: #9E9E9E;"/>
+                                        <MudIcon
+                                            Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                            Size="Size.Small" Style="color: #9E9E9E;"/>
                                         <span>prefix scaffolding</span>
                                     </div>
                                     <MudCollapse Expanded="_moduleScaffoldingExpanded">
-                                        <pre style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_modulePrefix</pre>
+                                        <pre
+                                            style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_modulePrefix</pre>
                                     </MudCollapse>
                                 }
-                                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleContent</pre>
+                                <pre
+                                    style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleContent</pre>
                                 @if (HasModuleScaffolding)
                                 {
                                     <MudCollapse Expanded="_moduleScaffoldingExpanded">
-                                        <pre style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleSuffix</pre>
+                                        <pre
+                                            style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@_moduleSuffix</pre>
                                     </MudCollapse>
                                     <div @onclick="ToggleModuleScaffolding"
                                          style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                        <MudIcon Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
-                                                 Size="Size.Small" Style="color: #9E9E9E;"/>
+                                        <MudIcon
+                                            Icon="@(_moduleScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                            Size="Size.Small" Style="color: #9E9E9E;"/>
                                         <span>suffix scaffolding</span>
                                     </div>
                                 }
@@ -249,20 +257,28 @@
                         {
                             <MudItem xs="12" md="5">
                                 <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
-                                    <MudText Typo="Typo.subtitle2" Class="mb-2">Entry Values (@_template.EditableValueTypes.Count)</MudText>
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">Entry Values
+                                        (@_template.EditableValueTypes.Count)
+                                    </MudText>
                                     <MudDivider Class="mb-2"/>
                                     <MudStack Spacing="2">
                                         @foreach (var entry in _template.EditableValueTypes)
                                         {
-                                            <MudPaper Class="pa-2" Elevation="0" Style="background-color: var(--mud-palette-background-grey);">
+                                            <MudPaper Class="pa-2" Elevation="0"
+                                                      Style="background-color: var(--mud-palette-background-grey);">
                                                 <MudStack Spacing="0">
                                                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                                        <MudText Typo="Typo.body2" Style="color: #FFA500; font-weight: 600; font-family: monospace;">@entry.Placeholder</MudText>
-                                                        <MudText Typo="Typo.body2" Style="color: #9E9E9E;">(@entry.Name)</MudText>
+                                                        <MudText Typo="Typo.body2"
+                                                                 Style="color: #FFA500; font-weight: 600; font-family: monospace;">@entry.Placeholder</MudText>
+                                                        <MudText Typo="Typo.body2" Style="color: #9E9E9E;">
+                                                            (@entry.Name)
+                                                        </MudText>
                                                     </MudStack>
                                                     <MudStack Row="true" Spacing="1" Class="mt-1">
-                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.ValueKind.Humanize()</MudChip>
-                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.BindingKind.Humanize()</MudChip>
+                                                        <MudChip T="string" Size="Size.Small"
+                                                                 Variant="Variant.Outlined">@entry.ValueKind.Humanize()</MudChip>
+                                                        <MudChip T="string" Size="Size.Small"
+                                                                 Variant="Variant.Outlined">@entry.BindingKind.Humanize()</MudChip>
                                                     </MudStack>
                                                 </MudStack>
                                             </MudPaper>
@@ -318,29 +334,35 @@
                                         var testScaffoldingExpanded = IsTestScaffoldingExpanded(test.Id);
                                         <MudGrid Class="mt-2">
                                             <MudItem xs="12" md="@(test.VariableNames.Count > 0 ? 7 : 12)">
-                                                <MudPaper Class="pa-3" Elevation="1" Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
+                                                <MudPaper Class="pa-3" Elevation="1"
+                                                          Style="background-color: var(--mud-palette-background-grey); overflow-x: auto; height: 100%;">
                                                     @if (HasTestScaffolding(test))
                                                     {
                                                         <div @onclick="@(() => ToggleTestScaffolding(test.Id))"
                                                              style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                                            <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                                                                     Size="Size.Small" Style="color: #9E9E9E;"/>
+                                                            <MudIcon
+                                                                Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                                                                Size="Size.Small" Style="color: #9E9E9E;"/>
                                                             <span>prefix scaffolding</span>
                                                         </div>
                                                         <MudCollapse Expanded="testScaffoldingExpanded">
-                                                            <pre style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Prefix</pre>
+                                                            <pre
+                                                                style="margin: 0 0 4px 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Prefix</pre>
                                                         </MudCollapse>
                                                     }
-                                                    <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Content</pre>
+                                                    <pre
+                                                        style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Content</pre>
                                                     @if (HasTestScaffolding(test))
                                                     {
                                                         <MudCollapse Expanded="testScaffoldingExpanded">
-                                                            <pre style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Suffix</pre>
+                                                            <pre
+                                                                style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Suffix</pre>
                                                         </MudCollapse>
                                                         <div @onclick="@(() => ToggleTestScaffolding(test.Id))"
                                                              style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
-                                                            <MudIcon Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
-                                                                     Size="Size.Small" Style="color: #9E9E9E;"/>
+                                                            <MudIcon
+                                                                Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"
+                                                                Size="Size.Small" Style="color: #9E9E9E;"/>
                                                             <span>suffix scaffolding</span>
                                                         </div>
                                                     }
@@ -350,17 +372,23 @@
                                             {
                                                 <MudItem xs="12" md="5">
                                                     <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
-                                                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-                                                            <MudChip T="string" Style="background-color: #4CAF50; color: white;" Size="Size.Small">
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center"
+                                                                  Class="mb-2">
+                                                            <MudChip T="string"
+                                                                     Style="background-color: #4CAF50; color: white;"
+                                                                     Size="Size.Small">
                                                                 Variable
                                                             </MudChip>
-                                                            <MudText Typo="Typo.subtitle2">Test Variables (@test.VariableNames.Count)</MudText>
+                                                            <MudText Typo="Typo.subtitle2">Test Variables
+                                                                (@test.VariableNames.Count)
+                                                            </MudText>
                                                         </MudStack>
                                                         <MudDivider Class="mb-2"/>
                                                         <MudStack Spacing="1">
                                                             @foreach (var variable in test.VariableNames)
                                                             {
-                                                                <MudText Typo="Typo.body2" Style="color: #4CAF50; font-family: monospace;">@variable</MudText>
+                                                                <MudText Typo="Typo.body2"
+                                                                         Style="color: #4CAF50; font-family: monospace;">@variable</MudText>
                                                             }
                                                         </MudStack>
                                                     </MudPaper>

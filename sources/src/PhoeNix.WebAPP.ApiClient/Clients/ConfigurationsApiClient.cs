@@ -38,4 +38,75 @@ public sealed class ConfigurationsApiClient(HttpClient httpClient, IAuthenticati
             request,
             cancellationToken);
     }
+
+    public async Task<ApiResult<Contracts.ModuleValueResponse>> AddConfigurationModuleAsync(
+        Guid configurationId,
+        Contracts.CreateConfigurationModuleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PostWithResponseAsync<Contracts.ModuleValueResponse>(
+            $"configurations/{configurationId}/modules",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult<Contracts.ModuleValueResponse>> AddConfigurationSystemModuleAsync(
+        Guid configurationId,
+        Guid systemId,
+        Contracts.CreateConfigurationSystemModuleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PostWithResponseAsync<Contracts.ModuleValueResponse>(
+            $"configurations/{configurationId}/systems/{systemId}/modules",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult> UpdateConfigurationModuleAsync(
+        Guid configurationId,
+        Guid moduleValueId,
+        Contracts.UpdateConfigurationModuleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PutAsync(
+            $"configurations/{configurationId}/modules/{moduleValueId}",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult> UpdateConfigurationSystemModuleAsync(
+        Guid configurationId,
+        Guid systemId,
+        Guid moduleValueId,
+        Contracts.UpdateConfigurationSystemModuleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PutAsync(
+            $"configurations/{configurationId}/systems/{systemId}/modules/{moduleValueId}",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult<Contracts.SystemResponse>> AddConfigurationSystemAsync(
+        Guid configurationId,
+        Contracts.CreateConfigurationSystemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PostWithResponseAsync<Contracts.SystemResponse>(
+            $"configurations/{configurationId}/systems",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult> UpdateConfigurationSystemAsync(
+        Guid configurationId,
+        Guid systemId,
+        Contracts.UpdateConfigurationSystemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PutAsync(
+            $"configurations/{configurationId}/systems/{systemId}",
+            request,
+            cancellationToken);
+    }
 }

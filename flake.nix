@@ -111,6 +111,8 @@
             inherit pkgs lib inputs project;
           };
 
+          createIngest = import ./nix/apps/createIngest.nix {inherit pkgs;};
+
           up = {
             type = "app";
             program = "${pkgs.writeShellScript "phoenix-up" ''

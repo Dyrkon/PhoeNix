@@ -19,6 +19,8 @@ public partial class TemplatesDetailPage : ComponentBase
     private ModuleScaffoldingResponse? _scaffolding;
     private bool _isLoading = true;
     private ViewMode _viewMode = ViewMode.Overview;
+    private bool _entriesExpanded = true;
+    private bool _testsExpanded = true;
 
     private bool _moduleScaffoldingExpanded = false;
     private HashSet<Guid> _testScaffoldingExpanded = new();
@@ -97,7 +99,8 @@ public partial class TemplatesDetailPage : ComponentBase
             {
                 var formatted = NixCodeFormatter.Format(test.Content);
                 var highlighted = NixCodeHighlighter.HighlightVariables(formatted, test.VariableNames);
-                _testParts[test.Id] = (new MarkupString(string.Empty), new MarkupString(highlighted), new MarkupString(string.Empty));
+                _testParts[test.Id] = (new MarkupString(string.Empty), new MarkupString(highlighted),
+                    new MarkupString(string.Empty));
             }
             else
             {
@@ -125,14 +128,19 @@ public partial class TemplatesDetailPage : ComponentBase
             _testScaffoldingExpanded.Remove(testId);
     }
 
-    private bool IsTestScaffoldingExpanded(Guid testId) => _testScaffoldingExpanded.Contains(testId);
+    private bool IsTestScaffoldingExpanded(Guid testId)
+    {
+        return _testScaffoldingExpanded.Contains(testId);
+    }
 
     private bool HasModuleScaffolding =>
         _scaffolding is not null &&
         (!string.IsNullOrEmpty(_scaffolding.Module.Prefix) || !string.IsNullOrEmpty(_scaffolding.Module.Suffix));
 
-    private bool HasTestScaffolding(ModuleTemplateTestResponse test) =>
-        _scaffolding?.Tests.Any(t => t.TestName == test.Name) == true;
+    private bool HasTestScaffolding(ModuleTemplateTestResponse test)
+    {
+        return _scaffolding?.Tests.Any(t => t.TestName == test.Name) == true;
+    }
 
     private static string GetDefaultValueDisplay(EntryValueDefinitionResponse entry)
     {

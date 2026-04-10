@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Extensions;
 using MudBlazor.Services;
 using PhoeNix.WebAPP.ApiClient;
 
@@ -15,6 +16,7 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddMudServices();
+        builder.Services.AddMudExtensions();
 
         var apiBaseAddress = "https://localhost:7031";
         var httpBaseAddress = string.IsNullOrWhiteSpace(apiBaseAddress)

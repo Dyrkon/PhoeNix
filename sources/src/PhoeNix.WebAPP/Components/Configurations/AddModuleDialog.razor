@@ -1,0 +1,189 @@
+@using Humanizer
+@using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.ApiClient.Contracts
+@using static PhoeNix.WebAPP.Components.Configurations.ModuleEntryEditorHelpers
+
+<MudDialog Style="width: 70vh; height: 50vh">
+    <DialogContent>
+        @if (_isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto my-4"/>
+        }
+        else
+        {
+            <MudForm @ref="_form">
+                <MudStack Spacing="3">
+                    <MudSelect T="Guid?"
+                               Value="_selectedTemplateId"
+                               ValueChanged="OnTemplateSelectedAsync"
+                               Label="Module Template"
+                               Required="true"
+                               RequiredError="Please select a module template."
+                               Variant="Variant.Outlined"
+                               AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var template in _templates)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)template.Id)">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIcon
+                                        Icon="@(template.Type == ModuleType.Generic ? Icons.Material.Filled.Share : Icons.Material.Filled.Memory)"
+                                        Size="Size.Small"/>
+                                    <MudText>@template.Name - @template.SupportedArchitectures.Skip(1).Aggregate($"{template.SupportedArchitectures.FirstOrDefault().ToArchitectureString()}", (current, result) => current + $", {result.ToArchitectureString()}")</MudText>
+                                    @if (!template.Enabled)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default"
+                                                 Variant="Variant.Outlined">Disabled
+                                        </MudChip>
+                                    }
+                                </MudStack>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudSwitch T="bool" @bind-Value="_enabled" Label="Enabled" Color="Color.Primary"/>
+
+                    @if (_loadingEntries)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto"/>
+                    }
+                    else if (_entryModels.Count > 0)
+                    {
+                        <MudDivider/>
+
+                        @foreach (var entry in _entryModels)
+                        {
+                            @if (entry.Kind == EntryValueKind.Text)
+                            {
+                                <MudTextField T="string"
+                                              @bind-Value="entry.TextValue"
+                                              Label="@entry.Name"
+                                              HelperText="@entry.Placeholder"
+                                              Variant="Variant.Outlined"/>
+                            }
+                            else if (entry.Kind == EntryValueKind.IntegerRange)
+                            {
+                                <MudText Typo="Typo.body2">@entry.Name (@entry.IntegerMin – @entry.IntegerMax)</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@entry.Placeholder</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText Typo="Typo.caption" Style="min-width:40px">Upper</MudText>
+                                    <MudSlider T="int"
+                                               @bind-Value="entry.IntegerUpperValue"
+                                               Min="@entry.IntegerMin"
+                                               Max="@entry.IntegerMax"
+                                               Step="1"
+                                               Immediate="true"
+                                               Class="flex-grow-1">
+                                        @entry.IntegerUpperValue
+                                    </MudSlider>
+                                </MudStack>
+                                @if (entry.AllowLowerValue)
+                                {
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Typo="Typo.caption" Style="min-width:40px">Lower</MudText>
+                                        <MudSlider T="int"
+                                                   Value="@(entry.IntegerLowerValue ?? entry.IntegerMin)"
+                                                   ValueChanged="@((int v) => entry.IntegerLowerValue = v)"
+                                                   Min="@entry.IntegerMin"
+                                                   Max="@entry.IntegerUpperValue"
+                                                   Step="1"
+                                                   Immediate="true"
+                                                   Class="flex-grow-1">
+                                            @(entry.IntegerLowerValue?.ToString() ?? entry.IntegerMin.ToString())
+                                        </MudSlider>
+                                    </MudStack>
+                                }
+                            }
+                            else if (entry.Kind == EntryValueKind.DecimalRange)
+                            {
+                                <MudText Typo="Typo.body2">@entry.Name (@entry.DecimalMin – @entry.DecimalMax)</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@entry.Placeholder</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText Typo="Typo.caption" Style="min-width:40px">Upper</MudText>
+                                    <MudSlider T="decimal"
+                                               @bind-Value="entry.DecimalUpperValue"
+                                               Min="@entry.DecimalMin"
+                                               Max="@entry.DecimalMax"
+                                               Step="0.01m"
+                                               Immediate="true"
+                                               Class="flex-grow-1">
+                                        @entry.DecimalUpperValue
+                                    </MudSlider>
+                                </MudStack>
+                                @if (entry.AllowLowerValue)
+                                {
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Typo="Typo.caption" Style="min-width:40px">Lower</MudText>
+                                        <MudSlider T="decimal"
+                                                   Value="@(entry.DecimalLowerValue ?? entry.DecimalMin)"
+                                                   ValueChanged="@((decimal v) => entry.DecimalLowerValue = v)"
+                                                   Min="@entry.DecimalMin"
+                                                   Max="@entry.DecimalUpperValue"
+                                                   Step="0.01m"
+                                                   Immediate="true"
+                                                   Class="flex-grow-1">
+                                            @(entry.DecimalLowerValue?.ToString() ?? entry.DecimalMin.ToString())
+                                        </MudSlider>
+                                    </MudStack>
+                                }
+                            }
+                            else if (entry.Kind == EntryValueKind.SingleChoice)
+                            {
+                                <MudSelect T="string"
+                                           @bind-Value="entry.SelectedValue"
+                                           Label="@entry.Name"
+                                           HelperText="@entry.Placeholder"
+                                           Variant="Variant.Outlined"
+                                           AnchorOrigin="Origin.BottomCenter">
+                                    @foreach (var option in entry.Options)
+                                    {
+                                        <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            else if (entry.Kind == EntryValueKind.List)
+                            {
+                                <MudText Typo="Typo.body2">@entry.Name</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@entry.Placeholder</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudTextField T="string"
+                                                  @bind-Value="_newListItem"
+                                                  Placeholder="Add item…"
+                                                  Variant="Variant.Outlined"
+                                                  Class="flex-grow-1"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => AddListItem(entry))"/>
+                                </MudStack>
+                                @if (entry.ListItems.Count > 0)
+                                {
+                                    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                                        @foreach (var item in entry.ListItems.ToList())
+                                        {
+                                            var captured = item;
+                                            <MudChip T="string"
+                                                     OnClose="@(() => entry.ListItems.Remove(captured))"
+                                                     Color="Color.Primary"
+                                                     Variant="Variant.Outlined">
+                                                @captured
+                                            </MudChip>
+                                        }
+                                    </MudStack>
+                                }
+                            }
+                        }
+                    }
+                </MudStack>
+            </MudForm>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting || _isLoading || _loadingEntries">
+            Add
+        </MudButton>
+    </DialogActions>
+</MudDialog>
