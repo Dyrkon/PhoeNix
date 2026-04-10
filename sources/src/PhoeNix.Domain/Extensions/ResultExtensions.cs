@@ -252,4 +252,13 @@ public static class ResultExtensions
 
         return Result.Success();
     }
+
+    public static async Task<Result> TryCatch(this Task<Result> resultTask, Func<Result> success)
+    {
+        var result = await resultTask;
+        if (result.IsFailure)
+            return result;
+
+        return success.Invoke();
+    }
 }

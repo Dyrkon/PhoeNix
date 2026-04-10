@@ -1,10 +1,19 @@
 @using Humanizer
 @using PhoeNix.Domain.Enums
-@using MachineState = PhoeNix.Domain.Enums.MachineState
+@using PhoeNix.WebAPP.Helpers
+@using PhoeNix.WebAPP.States
+@using DomainMachineState = PhoeNix.Domain.Enums.MachineState
 
 <MudPaper Class="pa-4" Elevation="0">
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
         <MudText Typo="Typo.h6">Machine Inventory</MudText>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Sync"
+                   Disabled="@(!SelectedUpdatableItems.Any())"
+                   OnClick="UpdateSelectedAsync">
+            Update Selected (@SelectedUpdatableItems.Count())
+        </MudButton>
     </MudStack>
 
     <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
@@ -33,12 +42,17 @@
             }
         </MudSelect>
 
-        <MudSelect T="MachineState?" Value="_machineState" ValueChanged="OnMachineStateChangedAsync" Label="State"
+        <MudSelect T="DomainMachineState?" Value="_machineState" ValueChanged="OnMachineStateChangedAsync" Label="State"
                    Clearable="true">
-            @foreach (var machineState in Enum.GetValues<MachineState>())
+            @foreach (var machineState in Enum.GetValues<DomainMachineState>())
             {
-                <MudSelectItem Value="@((MachineState?)machineState)">
-                    @machineState.Humanize()
+                <MudSelectItem Value="@((DomainMachineState?)machineState)">
+                    <MudChip T="string"
+                             Color="@machineState.ToMachineStateColor()"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+                        @machineState.ToMachineStateLabel()
+                    </MudChip>
                 </MudSelectItem>
             }
         </MudSelect>
@@ -58,13 +72,25 @@
                  Filterable="false"
                  SortMode="SortMode.Single"
                  Elevation="0"
+                 MultiSelection="true"
+                 @bind-SelectedItems="_selectedItems"
                  RowClick="OnRowClickAsync">
 
         <Columns>
+            <SelectColumn T="MachineTableRow"/>
             <PropertyColumn Property="x => x.Title" Title="Title" Sortable="true"/>
             <PropertyColumn Property="x => x.MacAddress" Title="MAC Address" Sortable="true"/>
             <PropertyColumn Property="x => x.Architecture" Title="Architecture" Sortable="true"/>
-            <PropertyColumn Property="x => x.MachineState" Title="State" Sortable="true"/>
+            <TemplateColumn Title="State" Sortable="true" SortBy="x => x.MachineState">
+                <CellTemplate>
+                    <MudChip T="string"
+                             Color="@context.Item.RawMachineState.ToMachineStateColor()"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+                        @context.Item.MachineState
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
             <PropertyColumn Property="x => x.InstalledConfigurationTitle" Title="Installed Configuration"
                             Sortable="false"/>
 
@@ -75,6 +101,37 @@
                              Size="Size.Small" T="string">
                         @(context.Item.Enabled ? "Enabled" : "Disabled")
                     </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <TemplateColumn Title="" Sortable="false" CellStyle="width: 56px; text-align: center;">
+                <CellTemplate>
+                    @{ var entry = MachineState.GetUpdate(context.Item.Id); }
+                    @if (entry?.Status == UpdateStatus.InProgress)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                    }
+                    else if (entry?.Status is UpdateStatus.Success or UpdateStatus.Failed)
+                    {
+                        <span @onclick:stopPropagation="true">
+                            <MudTooltip Text="@(entry.Status == UpdateStatus.Success ? "Update succeeded — click for details" : "Update failed — click for details")">
+                                <MudIconButton Icon="@(entry.Status == UpdateStatus.Success ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                                               Color="@(entry.Status == UpdateStatus.Success ? Color.Success : Color.Error)"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenUpdateResultDialogAsync(context.Item.Id))"/>
+                            </MudTooltip>
+                        </span>
+                    }
+                    else if (context.Item.Enabled && context.Item.InstalledConfigurationId is not null)
+                    {
+                        <span @onclick:stopPropagation="true">
+                            <MudTooltip Text="Update configuration">
+                                <MudIconButton Icon="@Icons.Material.Filled.Sync"
+                                               Size="Size.Small"
+                                               OnClick="@(() => TriggerUpdateAsync(context.Item.Id))"/>
+                            </MudTooltip>
+                        </span>
+                    }
                 </CellTemplate>
             </TemplateColumn>
         </Columns>

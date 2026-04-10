@@ -3,6 +3,7 @@
 @using PhoeNix.Domain.Enums
 @using PhoeNix.WebAPP.Components.Machines
 @using PhoeNix.WebAPP.Helpers
+@using PhoeNix.WebAPP.States
 
 <MudStack Spacing="3">
     @if (_isLoading)
@@ -20,16 +21,57 @@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
             <MudText Typo="Typo.h4">@_machine.Title</MudText>
 
-            <MudButton Variant="Variant.Outlined"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Href="/">
-                Back to machines
-            </MudButton>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudTooltip Text="@(_canUpdateTooltip)">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@(CurrentStatus == UpdateStatus.InProgress ? null : Icons.Material.Filled.Sync)"
+                               Disabled="@(!CanUpdate || CurrentStatus == UpdateStatus.InProgress)"
+                               OnClick="UpdateConfigurationAsync">
+                        @if (CurrentStatus == UpdateStatus.InProgress)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"/>
+                            <span>Updating…</span>
+                        }
+                        else
+                        {
+                            <span>Update Configuration</span>
+                        }
+                    </MudButton>
+                </MudTooltip>
+
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/">
+                    Back to machines
+                </MudButton>
+            </MudStack>
         </MudStack>
 
         <MudCard>
             <MudCardContent>
-                <MudText Typo="Typo.h6" Class="mb-4">Machine Information</MudText>
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Machine Information</MudText>
+
+                    @if (CurrentStatus != UpdateStatus.None)
+                    {
+                        @if (CurrentStatus == UpdateStatus.InProgress)
+                        {
+                            <MudTooltip Text="Update in progress…">
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="@(_updateStatusTooltip)">
+                                <MudIconButton Icon="@(_updateStatusIcon)"
+                                               Color="@(_updateStatusColor)"
+                                               Size="Size.Small"
+                                               OnClick="OpenUpdateResultDialogAsync"/>
+                            </MudTooltip>
+                        }
+                    }
+                </MudStack>
 
                 <MudGrid>
                     <MudItem xs="12" sm="6" md="4">
@@ -64,7 +106,12 @@
 
                     <MudItem xs="12" sm="6" md="4">
                         <MudText Typo="Typo.caption">Current State</MudText>
-                        <MudText Typo="Typo.body1">@_machine.MachineStatus.MachineState.Humanize()</MudText>
+                        <MudChip T="string"
+                                 Color="@(_machine.MachineStatus.MachineState.ToMachineStateColor())"
+                                 Variant="Variant.Filled"
+                                 Size="Size.Small">
+                            @_machine.MachineStatus.MachineState.ToMachineStateLabel()
+                        </MudChip>
                     </MudItem>
                 </MudGrid>
             </MudCardContent>

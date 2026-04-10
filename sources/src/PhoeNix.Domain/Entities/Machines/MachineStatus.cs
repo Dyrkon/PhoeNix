@@ -23,16 +23,25 @@ public class MachineStatus(MachineState machineState)
             case MachineState.Provisioned:
                 if (MachineState != MachineState.Registered)
                     return Result.Failure(new Error("MachineStatusError",
-                        $"Can't got to machine state {machineState.Humanize()} from state {MachineState.Provisioned.Humanize()}"));
+                        $"Can't go to machine state {machineState.Humanize()} from state {MachineState.Humanize()}"));
                 LastProvisioned = now;
                 LastContacted = now;
                 break;
             case MachineState.Orchestrated:
                 if (MachineState != MachineState.Provisioned)
                     return Result.Failure(new Error("MachineStatusError",
-                        $"Can't got to machine state {MachineState.Orchestrated.Humanize()} from state {machineState.Humanize()}"));
+                        $"Can't go to machine state {machineState.Humanize()} from state {MachineState.Humanize()}"));
                 LastOrchestrated = now;
                 LastContacted = now;
+                break;
+            case MachineState.Updated:
+                if (MachineState is not (MachineState.Orchestrated or MachineState.OutDated or MachineState.Updated))
+                    return Result.Failure(new Error("MachineStatusError",
+                        $"Can't go to machine state {machineState.Humanize()} from state {MachineState.Humanize()}"));
+                LastConfigured = now;
+                LastContacted = now;
+                break;
+            case MachineState.OutDated:
                 break;
             case MachineState.Registered:
                 LastContacted = now;

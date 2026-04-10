@@ -9,6 +9,7 @@ using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -128,6 +129,7 @@ internal sealed class UpdateMachineConfigurationHandler(
         var writeResult = await fileSystemService.WriteConfigurationToFsAsync(
             builtFilesResult.Value,
             request.ConfigurationId,
+            request.MachineId,
             cancellationToken);
 
         if (writeResult.IsFailure)
@@ -160,6 +162,6 @@ internal sealed class UpdateMachineConfigurationHandler(
         if (snapshotResult.IsFailure)
             return snapshotResult.Error;
 
-        return Result.Success();
+        return machine.ChangeMachineState(MachineState.Updated, nowUtc);
     }
 }

@@ -1,6 +1,7 @@
 using System.Net.NetworkInformation;
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Repositories;
+using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 
 namespace PhoeNix.Persistence.Repositories;
@@ -30,5 +31,16 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
             .SingleOrDefaultAsync(
                 m => m.MacAddress.Equals(macAddress),
                 cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Machine>> GetAllByInstalledConfigurationIdAsync(
+        ConfigurationId configurationId,
+        CancellationToken cancellationToken)
+    {
+        return await DbContext
+            .Set<Machine>()
+            .Where(m => m.DeploymentSnapshot != null &&
+                        m.DeploymentSnapshot.ConfigurationId == configurationId)
+            .ToListAsync(cancellationToken);
     }
 }

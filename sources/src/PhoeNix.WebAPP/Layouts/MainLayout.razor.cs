@@ -15,6 +15,7 @@ public partial class MainLayout
 
     private bool _isDarkMode;
     private MudTheme? _theme;
+    private readonly MachineState _machineState = new();
     private readonly UserState _userState = new();
     private SetupSessionsState _setupSessionsState = null!;
 

@@ -4,6 +4,7 @@ using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services.Filesystem;
@@ -30,7 +31,8 @@ public class FileSystemService(
 
     public async Task<Result<string>> WriteConfigurationToFsAsync(
         Folder configurationFolder,
-        ConfigurationId id,
+        ConfigurationId configurationId,
+        MachineId? machineId,
         CancellationToken cancellationToken)
     {
         var rootPathResult = GetRootFolder();
@@ -38,7 +40,9 @@ public class FileSystemService(
             return (Result<string>)rootPathResult.Error;
 
         var rootPath = rootPathResult.Value;
-        var configurationPath = Path.Combine(rootPath, id.Value.ToString());
+        var configurationPath = machineId is null
+            ? Path.Combine(rootPath, configurationId.Value.ToString())
+            : Path.Combine(rootPath, configurationId.Value.ToString(), machineId!.Value.ToString());
 
         try
         {
