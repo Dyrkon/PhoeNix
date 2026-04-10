@@ -107,44 +107,84 @@
                 </ChildContent>
             </MudExpansionPanel>
 
-            <MudExpansionPanel Disabled="@(_configuration.Modules.Count == 0)">
+            <MudExpansionPanel>
                 <TitleContent>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Share" Size="Size.Small"/>
-                        <MudText Typo="Typo.body1">Shared Modules</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                            @_configuration.Modules.Count @(_configuration.Modules.Count == 1 ? "module" : "modules") applied
-                            to all systems
-                        </MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Share" Size="Size.Small"/>
+                            <MudText Typo="Typo.body1">Shared Modules</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @_configuration.Modules.Count @(_configuration.Modules.Count == 1 ? "module" : "modules") applied
+                                to all systems
+                            </MudText>
+                        </MudStack>
+                        <span @onclick:stopPropagation="true">
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="OpenAddSharedModuleDialogAsync">
+                                Add Module
+                            </MudButton>
+                        </span>
                     </MudStack>
                 </TitleContent>
                 <ChildContent>
-                    <MudStack Spacing="2" Class="pt-2">
-                        @foreach (var module in _configuration.Modules)
-                        {
-                            <ConfiguredModuleCard Module="@module"/>
-                        }
-                    </MudStack>
+                    @if (_configuration.Modules.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No shared modules configured.</MudText>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2" Class="pt-2">
+                            @foreach (var module in _configuration.Modules)
+                            {
+                                <ConfiguredModuleCard Module="@module"
+                                                      ConfigurationId="@ConfigurationId"
+                                                      OnModuleUpdated="ReloadAsync"/>
+                            }
+                        </MudStack>
+                    }
                 </ChildContent>
             </MudExpansionPanel>
 
-            <MudExpansionPanel Disabled="@(_configuration.Systems.Count == 0)">
+            <MudExpansionPanel>
                 <TitleContent>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small"/>
-                        <MudText Typo="Typo.body1">Systems</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                            @_configuration.Systems.Count @(_configuration.Systems.Count == 1 ? "system" : "systems")
-                        </MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small"/>
+                            <MudText Typo="Typo.body1">Systems</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @_configuration.Systems.Count @(_configuration.Systems.Count == 1 ? "system" : "systems")
+                            </MudText>
+                        </MudStack>
+                        <span @onclick:stopPropagation="true">
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="OpenAddSystemDialogAsync">
+                                Add System
+                            </MudButton>
+                        </span>
                     </MudStack>
                 </TitleContent>
                 <ChildContent>
-                    <MudStack Spacing="2" Class="pt-2">
-                        @foreach (var system in _configuration.Systems)
-                        {
-                            <ConfiguredSystemCard System="@system"/>
-                        }
-                    </MudStack>
+                    @if (_configuration.Systems.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No systems configured.</MudText>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2" Class="pt-2">
+                            @foreach (var system in _configuration.Systems)
+                            {
+                                <ConfiguredSystemCard System="@system"
+                                                      ConfigurationId="@ConfigurationId"
+                                                      OnModuleAdded="ReloadAsync"
+                                                      OnModuleUpdated="ReloadAsync"
+                                                      OnSystemUpdated="ReloadAsync"/>
+                            }
+                        </MudStack>
+                    }
                 </ChildContent>
             </MudExpansionPanel>
 

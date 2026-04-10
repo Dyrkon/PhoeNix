@@ -18,15 +18,18 @@ public sealed class ListValue : EntryValue
 
     public override EntryValueKind Kind => EntryValueKind.List;
 
-    public IReadOnlyList<string> GetItems() =>
-        string.IsNullOrEmpty(Value) ? [] : JsonSerializer.Deserialize<List<string>>(Value) ?? [];
+    public IReadOnlyList<string> GetItems()
+    {
+        return string.IsNullOrEmpty(Value) ? [] : JsonSerializer.Deserialize<List<string>>(Value) ?? [];
+    }
 
     public override string GetNixExpression()
     {
         var items = GetItems();
         if (items.Count == 0) return "[ ]";
-        var escaped = items.Select(i => $"\"{i.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"");
-        return $"[ {string.Join(" ", escaped)} ]";
+        // TODO List types?
+        // var escaped = items.Select(i => $"\"{i.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"");
+        return $"[ {string.Join(" ", items)} ]";
     }
 
     public static Result<ListValue> Create(

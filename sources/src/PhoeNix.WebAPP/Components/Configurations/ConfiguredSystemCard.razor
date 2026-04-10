@@ -6,11 +6,22 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Default"/>
                 <MudText Typo="Typo.h6">@System.Name</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Size="Size.Small"
+                               OnClick="OpenEditSystemDialogAsync"/>
             </MudStack>
 
-            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
-                @System.Architecture.ToArchitectureString()
-            </MudChip>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
+                    @System.Architecture.ToArchitectureString()
+                </MudChip>
+                <MudButton Size="Size.Small"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddModuleDialogAsync">
+                    Add Module
+                </MudButton>
+            </MudStack>
         </MudStack>
 
         <MudDivider Class="mb-3"/>
@@ -42,7 +53,10 @@
                             </MudStack>
                         </TitleContent>
                         <ChildContent>
-                            <ConfiguredModuleCard Module="@module"/>
+                            <ConfiguredModuleCard Module="@module"
+                                                  ConfigurationId="@ConfigurationId"
+                                                  SystemId="@System.Id"
+                                                  OnModuleUpdated="OnModuleUpdated"/>
                         </ChildContent>
                     </MudExpansionPanel>
                 }

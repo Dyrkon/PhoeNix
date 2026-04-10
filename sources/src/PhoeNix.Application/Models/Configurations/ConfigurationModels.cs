@@ -53,4 +53,5 @@ public sealed record ConfiguredModuleEntryResponse(
     int? IntegerUpperValue,
     decimal? DecimalLowerValue,
     decimal? DecimalUpperValue,
-    IReadOnlyList<string>? Options);
+    IReadOnlyList<string>? Options,
+    IReadOnlyList<string>? ListItems = null);

@@ -1,0 +1,22 @@
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField T="string"
+                          @bind-Value="_name"
+                          Label="System Name"
+                          Required="true"
+                          RequiredError="Please enter a system name."
+                          Variant="Variant.Outlined"/>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isSubmitting">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>

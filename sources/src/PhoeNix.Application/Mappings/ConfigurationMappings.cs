@@ -78,7 +78,7 @@ public static class ConfigurationMappings
                 textValue.Placeholder,
                 textValue.Kind,
                 textValue.Value,
-                null, null, null, null, null),
+                null, null, null, null, null, null),
 
             IntegerRangeValue integerRangeValue => new ConfiguredModuleEntryResponse(
                 integerRangeValue.Id.Value,
@@ -88,7 +88,7 @@ public static class ConfigurationMappings
                 null,
                 integerRangeValue.LowerValue,
                 integerRangeValue.UpperValue,
-                null, null, null),
+                null, null, null, null),
 
             DecimalRangeValue decimalRangeValue => new ConfiguredModuleEntryResponse(
                 decimalRangeValue.Id.Value,
@@ -98,7 +98,7 @@ public static class ConfigurationMappings
                 null, null, null,
                 decimalRangeValue.LowerValue,
                 decimalRangeValue.UpperValue,
-                null),
+                null, null),
 
             SingleChoiceValue singleChoiceValue => new ConfiguredModuleEntryResponse(
                 singleChoiceValue.Id.Value,
@@ -107,7 +107,17 @@ public static class ConfigurationMappings
                 singleChoiceValue.Kind,
                 singleChoiceValue.Value,
                 null, null, null, null,
-                singleChoiceValue.Options.ToList()),
+                singleChoiceValue.Options.ToList(),
+                null),
+
+            ListValue listValue => new ConfiguredModuleEntryResponse(
+                listValue.Id.Value,
+                listValue.Name,
+                listValue.Placeholder,
+                listValue.Kind,
+                listValue.Value,
+                null, null, null, null, null,
+                listValue.GetItems().ToList()),
 
             _ => throw new InvalidOperationException(
                 $"Unsupported entry value type '{entryValue.GetType().Name}'.")

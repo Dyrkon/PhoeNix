@@ -1,16 +1,38 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Application.Models.Configurations;
-using PhoeNix.WebAPP.ApiClient.Abstractions;
 
 namespace PhoeNix.WebAPP.Components.Configurations;
 
 public partial class ConfiguredModuleCard : ComponentBase
 {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
     [Parameter] [EditorRequired] public ConfiguredModuleResponse Module { get; set; } = null!;
+    [Parameter] [EditorRequired] public Guid ConfigurationId { get; set; }
+    [Parameter] public Guid? SystemId { get; set; }
+    [Parameter] public EventCallback OnModuleUpdated { get; set; }
+
+    private async Task OpenEditDialogAsync()
+    {
+        var parameters = new DialogParameters<EditModuleValuesDialog>
+        {
+            { x => x.ConfigurationId, ConfigurationId },
+            { x => x.SystemId, SystemId },
+            { x => x.Module, Module }
+        };
+        var dialog = await DialogService.ShowAsync<EditModuleValuesDialog>(
+            $"Edit: {Module.TemplateName}", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await OnModuleUpdated.InvokeAsync();
+    }
 
     private static string ResolveEntryValue(ConfiguredModuleEntryResponse entry)
     {
+        if (entry.ListItems is { Count: > 0 })
+            return string.Join(", ", entry.ListItems);
+
         if (!string.IsNullOrWhiteSpace(entry.Value))
             return entry.Value;
 

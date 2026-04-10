@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
@@ -36,21 +37,24 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.HostName,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "\"machineone\""),
+                "\"machineone\""),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.StateVersion,
                 SeedPlaceholders.StateVersion,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "\"25.11\""),
+                "\"25.11\""),
             new(
                 SeedIds.MinimalBaseTemplate,
                 SeedPlaceholders.RootAuthorizedKeys,
                 SeedPlaceholders.RootAuthorizedKeys,
                 EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                DefaultValue: "[ \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\n\" ]")
+                EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>
+                {
+                    "\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\""
+                }))
         };
 
         var content =
@@ -94,7 +98,7 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.InstallDisk,
                 EntryBindingKind.RankedDiskCandidate,
                 EntryValueKind.Text,
-                DefaultValue: "\"/dev/sda\"",
+                "\"/dev/sda\"",
                 BindingIndex: 0)
         };
 
@@ -155,14 +159,14 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.MetricsPort,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "9100"),
+                "9100"),
             new(
                 SeedIds.PrometheusTemplate,
                 SeedPlaceholders.OpenFirewall,
                 SeedPlaceholders.OpenFirewall,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "true")
+                "true")
         };
 
         var content =
@@ -212,7 +216,7 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.Timezone,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "\"Europe/Prague\"")
+                "\"Europe/Prague\"")
         };
 
         var content =
@@ -245,15 +249,20 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.NixTrustedSubstituters,
                 SeedPlaceholders.NixTrustedSubstituters,
                 EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                DefaultValue: "[ \"https://cache.nixos.org\" \"https://nix-community.cachix.org\" ]"),
+                EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>
+                    { "\"https://cache.nixos.org\"", "\"https://nix-community.cachix.org\"" })),
             new(
                 SeedIds.NixFlakeSettingsTemplate,
                 SeedPlaceholders.NixTrustedPublicKeys,
                 SeedPlaceholders.NixTrustedPublicKeys,
                 EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                DefaultValue: "[ \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\" \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\" ]")
+                EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>
+                {
+                    "\"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\"",
+                    "\"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\""
+                }))
         };
 
         var content =
@@ -294,14 +303,14 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.NixMaxJobs,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "\"auto\""),
+                "\"auto\""),
             new(
                 SeedIds.NixBuildOptimisationTemplate,
                 SeedPlaceholders.NixCores,
                 SeedPlaceholders.NixCores,
                 EntryBindingKind.UserProvided,
                 EntryValueKind.Text,
-                DefaultValue: "1")
+                "1")
         };
 
         var content =

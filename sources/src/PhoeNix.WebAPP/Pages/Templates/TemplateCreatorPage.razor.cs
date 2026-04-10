@@ -1,11 +1,13 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.Components.Templates;
 using PhoeNix.WebAPP.Extensions;
+using PhoeNix.WebAPP.Helpers;
 
 namespace PhoeNix.WebAPP.Pages.Templates;
 
@@ -110,6 +112,12 @@ public partial class TemplateCreatorPage : ComponentBase
         }
 
         await FetchScaffoldingAsync();
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        Console.WriteLine($"Pushing {e.ShiftKey} {e.CtrlKey} {e.Key}");
+        if (e is { CtrlKey: true, ShiftKey: true, Key: "F" }) _moduleContent = NixCodeFormatter.Format(_moduleContent);
     }
 
     private void OnArchitecturesChanged(IEnumerable<Architecture> values)

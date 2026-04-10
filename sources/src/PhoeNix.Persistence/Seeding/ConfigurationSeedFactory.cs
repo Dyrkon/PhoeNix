@@ -46,16 +46,16 @@ internal static class ConfigurationSeedFactory
         var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
         nixFlakeModule.ReplaceEntries(
         [
-            TextValue.Create(
+            ListValue.Create(
                 new EntryValueId(Guid.NewGuid()),
-                options.NixSubstituters,
                 SeedPlaceholders.NixTrustedSubstituters,
-                SeedPlaceholders.NixTrustedSubstituters).Value,
-            TextValue.Create(
+                SeedPlaceholders.NixTrustedSubstituters,
+                options.NixSubstituters).Value,
+            ListValue.Create(
                 new EntryValueId(Guid.NewGuid()),
-                options.NixTrustedPublicKeys,
                 SeedPlaceholders.NixTrustedPublicKeys,
-                SeedPlaceholders.NixTrustedPublicKeys).Value
+                SeedPlaceholders.NixTrustedPublicKeys,
+                options.NixTrustedPublicKeys).Value
         ]);
 
         var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
@@ -88,11 +88,11 @@ internal static class ConfigurationSeedFactory
                 ToNixString(options.StateVersion),
                 SeedPlaceholders.StateVersion,
                 SeedPlaceholders.StateVersion).Value,
-            TextValue.Create(
+            ListValue.Create(
                 new EntryValueId(Guid.NewGuid()),
-                ToNixStringList(options.RootAuthorizedKeys),
                 SeedPlaceholders.RootAuthorizedKeys,
-                SeedPlaceholders.RootAuthorizedKeys).Value
+                SeedPlaceholders.RootAuthorizedKeys,
+                options.RootAuthorizedKeys).Value
         ]);
 
         var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiExt4Template);
@@ -125,10 +125,5 @@ internal static class ConfigurationSeedFactory
     {
         var escaped = value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         return $"\"{escaped}\"";
-    }
-
-    private static string ToNixStringList(IEnumerable<string> values)
-    {
-        return $"[ {string.Join(" ", values.Select(ToNixString))} ]";
     }
 }
