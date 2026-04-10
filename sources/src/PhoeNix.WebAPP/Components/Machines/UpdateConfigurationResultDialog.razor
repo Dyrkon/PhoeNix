@@ -1,0 +1,39 @@
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3" AlignItems="AlignItems.Center" Class="py-2">
+            @if (IsSuccess)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Success"
+                         Style="font-size: 3rem;"/>
+                <MudText Typo="Typo.h6">Configuration updated successfully</MudText>
+                @if (ConfigurationTitle is not null && SystemName is not null)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        @ConfigurationTitle / @SystemName
+                    </MudText>
+                }
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Error"
+                         Color="Color.Error"
+                         Style="font-size: 3rem;"/>
+                <MudText Typo="Typo.h6">Update failed</MudText>
+                @if (ErrorCode is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true" Class="w-100">
+                        <MudText Typo="Typo.body2"><strong>@ErrorCode</strong></MudText>
+                        @if (ErrorMessage is not null)
+                        {
+                            <MudText Typo="Typo.body2">@ErrorMessage</MudText>
+                        }
+                    </MudAlert>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>

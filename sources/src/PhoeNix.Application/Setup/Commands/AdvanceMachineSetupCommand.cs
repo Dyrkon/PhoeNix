@@ -16,6 +16,7 @@ public record AdvanceMachineSetupCommand(MachineId MachineId) : ICommand;
 internal sealed class AdvanceMachineSetupCommandHandler(
     ISetupSessionRepository setupSessionRepository,
     ISetupWorkflowDecider setupWorkflowDecider,
+    IMachineRepository machineRepository,
     ISender sender)
     : ICommandHandler<AdvanceMachineSetupCommand>
 {
@@ -30,7 +31,12 @@ internal sealed class AdvanceMachineSetupCommandHandler(
                 $"No active setup session was found for machine '{request.MachineId.Value}'."));
 
         if (sessionResult.IsFailure)
-            return sessionResult.Error;
+            return await machineRepository
+                .GetByIdAsync(request.MachineId, cancellationToken)
+                .EnsureNotNull(MachineErrors.NotFound(request.MachineId))
+                .Bind(machine =>
+                    machine.ChangeMachineState(MachineState.Failed, DateTime.Now))
+                .TryCatch(() => sessionResult);
 
         var session = sessionResult.Value;
 

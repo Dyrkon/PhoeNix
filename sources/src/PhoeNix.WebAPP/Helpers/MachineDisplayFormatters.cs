@@ -1,3 +1,5 @@
+using Humanizer;
+using MudBlazor;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.Extensions;
 
@@ -54,6 +56,17 @@ internal static class MachineDisplayFormatters
     {
         return value.ToMacFormat();
     }
+
+    public static Color ToMachineStateColor(this MachineState state) => state switch
+    {
+        MachineState.Updated => Color.Success,
+        MachineState.OutDated => Color.Warning,
+        MachineState.Failed => Color.Error,
+        MachineState.Provisioned or MachineState.Orchestrated => Color.Info,
+        _ => Color.Default
+    };
+
+    public static string ToMachineStateLabel(this MachineState state) => state.Humanize();
 
     public static string FormatBytes(this long? value)
     {

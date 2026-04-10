@@ -31,6 +31,6 @@ internal sealed class ExportConfigurationCommandHandler(
                 nixBuildMaterializer.MaterializeConfiguration(configuration, moduleTemplates.ToList()))
             .Bind(configurationFilesBuilder.BuildConfigurationFiles)
             .Bind(cFolder =>
-                fileSystemService.WriteConfigurationToFsAsync(cFolder, command.ConfigurationId, cancellationToken));
+                fileSystemService.WriteConfigurationToFsAsync(cFolder, command.ConfigurationId, null, cancellationToken));
     }
 }

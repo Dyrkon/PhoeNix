@@ -2,6 +2,7 @@ using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Events;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
 using PhoeNix.Domain.Shared;
@@ -60,7 +61,11 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"Module template '{moduleTemplateId.Value}' is already added to configuration '{Title}'."));
 
         return ModuleValue.Create(new ModuleValueId(Guid.NewGuid()), moduleTemplateId, enabled)
-            .Tap(configurationModule => _modules.Add(configurationModule));
+            .Tap(configurationModule =>
+            {
+                _modules.Add(configurationModule);
+                RaiseChangedEventIfNeeded();
+            });
     }
 
     public Result<ModuleValue> UpdateModule(
@@ -78,6 +83,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
 
         return module.SetEnabled(enabled)
             .Tap(() => module.ReplaceEntries(entries))
+            .Tap(RaiseChangedEventIfNeeded)
             .Map(() => module);
     }
 
@@ -91,6 +97,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.ModuleNotFound",
                     $"Module value '{moduleValueId.Value}' was not found in configuration '{Title}'."));
 
+        RaiseChangedEventIfNeeded();
         return Result.Success();
     }
 
@@ -107,7 +114,11 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"System with name '{name}' already exists in configuration '{Title}'."));
 
         return Systems.System.Create(systemId, Id, architecture, name)
-            .Tap(system => _systemSpecifications.Add(system));
+            .Tap(system =>
+            {
+                _systemSpecifications.Add(system);
+                RaiseChangedEventIfNeeded();
+            });
     }
 
     public Result<Systems.System> UpdateSystem(SystemId systemId, string newName)
@@ -127,6 +138,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"System with name '{newName}' already exists in configuration '{Title}'."));
 
         return system.ChangeName(newName)
+            .Tap(RaiseChangedEventIfNeeded)
             .Map(() => system);
     }
 
@@ -144,7 +156,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
-        return system.AddModule(moduleTemplateId, supportedArchitectures, enabled);
+        return system.AddModule(moduleTemplateId, supportedArchitectures, enabled)
+            .Tap(_ => RaiseChangedEventIfNeeded());
     }
 
     public Result<ModuleValue> UpdateSystemModule(
@@ -161,7 +174,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
-        return system.UpdateModule(moduleValueId, enabled, entries);
+        return system.UpdateModule(moduleValueId, enabled, entries)
+            .Tap(_ => RaiseChangedEventIfNeeded());
     }
 
     public Result RemoveSystemModule(SystemId systemId, ModuleValueId moduleValueId)
@@ -174,7 +188,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
-        return system.RemoveModule(moduleValueId);
+        return system.RemoveModule(moduleValueId)
+            .Tap(RaiseChangedEventIfNeeded);
     }
 
     public Result RemoveSystem(SystemId systemId)
@@ -187,6 +202,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' was not found in configuration '{Title}'."));
 
+        RaiseChangedEventIfNeeded();
         return Result.Success();
     }
 
@@ -199,7 +215,11 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"Input '{name}' is already added to configuration '{Title}'."));
 
         return Input.Create(new InputId(Guid.NewGuid()), Id, source, name)
-            .Tap(i => _inputs.Add(i));
+            .Tap(i =>
+            {
+                _inputs.Add(i);
+                RaiseChangedEventIfNeeded();
+            });
     }
 
     public Result<Input> UpdateInput(
@@ -225,6 +245,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
         return input.ChangeSource(source)
             .Tap(() => input.ChangeName(name))
             .Tap(() => input.ReplaceFollows(follows))
+            .Tap(RaiseChangedEventIfNeeded)
             .Map(() => input);
     }
 
@@ -234,7 +255,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
 
         return input is null
             ? Result.Failure(new Error("Configurations.InputNotFound", $"Cannot find input '{inputId.Value}'."))
-            : input.AddFollow(followName, followValue);
+            : input.AddFollow(followName, followValue)
+                .Tap(RaiseChangedEventIfNeeded);
     }
 
     public Result RemoveInputFollow(Guid followId)
@@ -243,7 +265,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
 
         return input is null
             ? Result.Failure(new Error("Configurations.InputFollowNotFound", $"Cannot find follow '{followId}'."))
-            : input.RemoveFollow(followId);
+            : input.RemoveFollow(followId)
+                .Tap(RaiseChangedEventIfNeeded);
     }
 
     public Result RemoveInput(InputId inputId)
@@ -256,7 +279,14 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.InputNotFound",
                     $"Input '{inputId.Value}' was not found in configuration '{Title}'."));
 
+        RaiseChangedEventIfNeeded();
         return Result.Success();
+    }
+
+    private void RaiseChangedEventIfNeeded()
+    {
+        if (!DomainEvents.Any(e => e is ConfigurationChangedDomainEvent))
+            RaiseDomainEvent(new ConfigurationChangedDomainEvent(Id));
     }
 
     public IReadOnlyList<Architecture> SupportedSystemArchitectures()

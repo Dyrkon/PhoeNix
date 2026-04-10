@@ -4,8 +4,9 @@
 @implements IDisposable
 @inject IAuthenticationApiClient AuthenticationApiClient
 
-<CascadingValue Value="_userState">
-    <CascadingValue Value="_setupSessionsState">
+<CascadingValue Value="_machineState">
+    <CascadingValue Value="_userState">
+        <CascadingValue Value="_setupSessionsState">
         <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
         <MudPopoverProvider/>
         <MudDialogProvider MaxWidth="MaxWidth.Large"/>
@@ -19,5 +20,6 @@
                 </MudContainer>
             </MudMainContent>
         </MudLayout>
+        </CascadingValue>
     </CascadingValue>
 </CascadingValue>

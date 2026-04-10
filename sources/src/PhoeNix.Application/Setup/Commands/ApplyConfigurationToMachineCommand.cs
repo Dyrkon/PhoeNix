@@ -195,6 +195,7 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
             .Bind(files => fileSystemService.WriteConfigurationToFsAsync(
                 files,
                 target.SelectedConfigurationId,
+                request.MachineId,
                 cancellationToken))
             .Bind(path => nixosInstaller.InstallAsync(
                 session,

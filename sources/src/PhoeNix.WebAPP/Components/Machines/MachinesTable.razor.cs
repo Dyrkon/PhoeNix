@@ -4,19 +4,28 @@ using MudBlazor;
 using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Models.Machines;
 using PhoeNix.Common.Models;
-using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
+using PhoeNix.WebAPP.Components.Machines;
+using ApiError = PhoeNix.WebAPP.ApiClient.Contracts.ApiError;
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.Extensions;
+using PhoeNix.WebAPP.Helpers;
+using PhoeNix.WebAPP.States;
 using Architecture = PhoeNix.Domain.Enums.Architecture;
+using DomainMachineState = PhoeNix.Domain.Enums.MachineState;
+using MachinesState = PhoeNix.WebAPP.States.MachineState;
 
 namespace PhoeNix.WebAPP.Components.Machines;
 
-public partial class MachinesTable : ComponentBase
+public partial class MachinesTable : ComponentBase, IDisposable
 {
     [Inject] private IMachinesApiClient MachinesApiClient { get; set; } = null!;
+    [Inject] private IDeploymentApiClient DeploymentApiClient { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter] public MachinesState MachineState { get; set; } = null!;
 
     [Parameter] public List<ConfigurationListResponse> Configurations { get; set; } = [];
 
@@ -25,7 +34,23 @@ public partial class MachinesTable : ComponentBase
     private string? _search;
     private bool? _enabled;
     private Architecture? _architecture;
-    private MachineState? _machineState;
+    private DomainMachineState? _machineState;
+    private HashSet<MachineTableRow> _selectedItems = [];
+
+    private IEnumerable<MachineTableRow> SelectedUpdatableItems =>
+        _selectedItems.Where(m => m.Enabled && m.InstalledConfigurationId is not null);
+
+    protected override void OnInitialized()
+    {
+        MachineState.StateChanged += OnMachineStateChanged;
+    }
+
+    public void Dispose()
+    {
+        MachineState.StateChanged -= OnMachineStateChanged;
+    }
+
+    private void OnMachineStateChanged() => InvokeAsync(StateHasChanged);
 
     private async Task<GridData<MachineTableRow>> LoadServerDataAsync(GridState<MachineTableRow> state,
         CancellationToken cancellationToken)
@@ -62,9 +87,11 @@ public partial class MachinesTable : ComponentBase
                 machine.Id,
                 machine.Title,
                 machine.Enabled,
+                machine.InstalledConfigurationId,
                 machine.MacAddress.ToMacFormat(),
                 machine.Architecture.ToArchitectureString(),
                 machine.MachineState.Humanize(),
+                machine.MachineState,
                 ResolveInstalledConfigurationTitle(machine.InstalledConfigurationId, configurationTitles)))
             .ToList();
 
@@ -101,6 +128,62 @@ public partial class MachinesTable : ComponentBase
             await _dataGrid.ReloadServerData();
     }
 
+    private async Task UpdateSelectedAsync()
+    {
+        var targets = SelectedUpdatableItems.ToList();
+        await Task.WhenAll(targets.Select(m => TriggerUpdateAsync(m.Id)));
+        await ReloadGridAsync();
+    }
+
+    private async Task TriggerUpdateAsync(Guid machineId)
+    {
+        MachineState.SetUpdate(machineId, new MachineUpdateEntry(UpdateStatus.InProgress));
+
+        var detailResult = await MachinesApiClient.GetMachineAsync(machineId);
+
+        if (detailResult.IsFailure || detailResult.Value?.DeploymentSnapshot is null)
+        {
+            MachineState.SetUpdate(machineId, new MachineUpdateEntry(
+                UpdateStatus.Failed,
+                new ApiError("NoSnapshot", "Machine has no deployment snapshot.")));
+            return;
+        }
+
+        var snapshot = detailResult.Value.DeploymentSnapshot;
+
+        var updateResult = await DeploymentApiClient.UpdateMachineAsync(
+            snapshot.ConfigurationId,
+            snapshot.SystemId,
+            machineId);
+
+        MachineState.SetUpdate(machineId, updateResult.IsSuccess
+            ? new MachineUpdateEntry(UpdateStatus.Success,
+                ConfigurationTitle: snapshot.ConfigurationTitle,
+                SystemName: snapshot.SystemName)
+            : new MachineUpdateEntry(UpdateStatus.Failed,
+                Error: updateResult.Error,
+                ConfigurationTitle: snapshot.ConfigurationTitle,
+                SystemName: snapshot.SystemName));
+    }
+
+    private async Task OpenUpdateResultDialogAsync(Guid machineId)
+    {
+        var entry = MachineState.GetUpdate(machineId);
+        if (entry is null)
+            return;
+
+        var parameters = new DialogParameters<UpdateConfigurationResultDialog>
+        {
+            { x => x.IsSuccess, entry.Status == UpdateStatus.Success },
+            { x => x.ErrorCode, entry.Error?.Code },
+            { x => x.ErrorMessage, entry.Error?.Description },
+            { x => x.ConfigurationTitle, entry.ConfigurationTitle },
+            { x => x.SystemName, entry.SystemName }
+        };
+
+        await DialogService.ShowAsync<UpdateConfigurationResultDialog>("Update Result", parameters);
+    }
+
     private async Task OnSearchChangedAsync(string? value)
     {
         _search = value;
@@ -119,7 +202,7 @@ public partial class MachinesTable : ComponentBase
         await ReloadGridAsync();
     }
 
-    private async Task OnMachineStateChangedAsync(MachineState? value)
+    private async Task OnMachineStateChangedAsync(DomainMachineState? value)
     {
         _machineState = value;
         await ReloadGridAsync();
@@ -175,8 +258,10 @@ public partial class MachinesTable : ComponentBase
         Guid Id,
         string Title,
         bool Enabled,
+        Guid? InstalledConfigurationId,
         string MacAddress,
         string Architecture,
         string MachineState,
+        DomainMachineState RawMachineState,
         string InstalledConfigurationTitle);
 }
