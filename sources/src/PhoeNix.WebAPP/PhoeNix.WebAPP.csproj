@@ -8,15 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Humanizer" Version="3.0.10" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.*" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.*" PrivateAssets="all" />
-        <PackageReference Include="MudBlazor" Version="9.*" />
-        <PackageReference Include="MudBlazor.Extensions" Version="9.3.0" />
+        <PackageReference Include="Humanizer" Version="3.0.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.*"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.*" PrivateAssets="all"/>
+        <PackageReference Include="MudBlazor" Version="9.*"/>
+        <PackageReference Include="MudBlazor.Extensions" Version="9.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhoeNix.WebAPP.ApiClient\PhoeNix.WebAPP.ApiClient.csproj" />
+        <ProjectReference Include="..\PhoeNix.WebAPP.ApiClient\PhoeNix.WebAPP.ApiClient.csproj"/>
     </ItemGroup>
 
+    <PropertyGroup>
+        <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    </PropertyGroup>
 </Project>

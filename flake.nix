@@ -41,8 +41,8 @@
           sources = ./sources;
           versionFile = ./version;
           nugetDeps = ./nix/deps.json;
-          dotnetSdk = pkgs.dotnetCorePackages.sdk_10_0;
-          dotnetRuntime = pkgs.dotnetCorePackages.aspnetcore_10_0;
+          dotnetSdk = pkgs.dotnetCorePackages.sdk_10_0-bin;
+          dotnetRuntime = pkgs.dotnetCorePackages.aspnetcore_10_0-bin;
         };
 
         csprojSrc = import ./nix/lib/csprojFileset/default.nix {

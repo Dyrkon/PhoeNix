@@ -1,12 +1,16 @@
 { pkgs, lib, qmd-src, bun2nix }:
 
 let
-  cudaPackages = pkgs.cudaPackages_12;
+  stdenv = pkgs.stdenv;
+  isLinux = stdenv.isLinux;
+  isDarwin = stdenv.isDarwin;
+
+  cudaPackages = if isLinux then pkgs.cudaPackages_12 else null;
 
   patchedSrc = pkgs.applyPatches {
     name = "qmd-src";
     src = qmd-src;
-    patches = [
+    patches = lib.optionals (pkgs.stdenv.isLinux && pkgs.config.cudaSupport or false) [
       ../../patches/qmd-llm-cuda.patch
     ];
   };
@@ -23,24 +27,26 @@ bun2nix.mkDerivation {
     bunNix = ./bun.nix;
   };
 
-  nativeBuildInputs = [
-    pkgs.makeWrapper
-    pkgs.python3
-    cudaPackages.cuda_nvcc
-  ];
+  nativeBuildInputs =
+    [
+      pkgs.makeWrapper
+      pkgs.python3
+    ]
+    ++ lib.optionals isLinux [
+      cudaPackages.cuda_nvcc
+    ];
 
-  buildInputs = [
-    pkgs.sqlite
-    cudaPackages.cuda_cudart
-    cudaPackages.libcublas
-  ];
+  buildInputs =
+    [
+      pkgs.sqlite
+    ]
+    ++ lib.optionals isLinux [
+      cudaPackages.cuda_cudart
+      cudaPackages.libcublas
+    ];
 
-  dontUseCmakeConfigure = true;
   dontConfigure = true;
-
-  buildPhase = ''
-    true
-  '';
+  dontBuild = true;
 
   installPhase = ''
     mkdir -p "$out/lib/qmd" "$out/bin"
@@ -59,6 +65,7 @@ bun2nix.mkDerivation {
 
     chmod -R u+w "$out/lib/qmd"
 
+    # Patch glibc detection (Linux only really matters, harmless elsewhere)
     find "$out/lib/qmd/node_modules" -type f -name 'detectGlibc.js' -print0 | \
       while IFS= read -r -d "" file; do
         substituteInPlace "$file" \
@@ -66,8 +73,8 @@ bun2nix.mkDerivation {
       done
 
     cat > "$out/bin/qmd" << 'WRAPPER'
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 QMD_CACHE="''${XDG_CACHE_HOME:-$HOME/.cache}/qmd-runtime"
 QMD_SHARED_CACHE="''${XDG_CACHE_HOME:-$HOME/.cache}/qmd"
@@ -96,10 +103,19 @@ if [ ! -f "$QMD_STAMP_FILE" ] || [ "$(cat "$QMD_STAMP_FILE")" != "$QMD_STAMP" ];
   printf '%s\n' "$QMD_STAMP" > "$QMD_STAMP_FILE"
 fi
 
-export PATH="@nvcc_bin@:$PATH"
-export CUDACXX="@nvcc_bin@/nvcc"
-export LD_LIBRARY_PATH="/run/opengl-driver/lib:@sqlite_lib@:@cuda_lib@''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export LLAMA_CPP_LOCAL_BUILDS_DIR="$QMD_SHARED_CACHE/llama-builds"
+
+# Platform-specific setup
+case "$(uname)" in
+  Linux)
+    export PATH="@nvcc_bin@:$PATH"
+    export CUDACXX="@nvcc_bin@/nvcc"
+    export LD_LIBRARY_PATH="@sqlite_lib@:@cuda_lib@''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    ;;
+  Darwin)
+    export DYLD_LIBRARY_PATH="@sqlite_lib@''${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+    ;;
+esac
 
 unset GGML_CUDA
 unset CUDA_PATH
@@ -114,12 +130,18 @@ else
 fi
 WRAPPER
 
-    substituteInPlace "$out/bin/qmd" \
+        substituteInPlace "$out/bin/qmd" \
       --replace @out@ "$out" \
       --replace @bun@ ${pkgs.bun} \
+      --replace @sqlite_lib@ "${pkgs.sqlite.out}/lib" \
+      ${lib.optionalString isLinux ''
       --replace @nvcc_bin@ ${cudaPackages.cuda_nvcc}/bin \
-      --replace @sqlite_lib@ ${pkgs.sqlite.out}/lib \
       --replace @cuda_lib@ "${cudaPackages.cuda_cudart}/lib:${cudaPackages.libcublas}/lib"
+      ''} \
+      ${lib.optionalString isDarwin ''
+      --replace @nvcc_bin@ "" \
+      --replace @cuda_lib@ ""
+      ''}
 
     chmod +x "$out/bin/qmd"
   '';

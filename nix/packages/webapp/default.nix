@@ -10,6 +10,14 @@ pkgs.buildDotnetModule rec {
 
   src = csprojSrc;
 
+  # Fix: https://github.com/dotnet/maui/issues/32968
+  dotnetRestoreFlags = [
+    "-p:UseMonoRuntime=false"
+  ];
+  dotnetFlags = [
+    "-p:UseMonoRuntime=false"
+  ];
+
   projectFile = "src/PhoeNix.WebAPP/PhoeNix.WebAPP/PhoeNix.WebAPP.csproj";
   nugetDeps = project.nugetDeps;
 
