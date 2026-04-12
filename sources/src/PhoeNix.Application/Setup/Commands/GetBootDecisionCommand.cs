@@ -132,8 +132,8 @@ internal sealed class GetBootDecisionQueryHandler(
             target.CallbackToken.Token);
 
         return Result.Success(new PxeBootDetails(
-            $"/setup/files/{session.Id.Value:D}/kernel",
-            [$"/setup/files/{session.Id.Value:D}/init"],
+            $"/api/setup/files/{session.Id.Value:D}/kernel",
+            [$"/api/setup/files/{session.Id.Value:D}/init"],
             cmdline,
             $"Booting {machine.Title}"));
     }

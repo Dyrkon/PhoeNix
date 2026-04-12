@@ -1,3 +1,4 @@
+using Humanizer;
 using MediatR;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Setup;

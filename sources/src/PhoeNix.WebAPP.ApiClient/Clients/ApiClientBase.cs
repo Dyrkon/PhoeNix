@@ -148,9 +148,17 @@ public abstract class ApiClientBase
             _authenticationInvalidationNotifier.NotifyAuthenticationInvalidated();
     }
 
+    private const string ApiPrefix = "api/";
+
     protected static HttpRequestMessage CreateRequest(HttpMethod method, string uri)
     {
-        var request = new HttpRequestMessage(method, uri);
+        var cleanUri = uri.TrimStart('/');
+
+        var finalUri = cleanUri.StartsWith(ApiPrefix)
+            ? cleanUri
+            : $"{ApiPrefix}{cleanUri}";
+
+        var request = new HttpRequestMessage(method, finalUri);
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
         return request;
     }

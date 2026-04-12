@@ -18,13 +18,9 @@ pkgs.buildDotnetModule rec {
 
   buildType = "Release";
   useAppHost = false;
-  selfContainedBuild = false; # true causes error with linux runtime
+  selfContainedBuild = false; 
 
-  # Fix: https://github.com/dotnet/maui/issues/32968
   dotnetRestoreFlags = [
-    "-p:UseMonoRuntime=false"
-  ];
-  dotnetFlags = [
     "-p:UseMonoRuntime=false"
   ];
 

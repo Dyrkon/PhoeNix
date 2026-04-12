@@ -8,7 +8,7 @@ public class DbContextSqLiteFactory : IDbContextFactory<ApplicationDbContext>
 
     public DbContextSqLiteFactory(string databaseName)
     {
-        _contextOptionsBuilder.UseSqlite("Data Source =:memory:;");
+        _contextOptionsBuilder.UseInMemoryDatabase(databaseName);
 
         _contextOptionsBuilder.EnableSensitiveDataLogging();
     }

@@ -137,7 +137,7 @@ EOF
     ramDisk = "${build.netbootRamdisk}/initrd";
     init = "${build.toplevel}/init";
     system = targetSystem;
-    kernelParams = "init=${build.toplevel}/init loglevel=4";
+    kernelParams = "init=${build.toplevel}/init loglevel=7 console=ttyS0,115200n8";
   };
 in
 {

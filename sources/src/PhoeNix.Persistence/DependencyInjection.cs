@@ -51,9 +51,10 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
-                var dbName = Path.Combine("/var/lib/phoenix/db",
-                    configuration.GetConnectionString("PhoeNix") ?? "phoenix.db");
-                options.UseSqlite($"Data Source={dbName}");
+                var connectionString = configuration.GetConnectionString("PhoeNix")
+                                       ?? throw new InvalidOperationException(
+                                           "Connection string 'DefaultConnection' is not configured.");
+                options.UseNpgsql(connectionString);
                 options.AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>());
             })
             .ConfigureDbContext()

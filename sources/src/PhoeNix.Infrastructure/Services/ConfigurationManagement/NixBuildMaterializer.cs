@@ -148,6 +148,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
             "      --silent \\\n" +
             "      --show-error \\\n" +
             "      -X POST \\\n" +
+            "      -d \"\" \\\n" +
             "      -H \"Authorization: Bearer ${bearerToken}\" \\\n" +
             "      \"${finalizeUrl}\"\n" +
             "    touch /var/lib/phoenix/setup/finalized\n" +

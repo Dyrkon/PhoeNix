@@ -1,4 +1,5 @@
 using System.Net;
+using Humanizer;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
