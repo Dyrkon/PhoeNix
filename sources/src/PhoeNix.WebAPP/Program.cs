@@ -18,14 +18,9 @@ public class Program
         builder.Services.AddMudServices();
         builder.Services.AddMudExtensions();
 
-        var apiBaseAddress = "https://localhost:7031";
-        var httpBaseAddress = string.IsNullOrWhiteSpace(apiBaseAddress)
-            ? builder.HostEnvironment.BaseAddress
-            : apiBaseAddress;
-
         builder.Services.AddScoped(_ => new HttpClient
         {
-            BaseAddress = new Uri(httpBaseAddress, UriKind.Absolute)
+            BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
         });
 
         builder.Services.AddPhoeNixApiClients();

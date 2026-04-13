@@ -29,7 +29,8 @@ public static class DependencyInjection
             {
                 policy.WithOrigins(
                         "http://localhost:5269",
-                        "https://localhost:7052")
+                        "https://localhost:7052",
+                        "http://localhost:8888")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -105,6 +106,8 @@ public static class DependencyInjection
     private static IServiceCollection AddPhoeNixAuthentication(this IServiceCollection services,
         IConfiguration configuration)
     {
+        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+
         services.AddHttpContextAccessor();
 
         var jwt = configuration.GetSection("CallbackToken").Get<JwtCallbackTokenOptions>()
@@ -122,8 +125,8 @@ public static class DependencyInjection
             {
                 options.Cookie.Name = "phoenix.auth";
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.None;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None;
+                options.Cookie.SecurePolicy = isDev ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
                 options.SlidingExpiration = true;
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
 

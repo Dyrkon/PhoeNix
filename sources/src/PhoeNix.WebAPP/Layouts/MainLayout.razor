@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject IAuthenticationApiClient AuthenticationApiClient
 
+<CascadingValue Value="_templatesState">
 <CascadingValue Value="_machineState">
     <CascadingValue Value="_userState">
         <CascadingValue Value="_setupSessionsState">
@@ -22,4 +23,5 @@
         </MudLayout>
         </CascadingValue>
     </CascadingValue>
+</CascadingValue>
 </CascadingValue>

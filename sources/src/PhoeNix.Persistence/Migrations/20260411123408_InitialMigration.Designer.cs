@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PhoeNix.Persistence;
 
 #nullable disable
@@ -11,43 +12,47 @@ using PhoeNix.Persistence;
 namespace PhoeNix.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260327210349_UpdateMachineDeploymentSnapshot")]
-    partial class UpdateMachineDeploymentSnapshot
+    [Migration("20260411123408_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("PhoeNix.Application.Models.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Error")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("NextAttemptOnUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("OccurredOnUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("ProcessedOnUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RetryCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -59,41 +64,41 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.Configuration", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Configurations");
+                    b.ToTable("Configurations", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.FollowInput", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("FollowName")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("FollowValue")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<Guid>("InputId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -105,20 +110,20 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.Input", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ConfigurationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
 
@@ -130,30 +135,30 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Machines.Machine", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Architecture")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(32)");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("InstallDiskSelectionPreference")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("MacAddress")
                         .IsRequired()
                         .HasMaxLength(12)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(12)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -169,36 +174,37 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.EntryValue", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntryValueKind")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)");
 
                     b.Property<Guid>("ModuleValueId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Placeholder")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TypeDiscriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("TypeDiscriminator");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleValueId");
 
-                    b.ToTable("EntryValues");
+                    b.ToTable("EntryValues", (string)null);
 
-                    b.HasDiscriminator<string>("TypeDiscriminator").HasValue("EntryValue");
+                    b.HasDiscriminator<string>("EntryValueKind").HasValue("EntryValue");
 
                     b.UseTphMappingStrategy();
                 });
@@ -206,46 +212,52 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleTemplate", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
+
+                    b.PrimitiveCollection<string[]>("SupportedArchitectures")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.PrimitiveCollection<string>("_supportedArchitectures")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ModuleTemplates");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ModuleTemplates", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ModuleValue", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("ConfigurationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ModuleTemplateId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("SystemId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -261,38 +273,41 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Test", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<Guid>("ModuleTemplateId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
-                    b.PrimitiveCollection<string>("_variableNames")
+                    b.PrimitiveCollection<string[]>("VariableNames")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text[]");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleTemplateId");
 
-                    b.ToTable("Tests");
+                    b.HasIndex("ModuleTemplateId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ModuleTemplateTests", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.SetupSessions.SetupSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("StartTime")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -302,32 +317,32 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.SystemUsers.SystemUser", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Group")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("HomePath")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsNormalUser")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Shell")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<uint>("Uid")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("Uid")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -337,18 +352,18 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Architecture")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ConfigurationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -360,89 +375,100 @@ namespace PhoeNix.Persistence.Migrations
             modelBuilder.Entity("PhoeNix.Domain.Entities.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.MultiChoiceValue<double>", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.DecimalRangeValue", b =>
                 {
                     b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
 
-                    b.HasDiscriminator().HasValue("MultiChoiceDouble");
+                    b.Property<decimal?>("LowerValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Max")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Min")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("UpperValue")
+                        .HasColumnType("numeric");
+
+                    b.HasDiscriminator().HasValue("DecimalRange");
                 });
 
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.MultiChoiceValue<int>", b =>
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.IntegerRangeValue", b =>
                 {
                     b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
 
-                    b.HasDiscriminator().HasValue("MultiChoiceInt");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.MultiChoiceValue<string>", b =>
-                {
-                    b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
-
-                    b.HasDiscriminator().HasValue("MultiChoiceString");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.RangeValue<double>", b =>
-                {
-                    b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
-
-                    b.Property<double>("LowerValue")
-                        .HasColumnType("REAL");
-
-                    b.Property<double>("Max")
-                        .HasColumnType("REAL");
-
-                    b.Property<double>("Min")
-                        .HasColumnType("REAL");
-
-                    b.Property<double>("UpperValue")
-                        .HasColumnType("REAL");
-
-                    b.HasDiscriminator().HasValue("RangeDouble");
-                });
-
-            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.RangeValue<int>", b =>
-                {
-                    b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
-
-                    b.Property<int>("LowerValue")
-                        .HasColumnType("INTEGER");
+                    b.Property<int?>("LowerValue")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Max")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Min")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("UpperValue")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.ToTable("EntryValues", t =>
                         {
                             t.Property("LowerValue")
-                                .HasColumnName("RangeValue_LowerValue");
+                                .HasColumnName("IntegerRangeValue_LowerValue");
 
                             t.Property("Max")
-                                .HasColumnName("RangeValue_Max");
+                                .HasColumnName("IntegerRangeValue_Max");
 
                             t.Property("Min")
-                                .HasColumnName("RangeValue_Min");
+                                .HasColumnName("IntegerRangeValue_Min");
 
                             t.Property("UpperValue")
-                                .HasColumnName("RangeValue_UpperValue");
+                                .HasColumnName("IntegerRangeValue_UpperValue");
                         });
 
-                    b.HasDiscriminator().HasValue("RangeInt");
+                    b.HasDiscriminator().HasValue("IntegerRange");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.ListValue", b =>
+                {
+                    b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
+
+                    b.HasDiscriminator().HasValue("List");
+                });
+
+            modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.SingleChoiceValue", b =>
+                {
+                    b.HasBaseType("PhoeNix.Domain.Entities.Modules.EntryValue");
+
+                    b.PrimitiveCollection<string[]>("Options")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.HasDiscriminator().HasValue("SingleChoice");
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.TextValue", b =>
@@ -475,24 +501,36 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.DeploymentSnapshot", "DeploymentSnapshot", b1 =>
                         {
                             b1.Property<Guid>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("ConfigurationId")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("uuid")
                                 .HasColumnName("ProvisionedConfigurationId");
+
+                            b1.Property<string>("ConfigurationTitle")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("ConfigurationTitle");
 
                             b1.Property<string>("LastKnownIpAddress")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("ProvisionedIpAddress");
 
                             b1.Property<DateTime>("ProvisionedAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("ProvisionedAtUtc");
 
                             b1.Property<Guid>("SystemId")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("uuid")
                                 .HasColumnName("ProvisionedSystemId");
+
+                            b1.Property<string>("SystemName")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("SystemName");
 
                             b1.HasKey("MachineId");
 
@@ -504,16 +542,16 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsMany("PhoeNix.Domain.Entities.Machines.DeploymentDiskBinding", "BoundDisks", b2 =>
                                 {
                                     b2.Property<Guid>("MachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<int>("Index")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("DiskIndex");
 
                                     b2.Property<string>("StableDevicePath")
                                         .IsRequired()
                                         .HasMaxLength(500)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(500)")
                                         .HasColumnName("StableDevicePath");
 
                                     b2.HasKey("MachineId", "Index");
@@ -532,10 +570,10 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.HardwareProfile", "HardwareProfile", b1 =>
                         {
                             b1.Property<Guid>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTime>("ObservedAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("HardwareObservedAtUtc");
 
                             b1.HasKey("MachineId");
@@ -548,24 +586,24 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsOne("PhoeNix.Domain.Entities.Machines.CpuProfile", "Cpu", b2 =>
                                 {
                                     b2.Property<Guid>("HardwareProfileMachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<int?>("CoreCount")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("CpuCoreCount");
 
                                     b2.Property<string>("Model")
                                         .HasMaxLength(300)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(300)")
                                         .HasColumnName("CpuModel");
 
                                     b2.Property<int?>("ThreadCount")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("CpuThreadCount");
 
                                     b2.Property<string>("Vendor")
                                         .HasMaxLength(200)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(200)")
                                         .HasColumnName("CpuVendor");
 
                                     b2.HasKey("HardwareProfileMachineId");
@@ -579,18 +617,18 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsOne("PhoeNix.Domain.Entities.Machines.MemoryProfile", "Memory", b2 =>
                                 {
                                     b2.Property<Guid>("HardwareProfileMachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<int?>("OccupiedSlotCount")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("MemoryOccupiedSlotCount");
 
                                     b2.Property<int?>("SlotCount")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("MemorySlotCount");
 
                                     b2.Property<long?>("TotalBytes")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("bigint")
                                         .HasColumnName("MemoryTotalBytes");
 
                                     b2.HasKey("HardwareProfileMachineId");
@@ -604,17 +642,19 @@ namespace PhoeNix.Persistence.Migrations
                                         {
                                             b3.Property<int>("Id")
                                                 .ValueGeneratedOnAdd()
-                                                .HasColumnType("INTEGER");
+                                                .HasColumnType("integer");
+
+                                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b3.Property<int>("Id"));
 
                                             b3.Property<Guid?>("MachineId")
-                                                .HasColumnType("TEXT");
+                                                .HasColumnType("uuid");
 
                                             b3.Property<long?>("SizeBytes")
-                                                .HasColumnType("INTEGER");
+                                                .HasColumnType("bigint");
 
                                             b3.Property<string>("Slot")
                                                 .HasMaxLength(100)
-                                                .HasColumnType("TEXT");
+                                                .HasColumnType("character varying(100)");
 
                                             b3.HasKey("Id");
 
@@ -632,16 +672,16 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsOne("PhoeNix.Domain.Entities.Machines.MotherboardProfile", "Motherboard", b2 =>
                                 {
                                     b2.Property<Guid>("HardwareProfileMachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<string>("Model")
                                         .HasMaxLength(300)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(300)")
                                         .HasColumnName("MotherboardModel");
 
                                     b2.Property<string>("Vendor")
                                         .HasMaxLength(200)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(200)")
                                         .HasColumnName("MotherboardVendor");
 
                                     b2.HasKey("HardwareProfileMachineId");
@@ -656,36 +696,38 @@ namespace PhoeNix.Persistence.Migrations
                                 {
                                     b2.Property<int>("Id")
                                         .ValueGeneratedOnAdd()
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("integer");
+
+                                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b2.Property<int>("Id"));
 
                                     b2.Property<string>("BusType")
                                         .HasMaxLength(100)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(100)");
 
                                     b2.Property<bool?>("IsRotational")
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("boolean");
 
                                     b2.Property<string>("KernelDevicePath")
                                         .HasMaxLength(200)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(200)");
 
                                     b2.Property<Guid?>("MachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<string>("Model")
                                         .HasMaxLength(300)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(300)");
 
                                     b2.Property<long?>("SizeBytes")
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("bigint");
 
                                     b2.Property<string>("StableDevicePath")
                                         .HasMaxLength(500)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(500)");
 
                                     b2.Property<string>("Vendor")
                                         .HasMaxLength(200)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(200)");
 
                                     b2.HasKey("Id");
 
@@ -701,21 +743,23 @@ namespace PhoeNix.Persistence.Migrations
                                 {
                                     b2.Property<int>("Id")
                                         .ValueGeneratedOnAdd()
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("integer");
+
+                                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b2.Property<int>("Id"));
 
                                     b2.Property<Guid?>("MachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<string>("Model")
                                         .HasMaxLength(300)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(300)");
 
                                     b2.Property<string>("Vendor")
                                         .HasMaxLength(200)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(200)");
 
                                     b2.Property<long?>("VramBytes")
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("bigint");
 
                                     b2.HasKey("Id");
 
@@ -731,22 +775,24 @@ namespace PhoeNix.Persistence.Migrations
                                 {
                                     b2.Property<int>("Id")
                                         .ValueGeneratedOnAdd()
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("integer");
+
+                                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b2.Property<int>("Id"));
 
                                     b2.Property<bool>("IsConnected")
-                                        .HasColumnType("INTEGER");
+                                        .HasColumnType("boolean");
 
                                     b2.Property<string>("Kind")
                                         .IsRequired()
                                         .HasMaxLength(64)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(64)");
 
                                     b2.Property<Guid?>("MachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<string>("Name")
                                         .HasMaxLength(300)
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("character varying(300)");
 
                                     b2.HasKey("Id");
 
@@ -774,28 +820,28 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.MachineStatus", "MachineStatus", b1 =>
                         {
                             b1.Property<Guid>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<DateTime?>("LastConfigured")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastConfigured");
 
                             b1.Property<DateTime?>("LastContacted")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastContacted");
 
                             b1.Property<DateTime?>("LastOrchestrated")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastOrchestrated");
 
                             b1.Property<DateTime?>("LastProvisioned")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastProvisioned");
 
                             b1.Property<string>("MachineState")
                                 .IsRequired()
                                 .HasMaxLength(32)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("character varying(32)")
                                 .HasColumnName("MachineState");
 
                             b1.HasKey("MachineId");
@@ -811,10 +857,10 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.Machines.SoftwareSnapshot", "SoftwareSnapshot", b1 =>
                         {
                             b1.Property<Guid>("MachineId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<int?>("SchemaVersion")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("integer");
 
                             b1.HasKey("MachineId");
 
@@ -849,35 +895,65 @@ namespace PhoeNix.Persistence.Migrations
                         {
                             b1.Property<Guid>("Id")
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("AllowLowerValue")
+                                .HasColumnType("boolean");
 
                             b1.Property<int?>("BindingIndex")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("integer");
 
                             b1.Property<string>("BindingKind")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("text");
 
-                            b1.Property<string>("InputType")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
+                            b1.Property<decimal?>("DecimalMax")
+                                .HasColumnType("numeric");
+
+                            b1.Property<decimal?>("DecimalMin")
+                                .HasColumnType("numeric");
+
+                            b1.Property<string>("DefaultLowerValue")
+                                .HasColumnType("text");
+
+                            b1.Property<string>("DefaultValue")
+                                .HasColumnType("text");
+
+                            b1.Property<int?>("IntegerMax")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("IntegerMin")
+                                .HasColumnType("integer");
 
                             b1.Property<Guid>("ModuleTemplateId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("OptionsJson")
+                                .HasColumnType("text");
 
                             b1.Property<string>("Placeholder")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("ValueKind")
+                                .IsRequired()
+                                .HasColumnType("text");
 
                             b1.HasKey("Id");
 
                             b1.HasIndex("ModuleTemplateId");
+
+                            b1.HasIndex("ModuleTemplateId", "Name")
+                                .IsUnique();
+
+                            b1.HasIndex("ModuleTemplateId", "Placeholder")
+                                .IsUnique();
 
                             b1.ToTable("ModuleTemplateEntryValueDefinitions", (string)null);
 
@@ -915,21 +991,21 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.BootstrapImageDescriptor", "BootArtefactDescriptor", b1 =>
                         {
                             b1.Property<Guid>("SetupSessionId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<string>("Init")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("CmdLine");
 
                             b1.Property<string>("Kernel")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("KernelLocation");
 
                             b1.Property<string>("RamDisk")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("InitRdLocation");
 
                             b1.HasKey("SetupSessionId");
@@ -943,50 +1019,50 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsMany("PhoeNix.Domain.Entities.SetupSessions.SetupTarget", "Targets", b1 =>
                         {
                             b1.Property<Guid>("SetupSessionId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<Guid>("MachineId")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("uuid")
                                 .HasColumnName("MachineId");
 
                             b1.Property<string>("IpAddress")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("IpAddress");
 
                             b1.Property<DateTime?>("LastErrorAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastErrorAtUtc");
 
                             b1.Property<string>("LastErrorCode")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("LastErrorCode");
 
                             b1.Property<string>("LastErrorDescription")
                                 .HasMaxLength(2000)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("character varying(2000)")
                                 .HasColumnName("LastErrorDescription");
 
                             b1.Property<string>("LastErrorSource")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("character varying(200)")
                                 .HasColumnName("LastErrorSource");
 
                             b1.Property<DateTime?>("LastTransitionAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("LastTransitionAtUtc");
 
                             b1.Property<Guid?>("SelectedConfigurationId")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("uuid")
                                 .HasColumnName("SelectedConfigurationId");
 
                             b1.Property<Guid?>("SelectedSystemId")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("uuid")
                                 .HasColumnName("SelectedSystemId");
 
                             b1.Property<string>("Stage")
                                 .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasColumnType("text");
 
                             b1.HasKey("SetupSessionId", "MachineId");
 
@@ -1004,19 +1080,19 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsMany("PhoeNix.Domain.Entities.SetupSessions.RankedDiskAssignment", "RankedDiskAssignments", b2 =>
                                 {
                                     b2.Property<Guid>("SetupSessionId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<Guid>("MachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<int>("Index")
-                                        .HasColumnType("INTEGER")
+                                        .HasColumnType("integer")
                                         .HasColumnName("RankIndex");
 
                                     b2.Property<string>("DiskByIdPath")
                                         .IsRequired()
                                         .HasMaxLength(500)
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("character varying(500)")
                                         .HasColumnName("DiskByIdPath");
 
                                     b2.HasKey("SetupSessionId", "MachineId", "Index");
@@ -1032,22 +1108,22 @@ namespace PhoeNix.Persistence.Migrations
                             b1.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.CallbackToken", "CallbackToken", b2 =>
                                 {
                                     b2.Property<Guid>("SetupTargetSetupSessionId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<Guid>("SetupTargetMachineId")
-                                        .HasColumnType("TEXT");
+                                        .HasColumnType("uuid");
 
                                     b2.Property<DateTime>("ExpiresAtUtc")
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("timestamp with time zone")
                                         .HasColumnName("CallbackTokenExpiresAtUtc");
 
                                     b2.Property<DateTime?>("RevokedAtUtc")
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("timestamp with time zone")
                                         .HasColumnName("CallbackTokenRevokedAtUtc");
 
                                     b2.Property<string>("Token")
                                         .IsRequired()
-                                        .HasColumnType("TEXT")
+                                        .HasColumnType("text")
                                         .HasColumnName("CallbackToken");
 
                                     b2.HasKey("SetupTargetSetupSessionId", "SetupTargetMachineId");
@@ -1066,24 +1142,24 @@ namespace PhoeNix.Persistence.Migrations
                     b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.SshCredential", "SshCredential", b1 =>
                         {
                             b1.Property<Guid>("SetupSessionId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uuid");
 
                             b1.Property<string>("CertificatePublicKey")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("SshCertificatePublicKey");
 
                             b1.Property<DateTime>("ExpiresAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("SshKeyExpiresAtUtc");
 
                             b1.Property<string>("PublicKey")
                                 .IsRequired()
-                                .HasColumnType("TEXT")
+                                .HasColumnType("text")
                                 .HasColumnName("SshPublicKey");
 
                             b1.Property<DateTime?>("RevokedAtUtc")
-                                .HasColumnType("TEXT")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("SshKeyRevokedAtUtc");
 
                             b1.HasKey("SetupSessionId");

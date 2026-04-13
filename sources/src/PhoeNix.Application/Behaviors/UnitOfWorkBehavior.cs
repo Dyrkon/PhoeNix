@@ -21,15 +21,33 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var response = await next();
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+        TResponse response;
+        try
+        {
+            response = await next();
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
 
         if (response is Result { IsFailure: true })
+        {
+            await transaction.RollbackAsync(cancellationToken);
             return response;
+        }
 
         if (request is ISelfManagedUnitOfWorkCommand)
+        {
+            await transaction.CommitAsync(cancellationToken);
             return response;
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return response;
     }

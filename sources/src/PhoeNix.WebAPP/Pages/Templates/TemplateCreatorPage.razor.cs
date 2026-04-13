@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using PhoeNix.Domain.Enums;
@@ -8,17 +9,23 @@ using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.Components.Templates;
 using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.Helpers;
+using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Pages.Templates;
 
-public partial class TemplateCreatorPage : ComponentBase
+public partial class TemplateCreatorPage : ComponentBase, IDisposable
 {
     [Inject] private IModulesApiClient ModulesApiClient { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
+    [CascadingParameter] public TemplatesState TemplatesState { get; set; } = null!;
+
     [Parameter] public Guid? TemplateId { get; set; }
+
+    private bool _suppressDraftSave;
+    private IDisposable? _locationChangingRegistration;
 
     private string _name = string.Empty;
     private bool _enabled = true;
@@ -58,6 +65,27 @@ public partial class TemplateCreatorPage : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        _locationChangingRegistration = NavigationManager.RegisterLocationChangingHandler(OnLocationChanging);
+
+        if (TemplatesState.IsMatchingDraft(TemplateId))
+        {
+            _name = TemplatesState.Name;
+            _enabled = TemplatesState.Enabled;
+            _moduleType = TemplatesState.ModuleType;
+            _selectedArchitectures = TemplatesState.SelectedArchitectures.ToList();
+            _moduleContent = TemplatesState.ModuleContent;
+            _entries.Clear();
+            foreach (var e in TemplatesState.Entries)
+                _entries.Add(MapDraftEntryToEditorModel(e));
+            _tests.Clear();
+            foreach (var t in TemplatesState.Tests)
+                _tests.Add(new TestEditorModel
+                    { Id = t.Id, Name = t.Name, Content = t.Content, VariableNames = t.VariableNames.ToList() });
+            _selectedTest = _tests.FirstOrDefault();
+            await FetchScaffoldingAsync();
+            return;
+        }
+
         if (TemplateId.HasValue)
         {
             var result = await ModulesApiClient.GetModuleTemplateByIdAsync(TemplateId.Value);
@@ -114,9 +142,39 @@ public partial class TemplateCreatorPage : ComponentBase
         await FetchScaffoldingAsync();
     }
 
+    private ValueTask OnLocationChanging(LocationChangingContext context)
+    {
+        if (!_suppressDraftSave)
+            TemplatesState.SaveDraft(
+                TemplateId,
+                _name,
+                _enabled,
+                _moduleType,
+                _selectedArchitectures.ToList(),
+                _moduleContent,
+                _entries.Select(MapEditorEntryToDraft).ToList(),
+                _tests.Select(t => new TemplateDraftTest(t.Id, t.Name, t.Content, t.VariableNames.ToList())).ToList());
+
+        return ValueTask.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _locationChangingRegistration?.Dispose();
+    }
+
+    private void CancelAndGoBack()
+    {
+        _suppressDraftSave = true;
+        TemplatesState.Clear();
+        if (TemplateId.HasValue)
+            NavigationManager.NavigateToTemplatesDetail(TemplateId.Value);
+        else
+            NavigationManager.NavigateToTemplates();
+    }
+
     private void HandleKeyDown(KeyboardEventArgs e)
     {
-        Console.WriteLine($"Pushing {e.ShiftKey} {e.CtrlKey} {e.Key}");
         if (e is { CtrlKey: true, ShiftKey: true, Key: "F" }) _moduleContent = NixCodeFormatter.Format(_moduleContent);
     }
 
@@ -352,6 +410,8 @@ public partial class TemplateCreatorPage : ComponentBase
                 }
 
                 Snackbar.Add("Template updated successfully.", Severity.Success);
+                _suppressDraftSave = true;
+                TemplatesState.Clear();
                 NavigationManager.NavigateToTemplatesDetail(TemplateId.Value);
             }
             else
@@ -375,6 +435,8 @@ public partial class TemplateCreatorPage : ComponentBase
                 }
 
                 Snackbar.Add("Template created successfully.", Severity.Success);
+                _suppressDraftSave = true;
+                TemplatesState.Clear();
                 NavigationManager.NavigateToTemplates();
             }
         }
@@ -446,6 +508,35 @@ public partial class TemplateCreatorPage : ComponentBase
             model.AllowLowerValue,
             model.Options.Count > 0 ? model.Options : null,
             model.BindingIndex);
+    }
+
+    private static TemplateDraftEntry MapEditorEntryToDraft(EntryEditorModel model)
+    {
+        return new TemplateDraftEntry(model.Name, model.Placeholder, model.BindingKind, model.ValueKind,
+            model.IntegerMin, model.IntegerMax, model.DecimalMin, model.DecimalMax,
+            [..model.Options], [..model.DefaultListItems], model.AllowLowerValue,
+            model.DefaultValue, model.DefaultLowerValue, model.BindingIndex);
+    }
+
+    private static EntryEditorModel MapDraftEntryToEditorModel(TemplateDraftEntry e)
+    {
+        return new EntryEditorModel
+        {
+            Name = e.Name,
+            Placeholder = e.Placeholder,
+            BindingKind = e.BindingKind,
+            ValueKind = e.ValueKind,
+            IntegerMin = e.IntegerMin,
+            IntegerMax = e.IntegerMax,
+            DecimalMin = e.DecimalMin,
+            DecimalMax = e.DecimalMax,
+            Options = [..e.Options],
+            DefaultListItems = [..e.DefaultListItems],
+            AllowLowerValue = e.AllowLowerValue,
+            DefaultValue = e.DefaultValue,
+            DefaultLowerValue = e.DefaultLowerValue,
+            BindingIndex = e.BindingIndex
+        };
     }
 
     private static ModuleTemplateTestUpsertModel MapTestToApiModel(TestEditorModel model)

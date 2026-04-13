@@ -10,7 +10,7 @@
         <MudText Typo="Typo.h4">@(TemplateId.HasValue ? "Edit Module Template" : "Create Module Template")</MudText>
         <MudButton Variant="Variant.Outlined"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Href="/templates">
+                   OnClick="CancelAndGoBack">
             Back to templates
         </MudButton>
     </MudStack>

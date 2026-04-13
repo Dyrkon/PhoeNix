@@ -10,6 +10,11 @@
 
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
 
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     qmd-src = {
       url = "github:tobi/qmd/c2f3a4037204066455662492518384c9f3a4d247";
       flake = false;
@@ -19,11 +24,40 @@
   };
 
   outputs = inputs @ {
-    self,
-    nixpkgs,
-    flake-utils,
-    ...
+    self, nixpkgs, flake-utils, disko, nixos-generators, ...
   }:
+  let
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      
+      nixosModules.default = import ./nix/modules/phoenix/default.nix { inherit self; };
+
+      mkSystem = system: nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs; };
+        modules = [
+          disko.nixosModules.disko
+          ./nix/configurations/phoenix-server/default.nix
+          { nixpkgs.hostPlatform = system; }
+        ];
+      };
+    in
+    {
+      inherit nixosModules;
+
+      nixosConfigurations = {
+        phoenix-x86 = mkSystem "x86_64-linux";
+        phoenix-arm = mkSystem "aarch64-linux";
+      };
+
+      packages = nixpkgs.lib.genAttrs supportedSystems (system: {
+        lxc = nixos-generators.outputs.packages.${system}.lxc {
+          inherit (self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}") config;
+        };
+        vm = nixos-generators.outputs.packages.${system}.qcow {
+          inherit (self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}") config;
+        };
+      });
+    } //
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = import nixpkgs {
@@ -41,8 +75,9 @@
           sources = ./sources;
           versionFile = ./version;
           nugetDeps = ./nix/deps.json;
-          dotnetSdk = pkgs.dotnetCorePackages.sdk_10_0;
-          dotnetRuntime = pkgs.dotnetCorePackages.aspnetcore_10_0;
+          webappDeps = ./nix/webapp-deps.json;
+          dotnetSdk = pkgs.dotnetCorePackages.sdk_10_0-bin;
+          dotnetRuntime = pkgs.dotnetCorePackages.aspnetcore_10_0-bin;
         };
 
         csprojSrc = import ./nix/lib/csprojFileset/default.nix {
@@ -112,12 +147,15 @@
           };
 
           createIngest = import ./nix/apps/createIngest.nix {inherit pkgs;};
+          
+          qm-rebuild = import ./nix/apps/qmdCudaRebuild.nix {inherit pkgs lib; qmd = packages.qmd; };
 
           up = {
             type = "app";
             program = "${pkgs.writeShellScript "phoenix-up" ''
               set -euo pipefail
               exec ${pkgs.process-compose}/bin/process-compose \
+                -p 8081 \
                 -f ${pc.configPackage}/process-compose.yaml up
             ''}";
           };
@@ -127,6 +165,7 @@
             program = "${pkgs.writeShellScript "phoenix-down" ''
               set -euo pipefail
               exec ${pkgs.process-compose}/bin/process-compose \
+                -p 8081 \
                 -f ${pc.configPackage}/process-compose.yaml down
             ''}";
           };

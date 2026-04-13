@@ -18,7 +18,11 @@ pkgs.buildDotnetModule rec {
 
   buildType = "Release";
   useAppHost = false;
-  selfContainedBuild = false; # true causes error with linux runtime
+  selfContainedBuild = false; 
+
+  dotnetRestoreFlags = [
+    "-p:UseMonoRuntime=false"
+  ];
 
   installPhase = ''mkdir -p $out'';
 
