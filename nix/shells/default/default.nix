@@ -1,6 +1,7 @@
 { pkgs, lib, project, qmd, runtimeDeps ? [] }:
 let
   isLinux = pkgs.stdenv.isLinux;
+  isDarwin = pkgs.stdenv.isDarwin;
   cudaPackages = pkgs.cudaPackages_12;
 in
 pkgs.mkShell {
@@ -24,21 +25,22 @@ pkgs.mkShell {
       cudaPackages.cuda_nvcc
       cudaPackages.cuda_cudart
       cudaPackages.libcublas
+    ]
+    ++ lib.optionals isDarwin [
+      pkgs.apple-sdk_15
     ];
 
   shellHook = ''
-    export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
     export DOTNET_ROOT=${project.dotnetSdk}
 
     ${lib.optionalString isLinux ''
-    export PATH="${cudaPackages.cuda_nvcc}/bin:$PATH"
-    export CUDACXX="${cudaPackages.cuda_nvcc}/bin/nvcc"
-    export LD_LIBRARY_PATH="${cudaPackages.cuda_cudart}/lib:${cudaPackages.libcublas}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      export PATH="${cudaPackages.cuda_nvcc}/bin:$PATH"
+      export CUDACXX="${cudaPackages.cuda_nvcc}/bin/nvcc"
+      export LD_LIBRARY_PATH="${cudaPackages.cuda_cudart}/lib:${cudaPackages.libcublas}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     ''}
 
     unset GGML_CUDA
     unset CUDA_PATH
-    unset CUDAToolkit_ROOT
     unset DOTNET_SKIP_FIRST_TIME_EXPERIENCE
   '';
 }

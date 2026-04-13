@@ -96,6 +96,18 @@ public record MachineStatusResponse(
     DateTime? LastOrchestrated,
     DateTime? LastConfigured);
 
+public record MetricSeriesResponse(DateTimeOffset[] Timestamps, double?[] Values);
+
+public record MachineMetricsResponse(
+    bool IsUp,
+    string? Uptime,
+    MetricSeriesResponse Cpu,
+    MetricSeriesResponse Ram,
+    MetricSeriesResponse NetRx,
+    MetricSeriesResponse NetTx,
+    MetricSeriesResponse DiskRead,
+    MetricSeriesResponse DiskWrite);
+
 public sealed class CreateMachineRequestValidator : AbstractValidator<CreateMachineRequest>
 {
     public CreateMachineRequestValidator()

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
+using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Deployment;
 using PhoeNix.Application.Abstractions.FileSystem;
@@ -12,6 +13,7 @@ using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
 using PhoeNix.Infrastructure.Services;
 using PhoeNix.Infrastructure.Services.Authentication;
+using PhoeNix.Infrastructure.Services.Monitoring;
 using PhoeNix.Infrastructure.Services.ConfigurationManagement;
 using PhoeNix.Infrastructure.Services.Filesystem;
 using PhoeNix.Infrastructure.Services.HardwareManagement;
@@ -35,6 +37,8 @@ public static class DependencyInjection
         services.AddSingleton<INixErrorParserService, NixErrorParserService>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<ICallbackTokenService, JwtCallbackTokenService>();
+        services.AddSingleton<IPrometheusTokenService, PrometheusTokenService>();
+        services.AddHttpClient<IPrometheusQueryClient, PrometheusQueryClient>();
         services.AddSingleton<INetbootHostService, NetbootHostService>();
         services.AddSingleton<INixBuildMaterializer, NixBuildMaterializer>();
         services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
@@ -53,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<IUserPasswordHasher, AspNetUserPasswordHasher>();
         services.AddScoped<IUserSessionService, CookieUserSessionService>();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
+        services.AddHostedService<PrometheusTokenWriterService>();
 
         return services;
     }

@@ -27,6 +27,10 @@ public class MachinesModule : ICarterModule
         app.MapGet("/machines/{machineId:guid}", GetMachineById)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        app.MapGet("/machines/{machineId:guid}/metrics", GetMachineMetrics)
+            .Produces<PhoeNix.Application.Models.Machines.MachineMetricsResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private async Task<IResult> CreateMachine(
@@ -63,5 +67,46 @@ public class MachinesModule : ICarterModule
         var query = new GetMachineQuery(new MachineId(machineId));
         var response = await sender.Send(query, cancellationToken);
         return response.AsHttpResult();
+    }
+
+    private async Task<IResult> GetMachineMetrics(
+        Guid machineId,
+        string? range,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var timeRange = range switch
+        {
+            "1h" => MetricsTimeRange.OneHour,
+            "6h" => MetricsTimeRange.SixHours,
+            "7d" => MetricsTimeRange.SevenDays,
+            "30d" => MetricsTimeRange.ThirtyDays,
+            _ => MetricsTimeRange.TwentyFourHours
+        };
+
+        var query = new GetMachineMetricsQuery(new MachineId(machineId), timeRange);
+        var result = await sender.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+            return result.AsHttpResult();
+
+        var m = result.Value!;
+        var response = new PhoeNix.Application.Models.Machines.MachineMetricsResponse(
+            m.IsUp,
+            m.Uptime,
+            ToSeriesResponse(m.Cpu),
+            ToSeriesResponse(m.Ram),
+            ToSeriesResponse(m.NetRx),
+            ToSeriesResponse(m.NetTx),
+            ToSeriesResponse(m.DiskRead),
+            ToSeriesResponse(m.DiskWrite));
+
+        return Results.Ok(response);
+    }
+
+    private static PhoeNix.Application.Models.Machines.MetricSeriesResponse ToSeriesResponse(
+        PhoeNix.Application.Abstractions.Monitoring.PrometheusRangeSeries series)
+    {
+        return new PhoeNix.Application.Models.Machines.MetricSeriesResponse(series.Timestamps, series.Values);
     }
 }

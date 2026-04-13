@@ -88,6 +88,7 @@ in {
         command: "${pkgs.writeShellScript "run-api" ''
           set -euo pipefail
           mkdir -p "$(pwd)/${devDataDir}/prometheus"
+          export PHOENIX_STATE_DIR="$(pwd)/${devDataDir}/prometheus"
           exec ${project.dotnetSdk}/bin/dotnet run \
             --project ./sources/src/PhoeNix.WebAPI/PhoeNix.WebAPI.csproj \
             --configuration Release \
@@ -98,7 +99,7 @@ in {
           - "ASPNETCORE_ENVIRONMENT=Development"
           - "ASPNETCORE_URLS=http://0.0.0.0:5001"
           - "ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
-          - "PHOENIX_STATE_DIR=$(pwd)/${devDataDir}/prometheus"
+          - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}/prometheus"
                 
       node-exporter:
         command: "${pkgs.prometheus-node-exporter}/bin/node_exporter --web.listen-address=127.0.0.1:${toString nodeExporterPort}"

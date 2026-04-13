@@ -27,7 +27,7 @@
     self, nixpkgs, flake-utils, disko, nixos-generators, ...
   }:
   let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       
       nixosModules.default = import ./nix/modules/phoenix/default.nix { inherit self; };
 
@@ -64,7 +64,7 @@
           inherit system;
           config = {
             allowUnfree = true;
-            cudaSupport = true;
+            cudaSupport = pkgs.stdenv.isLinux;
           };
         };
 

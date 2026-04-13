@@ -64,7 +64,8 @@ public sealed class InstallDiskSelectionPolicy : IInstallDiskSelectionPolicy
     private static bool IsSelectable(DiskProfile disk)
     {
         return !string.IsNullOrWhiteSpace(disk.StableDevicePath)
-               && disk.StableDevicePath.StartsWith("/dev/disk/by-id/", StringComparison.Ordinal)
+               && (disk.StableDevicePath.StartsWith("/dev/disk/by-id/", StringComparison.Ordinal) ||
+                   disk.StableDevicePath.StartsWith("/dev/disk/by-path/", StringComparison.Ordinal))
                && GetSizeBytes(disk) > 0;
     }
 

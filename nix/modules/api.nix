@@ -14,6 +14,8 @@ in
         ASPNETCORE_URLS = cfg.api.urls;
         PHOENIX_STATE_DIR = cfg.stateDir;
         PHOENIX_PROMETHEUS_TOKEN_PATH = cfg.monitoring.prometheusServer.tokenFile;
+      } // lib.optionalAttrs cfg.monitoring.prometheusServer.enable {
+        Monitoring__PrometheusEndpoint = "http://127.0.0.1:${toString cfg.monitoring.prometheusServer.port}";
       };
 
       preStart = ''
