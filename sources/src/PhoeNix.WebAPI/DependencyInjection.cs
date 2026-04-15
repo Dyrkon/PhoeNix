@@ -27,10 +27,15 @@ public static class DependencyInjection
         {
             options.AddPolicy("WebAppClient", policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:5269",
-                        "https://localhost:7052",
-                        "http://localhost:8888")
+                var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                                     ??
+                                     [
+                                         "http://localhost:5269",
+                                         "https://localhost:7052",
+                                         "http://localhost:8888"
+                                     ];
+
+                policy.WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

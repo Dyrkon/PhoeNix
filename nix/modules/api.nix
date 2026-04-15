@@ -7,7 +7,10 @@ in
   config = lib.mkIf cfg.enable {
     systemd.services.phoenix-api = {
       description = "Phoenix Web API";
-      after = [ "network.target" ] ++ lib.optional cfg.database.createLocally "postgresql.service";
+      after = [ "network.target" "phoenix-api-env.service" ]
+        ++ lib.optional cfg.database.createLocally "postgresql.service";
+      requires = [ "phoenix-api-env.service" ]
+        ++ lib.optional cfg.database.createLocally "postgresql.service";
       wantedBy = [ "multi-user.target" ];
 
       environment = cfg.api.environment // {
@@ -20,13 +23,11 @@ in
 
       preStart = ''
         TOKEN_PATH="${cfg.monitoring.prometheusServer.tokenFile}"
-        
-        if [ ! -f "$TOKEN_PATH" ]; then
+        mkdir -p "$(dirname "$TOKEN_PATH")"
+        if [ ! -s "$TOKEN_PATH" ]; then
           tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > "$TOKEN_PATH"
         fi
-
         chown ${cfg.user}:${cfg.group} "$TOKEN_PATH"
-
         chmod 0640 "$TOKEN_PATH"
       '';
 
@@ -37,6 +38,8 @@ in
         WorkingDirectory = cfg.stateDir;
         Restart = "on-failure";
         ExecStart = "${apiExec} ${lib.concatStringsSep " " (map lib.escapeShellArg cfg.api.extraArgs)}";
+      } // lib.optionalAttrs (cfg.api.environmentFile != null) {
+        EnvironmentFile = cfg.api.environmentFile;
       };
     };
   };

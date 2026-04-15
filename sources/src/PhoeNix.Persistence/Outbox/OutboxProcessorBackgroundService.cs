@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,8 @@ internal sealed class OutboxProcessorBackgroundService(
     : BackgroundService
 {
     private readonly OutboxOptions _options = options.Value;
+    private readonly ConcurrentDictionary<Guid, Task> _inFlight = new();
+    private readonly SemaphoreSlim _semaphore = new(options.Value.MaxDegreeOfParallelism);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -34,26 +37,59 @@ internal sealed class OutboxProcessorBackgroundService(
             {
                 logger.LogError(exception, "Unexpected error while processing the outbox.");
             }
+
+        if (_inFlight.Count > 0)
+        {
+            logger.LogInformation("Waiting for {Count} in-flight outbox messages.", _inFlight.Count);
+            await Task.WhenAll(_inFlight.Values);
+        }
     }
 
     private async Task ProcessBatchAsync(CancellationToken cancellationToken)
     {
-        List<Guid> messageIds;
+        foreach (var (id, task) in _inFlight.ToArray())
+            if (task.IsCompleted) _inFlight.TryRemove(id, out _);
 
+        var inFlightIds = _inFlight.Keys.ToList();
+
+        List<Guid> messageIds;
         using (var scope = serviceScopeFactory.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var nowUtc = DateTime.UtcNow;
 
-            messageIds = await dbContext.OutboxMessages
-                .Where(x => x.ProcessedOnUtc == null && (x.NextAttemptOnUtc == null || x.NextAttemptOnUtc <= nowUtc))
+            var query = dbContext.OutboxMessages
+                .Where(x => x.ProcessedOnUtc == null && (x.NextAttemptOnUtc == null || x.NextAttemptOnUtc <= nowUtc));
+
+            if (inFlightIds.Count > 0)
+                query = query.Where(x => !inFlightIds.Contains(x.Id));
+
+            messageIds = await query
                 .OrderBy(x => x.OccurredOnUtc)
                 .Select(x => x.Id)
                 .Take(_options.BatchSize)
                 .ToListAsync(cancellationToken);
         }
 
-        foreach (var messageId in messageIds) await ProcessMessageAsync(messageId, cancellationToken);
+        foreach (var messageId in messageIds)
+        {
+            var task = ProcessWithSemaphoreAsync(messageId, cancellationToken);
+            _inFlight.TryAdd(messageId, task);
+        }
+    }
+
+    private async Task ProcessWithSemaphoreAsync(Guid messageId, CancellationToken cancellationToken)
+    {
+        await _semaphore.WaitAsync(cancellationToken);
+        try
+        {
+            await ProcessMessageAsync(messageId, cancellationToken);
+        }
+        finally
+        {
+            _semaphore.Release();
+            _inFlight.TryRemove(messageId, out _);
+        }
     }
 
     private async Task ProcessMessageAsync(Guid messageId, CancellationToken cancellationToken)
