@@ -100,6 +100,9 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<MonitoringOptions>()
+            .BindConfiguration("Monitoring");
+
         return services;
     }
 

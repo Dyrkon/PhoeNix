@@ -1,5 +1,6 @@
 @page "/machines/{machineId:guid}"
 @using Humanizer
+@using PhoeNix.Application.Models.Machines
 @using PhoeNix.Domain.Enums
 @using PhoeNix.WebAPP.Components.Machines
 @using PhoeNix.WebAPP.Helpers
@@ -113,6 +114,95 @@
                             @_machine.MachineStatus.MachineState.ToMachineStateLabel()
                         </MudChip>
                     </MudItem>
+
+                    @if (_metrics is not null)
+                    {
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2"/>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Live Metrics</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Status</MudText>
+                            <MudChip T="string"
+                                     Color="@(_metrics.IsUp ? Color.Success : Color.Error)"
+                                     Variant="Variant.Filled"
+                                     Size="Size.Small"
+                                     Icon="@(_metrics.IsUp ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)">
+                                @(_metrics.IsUp ? "Online" : "Offline")
+                            </MudChip>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Uptime</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText
+                                    Typo="Typo.body1">
+                                    @(_metrics.Uptime ?? "-")
+                                </MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">CPU Usage</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatPercent(_metrics.Cpu)</MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">RAM Usage</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatPercent(_metrics.Ram)</MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Network RX</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatBytesPerSecond(_metrics.NetRx)</MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Network TX</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatBytesPerSecond(_metrics.NetTx)</MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            @* PAD *@
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Disk Read</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatBytesPerSecond(_metrics.DiskRead)</MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Disk Write</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small"
+                                         Class="mud-text-secondary"/>
+                                <MudText Typo="Typo.body1">@FormatBytesPerSecond(_metrics.DiskWrite)</MudText>
+                            </MudStack>
+                        </MudItem>
+                    }
                 </MudGrid>
             </MudCardContent>
         </MudCard>

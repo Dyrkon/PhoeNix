@@ -11,6 +11,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 {
     [Inject] private IMachinesApiClient MachinesApiClient { get; set; } = null!;
     [Inject] private IDeploymentApiClient DeploymentApiClient { get; set; } = null!;
+    [Inject] private IMetricsApiClient MetricsApiClient { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
@@ -20,6 +21,8 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 
     private MachineDetailResponse? _machine;
     private bool _isLoading = true;
+    private MachineMetricsResponse? _metrics;
+    private System.Timers.Timer? _metricsTimer;
 
     private UpdateStatus CurrentStatus => MachineState.GetUpdate(MachineId)?.Status ?? UpdateStatus.None;
 
@@ -55,6 +58,10 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         MachineState.StateChanged += OnMachineStateChanged;
+
+        _metricsTimer = new System.Timers.Timer(TimeSpan.FromSeconds(5));
+        _metricsTimer.Elapsed += (_, _) => InvokeAsync(LoadMetricsAsync);
+        _metricsTimer.AutoReset = true;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -73,6 +80,9 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 
         _machine = response.Value;
         _isLoading = false;
+
+        await LoadMetricsAsync();
+        _metricsTimer?.Start();
     }
 
     private async Task UpdateConfigurationAsync()
@@ -97,15 +107,15 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
                 SystemName: snapshot.SystemName));
 
             var refreshed = await MachinesApiClient.GetMachineAsync(MachineId);
-            if (refreshed.IsSuccess && refreshed.Value is not null)
+            if (refreshed is { IsSuccess: true, Value: not null })
                 _machine = refreshed.Value;
         }
         else
         {
             MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Failed,
-                Error: result.Error,
-                ConfigurationTitle: snapshot.ConfigurationTitle,
-                SystemName: snapshot.SystemName));
+                result.Error,
+                snapshot.ConfigurationTitle,
+                snapshot.SystemName));
         }
 
         StateHasChanged();
@@ -131,8 +141,37 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 
     private void OnMachineStateChanged() => InvokeAsync(StateHasChanged);
 
+    private async Task LoadMetricsAsync()
+    {
+        var result = await MetricsApiClient.GetMachineMetricsAsync(MachineId, "1h");
+        _metrics = result.IsSuccess ? result.Value : null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string FormatPercent(MetricSeriesResponse series)
+    {
+        var last = series.Values.LastOrDefault(v => v.HasValue);
+        return last.HasValue ? $"{last.Value:F1} %" : "—";
+    }
+
+    private static string FormatBytesPerSecond(MetricSeriesResponse series)
+    {
+        var last = series.Values.LastOrDefault(v => v.HasValue);
+        if (!last.HasValue) return "—";
+        var bps = last.Value;
+        return bps switch
+        {
+            >= 1_073_741_824 => $"{bps / 1_073_741_824:F1} GB/s",
+            >= 1_048_576 => $"{bps / 1_048_576:F1} MB/s",
+            >= 1024 => $"{bps / 1024:F1} KB/s",
+            _ => $"{bps:F0} B/s"
+        };
+    }
+
     public void Dispose()
     {
         MachineState.StateChanged -= OnMachineStateChanged;
+        _metricsTimer?.Stop();
+        _metricsTimer?.Dispose();
     }
 }

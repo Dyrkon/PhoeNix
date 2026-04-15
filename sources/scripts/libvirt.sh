@@ -10,6 +10,13 @@ VMS=(
   "phoenix-100 02:00:00:00:01:00"
   "phoenix-101 02:00:00:00:01:01"
   "phoenix-102 02:00:00:00:01:02"
+  "phoenix-103 02:00:00:00:01:03"
+#  "phoenix-104 02:00:00:00:01:04"
+#  "phoenix-105 02:00:00:00:01:05"
+#  "phoenix-106 02:00:00:00:01:06"
+#  "phoenix-107 02:00:00:00:01:07"
+#  "phoenix-108 02:00:00:00:01:08"
+#  "phoenix-109 02:00:00:00:01:09"
 )
 
 for entry in "${VMS[@]}"; do
@@ -27,19 +34,20 @@ for entry in "${VMS[@]}"; do
   fi
 
   echo "  -> Starting virt-install for $NAME..."
-  virt-install \
-    --name "$NAME" \
-    --memory 4096 \
-    --vcpus 2 \
-    --cpu host-passthrough \
-    --disk pool="$STORAGE_POOL",size=12,bus=virtio \
-    --network bridge="$BRIDGE",mac="$MAC",model=virtio \
-    --boot uefi,network,hd \
-    --os-variant fedora-unknown \
-    --serial pty \
-    --console pty,target_type=serial \
-    --graphics none \
-    --noautoconsole
+    virt-install \
+      --name "$NAME" \
+      --memory 4096 \
+      --vcpus 2 \
+      --cpu host-passthrough \
+      --controller type=scsi,model=virtio-scsi \
+      --disk pool="$STORAGE_POOL",size=16,bus=scsi \
+      --network bridge="$BRIDGE",mac="$MAC",model=virtio \
+      --boot uefi,hd,network \
+      --os-variant fedora-unknown \
+      --graphics spice,listen=0.0.0.0 \
+      --video qxl \
+      --channel spicevmc \
+      --noautoconsole
 
   echo "  -> $NAME is provisioning in the background."
   echo "-----------------------------------------------"

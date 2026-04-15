@@ -610,6 +610,11 @@
     "hash": "sha256-UqZwWus6Mb6+VBODaAqR4KdWQ8ayQCgiis/j7Kb1fpk="
   },
   {
+    "pname": "Microsoft.AspNetCore.Authorization",
+    "version": "10.0.6",
+    "hash": "sha256-k4TWYYJD3UJ/ihfH5qBmcjNFD4xj8HMA66q83oQRkrM="
+  },
+  {
     "pname": "Microsoft.AspNetCore.Components",
     "version": "10.0.1",
     "hash": "sha256-fYOjfDTNAJi6PBESE/anBNKpSBb8HaP1ykzZ85fF8hY="
@@ -618,6 +623,11 @@
     "pname": "Microsoft.AspNetCore.Components",
     "version": "10.0.5",
     "hash": "sha256-ugLwde/4a+Xp7k7EO8egdcf8Agrmu6Wn+/IbQc0O49g="
+  },
+  {
+    "pname": "Microsoft.AspNetCore.Components",
+    "version": "10.0.6",
+    "hash": "sha256-NOyqrjJL9dpp5RwIy6II6GbWLbb7gTxzQC3VxQeCtJg="
   },
   {
     "pname": "Microsoft.AspNetCore.Components.Analyzers",
@@ -630,9 +640,19 @@
     "hash": "sha256-Kh+RwiBcZdtOnzV0g56iJ7HVVl/oAdDa1X13WhjiyeY="
   },
   {
+    "pname": "Microsoft.AspNetCore.Components.Analyzers",
+    "version": "10.0.6",
+    "hash": "sha256-2qAagq3vn+dXha3pDEbAE70Yx7wSHli5RpKRT/3tyHg="
+  },
+  {
     "pname": "Microsoft.AspNetCore.Components.Forms",
     "version": "10.0.5",
     "hash": "sha256-ZM2qxVPoqIJ2JqDwoP4DWnKC6X/p49jFC5DAtKcZfTI="
+  },
+  {
+    "pname": "Microsoft.AspNetCore.Components.Forms",
+    "version": "10.0.6",
+    "hash": "sha256-DBM2tqkdcikam6m9D7gutYHD8ypq4vHEwy9H8M/AWeo="
   },
   {
     "pname": "Microsoft.AspNetCore.Components.Web",
@@ -651,6 +671,11 @@
   },
   {
     "pname": "Microsoft.AspNetCore.Components.Web",
+    "version": "10.0.6",
+    "hash": "sha256-36TbFUMZTrEDDRsxu/p/+hP6sBsH1Jck9sRedtg7q2o="
+  },
+  {
+    "pname": "Microsoft.AspNetCore.Components.Web",
     "version": "9.0.0",
     "hash": "sha256-0qkkWqGsWrOaPxxwUXzzwjjDRdJSe9MV3O2mS7psx/E="
   },
@@ -660,9 +685,14 @@
     "hash": "sha256-mB9sLgCK80GCDAm+BDvKhobcrE8ycxsKYPwpucAZQfY="
   },
   {
+    "pname": "Microsoft.AspNetCore.Components.WebAssembly",
+    "version": "10.0.6",
+    "hash": "sha256-taiIyYuv7UrBxVJW6MvtMZSkNjmixLBsbuU23gr5xz8="
+  },
+  {
     "pname": "Microsoft.AspNetCore.Components.WebAssembly.DevServer",
-    "version": "10.0.5",
-    "hash": "sha256-Zwr0V4IcDTxn93YNJuOUi3uq3EZFmwdxRGwogzMXAaw="
+    "version": "10.0.6",
+    "hash": "sha256-9sVm2iEEFI3EP5OJiMiL/KvCYMT9HMCcSQLGRk0WB2k="
   },
   {
     "pname": "Microsoft.AspNetCore.Http",
@@ -688,6 +718,11 @@
     "pname": "Microsoft.AspNetCore.Metadata",
     "version": "10.0.5",
     "hash": "sha256-uIceRU1OV739GCelAPDtfvJzrsRFzhkE54qJEVDSfwk="
+  },
+  {
+    "pname": "Microsoft.AspNetCore.Metadata",
+    "version": "10.0.6",
+    "hash": "sha256-2iw2d2fOBKS/Za3NC548MPs/uKLRqZqPpSiG2FpoCqA="
   },
   {
     "pname": "Microsoft.AspNetCore.WebUtilities",
@@ -730,6 +765,11 @@
     "hash": "sha256-6rOmJD7Jzq5MPLDd1aV+7gCQwIM9j4c+iT1pGea/daI="
   },
   {
+    "pname": "Microsoft.Extensions.Configuration",
+    "version": "10.0.6",
+    "hash": "sha256-CSd5RC5pMsmglpnE6Vm3JabMnbmziqtUGrZE5Rg7uF4="
+  },
+  {
     "pname": "Microsoft.Extensions.Configuration.Abstractions",
     "version": "10.0.3",
     "hash": "sha256-OfcPeDv7RJvvv7ns+wCMAQCdG/He2KtxV6MRlwvp35I="
@@ -740,9 +780,19 @@
     "hash": "sha256-DNK+lL2jeHFYyd43zfgVY32UskEfQ4YsTapztuQbYwo="
   },
   {
+    "pname": "Microsoft.Extensions.Configuration.Abstractions",
+    "version": "10.0.6",
+    "hash": "sha256-jxtne26QF7bASCRmLNwYsKruY3QhsnuzN9Us11WUdSQ="
+  },
+  {
     "pname": "Microsoft.Extensions.Configuration.Binder",
     "version": "10.0.5",
     "hash": "sha256-cVG2NEW1rgLfeq/Gnh/XXqzDx2Tt8ecvgCAB4uFzcQo="
+  },
+  {
+    "pname": "Microsoft.Extensions.Configuration.Binder",
+    "version": "10.0.6",
+    "hash": "sha256-34blBlrQ3FRS7iCS7/gxPZMa9xgDW0p3iEERqwgXFMA="
   },
   {
     "pname": "Microsoft.Extensions.Configuration.FileExtensions",
@@ -750,9 +800,19 @@
     "hash": "sha256-PUIRpSxnT41HnF/6ZPMe7oAAAJ8gm6mNGRuPhw5Zy6k="
   },
   {
+    "pname": "Microsoft.Extensions.Configuration.FileExtensions",
+    "version": "10.0.6",
+    "hash": "sha256-N2DeLcgzjaQIk7LKvUqd2FO2bTmB65iZxpbTXb2DWz8="
+  },
+  {
     "pname": "Microsoft.Extensions.Configuration.Json",
     "version": "10.0.5",
     "hash": "sha256-jxcGaQpr8RRQVtCobxvCOyn+8k/U2m5H5/ltFYhdKAk="
+  },
+  {
+    "pname": "Microsoft.Extensions.Configuration.Json",
+    "version": "10.0.6",
+    "hash": "sha256-gj55DSHQluOlZKiNOVeeHuhsz4GpqVRSlbad6jq+Olk="
   },
   {
     "pname": "Microsoft.Extensions.DependencyInjection",
@@ -763,6 +823,11 @@
     "pname": "Microsoft.Extensions.DependencyInjection",
     "version": "10.0.5",
     "hash": "sha256-ofDRirUV9XLSz4oksCqErwBJFtAieHACFfyZukHKFng="
+  },
+  {
+    "pname": "Microsoft.Extensions.DependencyInjection",
+    "version": "10.0.6",
+    "hash": "sha256-K3ODZC+Bwd3Tze5wF7BQvJJGlNObdf2PNA35F41jHTE="
   },
   {
     "pname": "Microsoft.Extensions.DependencyInjection.Abstractions",
@@ -790,9 +855,19 @@
     "hash": "sha256-KrP+hE3gk7pATbJYZsJ1LHiXjzLA+ntHW7G/VGgHk2g="
   },
   {
+    "pname": "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "version": "10.0.6",
+    "hash": "sha256-lFiZb81kfBJK7J0b0A2UIpydPRT73Xcs57Gzf/+1xXc="
+  },
+  {
     "pname": "Microsoft.Extensions.Diagnostics",
     "version": "10.0.5",
     "hash": "sha256-LlFT3ZzFH9QfymvP9DY4NteJKTdT+mqSGpzUDpsLNhM="
+  },
+  {
+    "pname": "Microsoft.Extensions.Diagnostics",
+    "version": "10.0.6",
+    "hash": "sha256-TGJjvsztoajNzOe0KeuOvtb2ZuNDbjq2NfPs15zo3kA="
   },
   {
     "pname": "Microsoft.Extensions.Diagnostics.Abstractions",
@@ -805,6 +880,11 @@
     "hash": "sha256-pwQltVfaqx0jRpO0d9k/dYtyOpnGixK2MB3aHVVbo0E="
   },
   {
+    "pname": "Microsoft.Extensions.Diagnostics.Abstractions",
+    "version": "10.0.6",
+    "hash": "sha256-9AbUvHuHhDPjtf6vsci2r6VfSg0BlmkJkMYmIqAQ2QA="
+  },
+  {
     "pname": "Microsoft.Extensions.FileProviders.Abstractions",
     "version": "10.0.3",
     "hash": "sha256-uWAZh/RdMEiwTM2311KlDKK2LBo81tIYXPTUzJXbceA="
@@ -813,6 +893,11 @@
     "pname": "Microsoft.Extensions.FileProviders.Abstractions",
     "version": "10.0.5",
     "hash": "sha256-6RwvzBQTJzbypUQAM9WNRkpn3gON63DLxY3gH0ZcrH4="
+  },
+  {
+    "pname": "Microsoft.Extensions.FileProviders.Abstractions",
+    "version": "10.0.6",
+    "hash": "sha256-CzUYBtxxXV8qn72ptRs0QkP8xmrKwlfq47MojRhM1Tw="
   },
   {
     "pname": "Microsoft.Extensions.FileProviders.Abstractions",
@@ -830,9 +915,19 @@
     "hash": "sha256-36irJIKuzhCmA28CC4U8+3W8EJ5U9PwMMdCSXRCp4J0="
   },
   {
+    "pname": "Microsoft.Extensions.FileProviders.Physical",
+    "version": "10.0.6",
+    "hash": "sha256-zZAyRMT9DnZYlKTW9A5ZeDAlO8EaHxgX9hHuzWDgjiY="
+  },
+  {
     "pname": "Microsoft.Extensions.FileSystemGlobbing",
     "version": "10.0.5",
     "hash": "sha256-FdwPwpyNejk8YEw4doaouas0oe+8d7K2m49WH+7k0RE="
+  },
+  {
+    "pname": "Microsoft.Extensions.FileSystemGlobbing",
+    "version": "10.0.6",
+    "hash": "sha256-hfoFBBqSIwZokoX3Kt+aRacLW06QbJkcecyLOhTd0T0="
   },
   {
     "pname": "Microsoft.Extensions.Hosting.Abstractions",
@@ -865,6 +960,11 @@
     "hash": "sha256-4gVrKZfo/YHZKgKNsgGZZYqa79XWK9wDUuiVfguUV6U="
   },
   {
+    "pname": "Microsoft.Extensions.Logging",
+    "version": "10.0.6",
+    "hash": "sha256-tskLj/WXLK35gkuJAWaAhPjMW92N1JKOTzTLupR30pE="
+  },
+  {
     "pname": "Microsoft.Extensions.Logging.Abstractions",
     "version": "10.0.0",
     "hash": "sha256-BnhgGZc01HwTSxogavq7Ueq4V7iMA3wPnbfRwQ4RhGk="
@@ -888,6 +988,11 @@
     "pname": "Microsoft.Extensions.Logging.Abstractions",
     "version": "10.0.5",
     "hash": "sha256-e3A/l+II+n+D7/OPwjdyQM1IBtKHfHeIdlkJmuRw77w="
+  },
+  {
+    "pname": "Microsoft.Extensions.Logging.Abstractions",
+    "version": "10.0.6",
+    "hash": "sha256-4ijpXt4PoTNcmF5dl/rEZkRWBAjukB229lXtBtJhxn4="
   },
   {
     "pname": "Microsoft.Extensions.Logging.Abstractions",
@@ -921,6 +1026,11 @@
   },
   {
     "pname": "Microsoft.Extensions.Options",
+    "version": "10.0.6",
+    "hash": "sha256-GJCULaUcN2FxCA9fKOLe5EDEtkKLrEuP2Kw0jRqospA="
+  },
+  {
+    "pname": "Microsoft.Extensions.Options",
     "version": "8.0.2",
     "hash": "sha256-AjcldddddtN/9aH9pg7ClEZycWtFHLi9IPe1GGhNQys="
   },
@@ -928,6 +1038,11 @@
     "pname": "Microsoft.Extensions.Options.ConfigurationExtensions",
     "version": "10.0.5",
     "hash": "sha256-VQPPvrvYWY/QpmilerCyTNLVejWeBE9mHtGTMOxXUlg="
+  },
+  {
+    "pname": "Microsoft.Extensions.Options.ConfigurationExtensions",
+    "version": "10.0.6",
+    "hash": "sha256-T0HNAYrIsm1xzfBD1qLqziI5qwSsGXGmXSDdOgpC5s0="
   },
   {
     "pname": "Microsoft.Extensions.Primitives",
@@ -941,6 +1056,11 @@
   },
   {
     "pname": "Microsoft.Extensions.Primitives",
+    "version": "10.0.6",
+    "hash": "sha256-/iSFDryQIl8rl+TtrzunT5LcbPsQCeC2V+9CnS1P4Cc="
+  },
+  {
+    "pname": "Microsoft.Extensions.Primitives",
     "version": "8.0.0",
     "hash": "sha256-FU8qj3DR8bDdc1c+WeGZx/PCZeqqndweZM9epcpXjSo="
   },
@@ -948,6 +1068,11 @@
     "pname": "Microsoft.Extensions.Validation",
     "version": "10.0.5",
     "hash": "sha256-q+mw24INebP7m04HZfVRsBDTnfatOU/2OjQRY7Hljvg="
+  },
+  {
+    "pname": "Microsoft.Extensions.Validation",
+    "version": "10.0.6",
+    "hash": "sha256-N0SVCL4vSQExoD7u/uqXSFF0cgG7tzSSyxx6J6S07cs="
   },
   {
     "pname": "Microsoft.IdentityModel.Abstractions",
@@ -981,6 +1106,11 @@
   },
   {
     "pname": "Microsoft.JSInterop",
+    "version": "10.0.6",
+    "hash": "sha256-b1CrGfY8L1FMHR0ZPHQPI97YlU4BP9DXSGWnMqIJO8E="
+  },
+  {
+    "pname": "Microsoft.JSInterop",
     "version": "9.0.0",
     "hash": "sha256-d1Q1piVzRaVMfNf78wGacKjNT5kYG8D1hVreBG/4wfA="
   },
@@ -988,6 +1118,11 @@
     "pname": "Microsoft.JSInterop.WebAssembly",
     "version": "10.0.5",
     "hash": "sha256-IIHtIC7NAj6vjq9w6OnqCG5p/LyHRSMfly+kWR0iJ0M="
+  },
+  {
+    "pname": "Microsoft.JSInterop.WebAssembly",
+    "version": "10.0.6",
+    "hash": "sha256-3q8Q0T1tjoAmHgsHCbbnjwsALjSDeghyssmIa7ozDGk="
   },
   {
     "pname": "Microsoft.Maui.Graphics",

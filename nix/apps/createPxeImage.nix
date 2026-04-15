@@ -143,7 +143,7 @@ in
 {
   type = "app";
   meta.description = "Create PXE bootstrap image with SSH CA trust";
-
+  meta.platforms = ["x86_64-linux" "aarch64-linux"];
   program = "${pkgs.writeShellScript "create-pxe-image" ''
     set -euo pipefail
     echo '${json}'

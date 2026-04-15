@@ -74,6 +74,8 @@ internal sealed class GetBootDecisionQueryHandler(
                 "SetupTargetNotFound",
                 "Setup target was not found for the machine."));
 
+        if (target.Stage == SetupStage.Bootstrapped) return Result.Success<PxeBootDetails>(null!);
+
         if (target.Stage is not (SetupStage.WaitingForPxe or SetupStage.ArtefactsAssigned))
         {
             var error = new Error(

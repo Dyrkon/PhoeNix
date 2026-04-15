@@ -22,7 +22,6 @@ internal sealed class OutboxProcessorBackgroundService(
         using var timer = new PeriodicTimer(_options.PollInterval);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
             try
             {
                 await ProcessBatchAsync(stoppingToken);
@@ -35,7 +34,6 @@ internal sealed class OutboxProcessorBackgroundService(
             {
                 logger.LogError(exception, "Unexpected error while processing the outbox.");
             }
-        }
     }
 
     private async Task ProcessBatchAsync(CancellationToken cancellationToken)
@@ -55,10 +53,7 @@ internal sealed class OutboxProcessorBackgroundService(
                 .ToListAsync(cancellationToken);
         }
 
-        foreach (var messageId in messageIds)
-        {
-            await ProcessMessageAsync(messageId, cancellationToken);
-        }
+        foreach (var messageId in messageIds) await ProcessMessageAsync(messageId, cancellationToken);
     }
 
     private async Task ProcessMessageAsync(Guid messageId, CancellationToken cancellationToken)
@@ -96,7 +91,7 @@ internal sealed class OutboxProcessorBackgroundService(
 
     private static DateTime CalculateNextAttemptUtc(DateTime nowUtc, int retryCount)
     {
-        var delaySeconds = Math.Min(300, (int)Math.Pow(2, Math.Min(retryCount, 8)));
+        var delaySeconds = Math.Min(100, (int)Math.Pow(2, Math.Min(retryCount, 8)));
         return nowUtc.AddSeconds(delaySeconds);
     }
 }
