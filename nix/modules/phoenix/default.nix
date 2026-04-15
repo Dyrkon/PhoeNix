@@ -5,11 +5,11 @@ let
 in
 {
   imports = [
-    (import ./options.nix { inherit self lib pkgs; })
-    ./api.nix
-    ./database.nix
-    ./monitoring.nix
-    ./nginx.nix
+    (import ../options.nix { inherit self lib pkgs; })
+    ../api.nix
+    ../database.nix
+    ../monitoring.nix
+    ../nginx.nix
   ];
 
   config = lib.mkIf cfg.enable {
