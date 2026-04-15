@@ -88,7 +88,7 @@ in {
         command: "${pkgs.writeShellScript "run-api" ''
           set -euo pipefail
           mkdir -p "$(pwd)/${devDataDir}/prometheus"
-          export PHOENIX_STATE_DIR="$(pwd)/${devDataDir}/prometheus"
+          export PHOENIX_STATE_DIR="$(pwd)/${devDataDir}"
           exec ${project.dotnetSdk}/bin/dotnet run \
             --project ./sources/src/PhoeNix.WebAPI/PhoeNix.WebAPI.csproj \
             --configuration Release \
@@ -99,7 +99,7 @@ in {
           - "ASPNETCORE_ENVIRONMENT=Development"
           - "ASPNETCORE_URLS=http://0.0.0.0:5001"
           - "ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
-          - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}/prometheus"
+          - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}"
                 
       node-exporter:
         command: "${pkgs.prometheus-node-exporter}/bin/node_exporter --web.listen-address=127.0.0.1:${toString nodeExporterPort}"
@@ -108,7 +108,7 @@ in {
         command: "${pkgs.writeShellScript "run-prometheus" ''
           set -euo pipefail
           PROM_DIR="$(pwd)/${devDataDir}/prometheus"
-          TKN_FILE="$PROM_DIR/prometheus-token"
+          TKN_FILE="$(pwd)/${devDataDir}/prometheus-token"
           CONF_FILE="$PROM_DIR/prometheus.yml"
           mkdir -p "$PROM_DIR"
           cat > "$CONF_FILE" <<EOF

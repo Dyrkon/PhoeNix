@@ -35,7 +35,11 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
 
     private readonly List<EntryEditorModel> _entries = [];
     private readonly List<TestEditorModel> _tests = [];
+    private readonly List<RequiredInputEditorModel> _requiredInputs = [];
     private TestEditorModel? _selectedTest;
+
+    private string _newRequiredInputName = string.Empty;
+    private string _newRequiredInputSource = string.Empty;
 
     private readonly List<string> _validationErrors = [];
     private bool _isSubmitting;
@@ -81,6 +85,9 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
             foreach (var t in TemplatesState.Tests)
                 _tests.Add(new TestEditorModel
                     { Id = t.Id, Name = t.Name, Content = t.Content, VariableNames = t.VariableNames.ToList() });
+            _requiredInputs.Clear();
+            foreach (var ri in TemplatesState.RequiredInputs)
+                _requiredInputs.Add(new RequiredInputEditorModel { Name = ri.Name, Source = ri.Source });
             _selectedTest = _tests.FirstOrDefault();
             await FetchScaffoldingAsync();
             return;
@@ -131,6 +138,10 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                         VariableNames = test.VariableNames.ToList()
                     });
 
+                _requiredInputs.Clear();
+                foreach (var ri in t.RequiredInputs ?? [])
+                    _requiredInputs.Add(new RequiredInputEditorModel { Name = ri.Name, Source = ri.Source });
+
                 _selectedTest = _tests.FirstOrDefault();
             }
             else
@@ -153,7 +164,8 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                 _selectedArchitectures.ToList(),
                 _moduleContent,
                 _entries.Select(MapEditorEntryToDraft).ToList(),
-                _tests.Select(t => new TemplateDraftTest(t.Id, t.Name, t.Content, t.VariableNames.ToList())).ToList());
+                _tests.Select(t => new TemplateDraftTest(t.Id, t.Name, t.Content, t.VariableNames.ToList())).ToList(),
+                _requiredInputs.Select(r => new TemplateDraftRequiredInput(r.Name, r.Source)).ToList());
 
         return ValueTask.CompletedTask;
     }
@@ -398,7 +410,8 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                     _moduleContent,
                     _selectedArchitectures.ToList(),
                     _entries.Select(MapToApiModel).ToList(),
-                    _tests.Select(MapTestToApiModel).ToList());
+                    _tests.Select(MapTestToApiModel).ToList(),
+                    _requiredInputs.Select(r => new RequiredInputDefinitionModel(r.Name, r.Source)).ToList());
 
                 var result = await ModulesApiClient.UpdateModuleTemplateAsync(TemplateId.Value, request);
 
@@ -423,7 +436,8 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                     _moduleContent,
                     _selectedArchitectures.ToList(),
                     _entries.Select(MapToApiModel).ToList(),
-                    _tests.Select(MapTestToApiModel).ToList());
+                    _tests.Select(MapTestToApiModel).ToList(),
+                    _requiredInputs.Select(r => new RequiredInputDefinitionModel(r.Name, r.Source)).ToList());
 
                 var result = await ModulesApiClient.CreateModuleTemplateAsync(request);
 
@@ -546,6 +560,32 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
             model.Name,
             model.Content,
             model.VariableNames);
+    }
+
+    private void AddRequiredInput()
+    {
+        if (string.IsNullOrWhiteSpace(_newRequiredInputName) || string.IsNullOrWhiteSpace(_newRequiredInputSource))
+            return;
+
+        _requiredInputs.Add(new RequiredInputEditorModel
+        {
+            Name = _newRequiredInputName.Trim(),
+            Source = _newRequiredInputSource.Trim()
+        });
+
+        _newRequiredInputName = string.Empty;
+        _newRequiredInputSource = string.Empty;
+    }
+
+    private void RemoveRequiredInput(RequiredInputEditorModel input)
+    {
+        _requiredInputs.Remove(input);
+    }
+
+    private sealed class RequiredInputEditorModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
     }
 
     private sealed class EntryEditorModel

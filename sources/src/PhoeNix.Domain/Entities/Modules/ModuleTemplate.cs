@@ -11,6 +11,7 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     private readonly List<Architecture> _supportedArchitectures = [];
     private readonly List<Test> _tests = [];
     private readonly List<EntryValueDefinition> _editableValueTypes = [];
+    private readonly List<RequiredInputDefinition> _requiredInputs = [];
 
     private ModuleTemplate(ModuleTemplateId id) : base(id)
     {
@@ -29,6 +30,8 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     public IReadOnlyList<EntryValueDefinition> EditableValueTypes => _editableValueTypes;
 
     public IReadOnlyList<Architecture> SupportedArchitectures => _supportedArchitectures;
+
+    public IReadOnlyList<RequiredInputDefinition> RequiredInputs => _requiredInputs;
 
     public bool RequiresSetupBindings =>
         _editableValueTypes.Any(v => v.BindingKind == EntryBindingKind.RankedDiskCandidate);
@@ -75,6 +78,13 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
         _supportedArchitectures.Clear();
         _supportedArchitectures.AddRange(incomingArchitectures);
 
+        return Result.Success();
+    }
+
+    public Result SetRequiredInputs(IEnumerable<(string Name, string Source)> inputs)
+    {
+        _requiredInputs.Clear();
+        _requiredInputs.AddRange(inputs.Select(i => RequiredInputDefinition.Create(Id, i.Name, i.Source)));
         return Result.Success();
     }
 

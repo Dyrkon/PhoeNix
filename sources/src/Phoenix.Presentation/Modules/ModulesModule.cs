@@ -72,8 +72,11 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
+        var requiredInputs = (request.RequiredInputs ?? [])
+            .Select(r => new RequiredInputDefinitionModel(r.Name, r.Source))
+            .ToList();
         var command = new CreateModuleTemplateCommand(request.Name, request.Enabled, request.Type, request.Content,
-            request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
+            request.SupportedArchitectures, request.EditableValueTypes, request.Tests, requiredInputs);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
@@ -84,9 +87,13 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
+        var updateRequiredInputs = (request.RequiredInputs ?? [])
+            .Select(r => new RequiredInputDefinitionModel(r.Name, r.Source))
+            .ToList();
         var command = new UpdateModuleTemplateCommand(new ModuleTemplateId(moduleTemplateId), request.Name,
             request.Enabled, request.Type,
-            request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests);
+            request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests,
+            updateRequiredInputs);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

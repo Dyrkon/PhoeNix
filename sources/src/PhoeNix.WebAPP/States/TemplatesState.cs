@@ -2,6 +2,8 @@ using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.WebAPP.States;
 
+public sealed record TemplateDraftRequiredInput(string Name, string Source);
+
 public sealed record TemplateDraftEntry(
     string Name,
     string Placeholder,
@@ -36,6 +38,7 @@ public class TemplatesState
     public string ModuleContent { get; private set; } = string.Empty;
     public List<TemplateDraftEntry> Entries { get; private set; } = [];
     public List<TemplateDraftTest> Tests { get; private set; } = [];
+    public List<TemplateDraftRequiredInput> RequiredInputs { get; private set; } = [];
 
     public bool IsMatchingDraft(Guid? templateId) => HasDraft && TemplateId == templateId;
 
@@ -47,7 +50,8 @@ public class TemplatesState
         List<Architecture> architectures,
         string moduleContent,
         List<TemplateDraftEntry> entries,
-        List<TemplateDraftTest> tests)
+        List<TemplateDraftTest> tests,
+        List<TemplateDraftRequiredInput> requiredInputs)
     {
         HasDraft = true;
         TemplateId = templateId;
@@ -58,6 +62,7 @@ public class TemplatesState
         ModuleContent = moduleContent;
         Entries = entries;
         Tests = tests;
+        RequiredInputs = requiredInputs;
     }
 
     public void Clear()
@@ -71,5 +76,6 @@ public class TemplatesState
         ModuleContent = string.Empty;
         Entries = [];
         Tests = [];
+        RequiredInputs = [];
     }
 }

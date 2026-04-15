@@ -41,6 +41,9 @@ internal sealed class AddConfigurationSystemModuleHandler(
         if (configuration is null)
             return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
 
+        foreach (var required in template.RequiredInputs)
+            configuration.AddInput(required.Source, required.Name);
+
         return configuration.AddSystemModule(
                 new SystemId(request.SystemId),
                 template.Id,

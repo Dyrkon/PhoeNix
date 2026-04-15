@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Application.Models.Configurations;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
+using InputResponse = PhoeNix.Application.Models.Inputs.InputResponse;
 using PhoeNix.WebAPP.Components.Configurations;
 
 namespace PhoeNix.WebAPP.Pages.Configurations;
@@ -33,6 +34,47 @@ public partial class ConfigurationDetailPage : ComponentBase
 
         _configuration = response.Value;
         _isLoading = false;
+    }
+
+    private async Task OpenAddInputDialogAsync()
+    {
+        var parameters = new DialogParameters<AddEditInputDialog>
+        {
+            { x => x.ConfigurationId, ConfigurationId },
+            { x => x.ExistingInput, (InputResponse?)null }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<AddEditInputDialog>("Add Input", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task OpenEditInputDialogAsync(InputResponse input)
+    {
+        var parameters = new DialogParameters<AddEditInputDialog>
+        {
+            { x => x.ConfigurationId, ConfigurationId },
+            { x => x.ExistingInput, input }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<AddEditInputDialog>("Edit Input", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task RemoveInputAsync(Guid inputId)
+    {
+        var result = await ConfigurationsApiClient.RemoveConfigurationInputAsync(ConfigurationId, inputId);
+        if (result.IsFailure)
+        {
+            Snackbar.Add("Failed to remove input.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Input removed.", Severity.Success);
+        await ReloadAsync();
     }
 
     private async Task OpenAddSharedModuleDialogAsync()

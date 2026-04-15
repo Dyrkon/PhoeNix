@@ -27,7 +27,13 @@ public static class ModuleMappings
             moduleTemplate.RequiresSetupBindings,
             moduleTemplate.EditableValueTypes.Select(MapEntryValueDefinitionToDto).ToList(),
             moduleTemplate.SupportedArchitectures.ToList(),
-            moduleTemplate.Tests.Select(MapModuleTestToDto).ToList());
+            moduleTemplate.Tests.Select(MapModuleTestToDto).ToList(),
+            moduleTemplate.RequiredInputs.Select(MapRequiredInputToDto).ToList());
+    }
+
+    public static RequiredInputDefinitionResponse MapRequiredInputToDto(RequiredInputDefinition input)
+    {
+        return new RequiredInputDefinitionResponse(input.Name, input.Source);
     }
 
     public static EntryValueDefinitionResponse MapEntryValueDefinitionToDto(EntryValueDefinition entryValue)

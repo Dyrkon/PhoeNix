@@ -15,6 +15,8 @@ public sealed record ModuleTemplateTestRequest(
     string Content,
     IReadOnlyList<string> VariableNames);
 
+public sealed record RequiredInputDefinitionRequest(string Name, string Source);
+
 public sealed record CreateModuleTemplateRequest(
     string Name,
     bool Enabled,
@@ -22,7 +24,8 @@ public sealed record CreateModuleTemplateRequest(
     string Content,
     IReadOnlyList<Architecture> SupportedArchitectures,
     IReadOnlyList<ModuleTemplateEntryValueDefinitionModel> EditableValueTypes,
-    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests);
+    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests,
+    IReadOnlyList<RequiredInputDefinitionRequest>? RequiredInputs = null);
 
 public sealed record UpdateModuleTemplateRequest(
     string Name,
@@ -31,6 +34,7 @@ public sealed record UpdateModuleTemplateRequest(
     string Content,
     IReadOnlyList<Architecture> SupportedArchitectures,
     IReadOnlyList<ModuleTemplateEntryValueDefinitionModel> EditableValueTypes,
-    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests);
+    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests,
+    IReadOnlyList<RequiredInputDefinitionRequest>? RequiredInputs = null);
 
 public sealed record GetScaffoldingPreviewRequest(ModuleType Type, string? TestNames);

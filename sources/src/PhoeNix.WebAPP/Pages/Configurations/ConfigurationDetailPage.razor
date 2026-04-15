@@ -79,31 +79,60 @@
 
         <MudExpansionPanels MultiExpansion="true" Elevation="0">
 
-            <MudExpansionPanel Disabled="@(_configuration.Inputs.Count == 0)">
+            <MudExpansionPanel>
                 <TitleContent>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small"/>
-                        <MudText Typo="Typo.body1">Inputs</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                            @_configuration.Inputs.Count @(_configuration.Inputs.Count == 1 ? "input" : "inputs")
-                        </MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Input" Size="Size.Small"/>
+                            <MudText Typo="Typo.body1">Inputs</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @_configuration.Inputs.Count @(_configuration.Inputs.Count == 1 ? "input" : "inputs")
+                            </MudText>
+                        </MudStack>
+                        <span @onclick:stopPropagation="true">
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="OpenAddInputDialogAsync">
+                                Add Input
+                            </MudButton>
+                        </span>
                     </MudStack>
                 </TitleContent>
                 <ChildContent>
-                    <MudTable Items="@_configuration.Inputs" Dense="true" Hover="true" Elevation="0">
-                        <HeaderContent>
-                            <MudTh>Name</MudTh>
-                            <MudTh>Source</MudTh>
-                            <MudTh>Followers</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
-                            <MudTd DataLabel="Source">
-                                <MudText Typo="Typo.body2" Style="word-break: break-all;">@context.Source</MudText>
-                            </MudTd>
-                            <MudTd DataLabel="Followers">@context.Followers.Count</MudTd>
-                        </RowTemplate>
-                    </MudTable>
+                    @if (_configuration.Inputs.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No inputs configured.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_configuration.Inputs" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Name</MudTh>
+                                <MudTh>Source</MudTh>
+                                <MudTh>Followers</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Name">@context.Name</MudTd>
+                                <MudTd DataLabel="Source">
+                                    <MudText Typo="Typo.body2" Style="word-break: break-all;">@context.Source</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Followers">@context.Followers.Count</MudTd>
+                                <MudTd>
+                                    <MudStack Row="true" Spacing="0" Justify="Justify.FlexEnd">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OpenEditInputDialogAsync(context))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => RemoveInputAsync(context.Id))"/>
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
                 </ChildContent>
             </MudExpansionPanel>
 

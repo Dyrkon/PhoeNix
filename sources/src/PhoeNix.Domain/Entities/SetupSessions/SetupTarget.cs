@@ -1,4 +1,5 @@
 using System.Net;
+using Humanizer;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
@@ -58,9 +59,9 @@ public sealed class SetupTarget
         string source,
         DateTime nowUtc)
     {
-        LastErrorCode = error.Code;
-        LastErrorDescription = error.Description;
-        LastErrorSource = source;
+        LastErrorCode = error.Code.Truncate(2000);
+        LastErrorDescription = error.Description?.Truncate(2000);
+        LastErrorSource = source.Truncate(2000);
         LastErrorAtUtc = nowUtc;
 
         return Result.Success();

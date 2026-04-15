@@ -17,7 +17,8 @@ public sealed record UpdateModuleTemplateCommand(
     string Content,
     IReadOnlyList<Architecture> SupportedArchitectures,
     IReadOnlyList<ModuleTemplateEntryValueDefinitionModel> EditableValueTypes,
-    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests) : ICommand<ModuleTemplateResponse>;
+    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests,
+    IReadOnlyList<RequiredInputDefinitionModel> RequiredInputs) : ICommand<ModuleTemplateResponse>;
 
 internal sealed class UpdateModuleTemplateHandler(
     IModuleTemplateRepository moduleTemplateRepository)
@@ -81,6 +82,8 @@ internal sealed class UpdateModuleTemplateHandler(
         var testResult = template.ReconcileTests(tests);
         if (testResult.IsFailure)
             return Result.Failure<ModuleTemplate>(testResult.Error);
+
+        template.SetRequiredInputs(request.RequiredInputs.Select(r => (r.Name, r.Source)));
 
         return template;
     }

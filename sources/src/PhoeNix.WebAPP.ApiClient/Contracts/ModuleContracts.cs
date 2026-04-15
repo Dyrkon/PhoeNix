@@ -31,6 +31,10 @@ public sealed record ModuleTemplateTestResponse(
     string Content,
     IReadOnlyList<string> VariableNames);
 
+public sealed record RequiredInputDefinitionResponse(string Name, string Source);
+
+public sealed record RequiredInputDefinitionModel(string Name, string Source);
+
 public sealed record ModuleTemplateResponse(
     Guid Id,
     string Name,
@@ -40,7 +44,8 @@ public sealed record ModuleTemplateResponse(
     bool RequiresSetupBindings,
     IReadOnlyList<EntryValueDefinitionResponse> EditableValueTypes,
     IReadOnlyList<Architecture> SupportedArchitectures,
-    IReadOnlyList<ModuleTemplateTestResponse> Tests);
+    IReadOnlyList<ModuleTemplateTestResponse> Tests,
+    IReadOnlyList<RequiredInputDefinitionResponse>? RequiredInputs = null);
 
 public sealed record ModuleTemplateEntryValueDefinitionModel(
     string? Name,
@@ -108,7 +113,8 @@ public sealed record CreateModuleTemplateRequest(
     string? Content,
     List<Architecture>? SupportedArchitectures,
     List<ModuleTemplateEntryValueDefinitionModel>? EditableValueTypes,
-    List<ModuleTemplateTestUpsertModel>? Tests);
+    List<ModuleTemplateTestUpsertModel>? Tests,
+    List<RequiredInputDefinitionModel>? RequiredInputs = null);
 
 public sealed record UpdateModuleTemplateRequest(
     string? Name,
@@ -117,7 +123,8 @@ public sealed record UpdateModuleTemplateRequest(
     string? Content,
     List<Architecture>? SupportedArchitectures,
     List<ModuleTemplateEntryValueDefinitionModel>? EditableValueTypes,
-    List<ModuleTemplateTestUpsertModel>? Tests);
+    List<ModuleTemplateTestUpsertModel>? Tests,
+    List<RequiredInputDefinitionModel>? RequiredInputs = null);
 
 public sealed record ListModuleTemplatesRequest(
     ModuleTemplateSortField SortField = ModuleTemplateSortField.Name,

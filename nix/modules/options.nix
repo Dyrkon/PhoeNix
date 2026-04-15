@@ -42,7 +42,7 @@ in
         };
         httpDiscovery = {
           enable = lib.mkOption { type = lib.types.bool; default = true; };
-          endpoint = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5000/api/monitoring/targets"; };
+          endpoint = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5001/api/monitoring/targets"; };
           refreshInterval = lib.mkOption { type = lib.types.str; default = "1m"; };
         };
       };
@@ -57,7 +57,7 @@ in
       hostName = lib.mkOption { type = lib.types.str; default = "phoenix.local"; };
       proxyApi = {
         enable = lib.mkOption { type = lib.types.bool; default = true; };
-        upstream = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5000"; };
+        upstream = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5001"; };
       };
     };
 

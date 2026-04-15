@@ -7,6 +7,11 @@ in
 {
   config = lib.mkIf (cfg.enable && mon.enable) (lib.mkMerge [
     {
+      networking.firewall.allowedTCPPorts =
+        lib.optional (prom.enable && prom.ui.public) prom.port;
+    }
+
+    (lib.mkIf prom.enable {
       users.users.prometheus.extraGroups = [ cfg.group ];
 
       systemd.services.prometheus = {
@@ -14,28 +19,21 @@ in
         requires = [ "phoenix-api.service" ];
       };
 
-      networking.firewall.allowedTCPPorts = 
-        lib.optional (prom.enable && prom.ui.public) prom.port;
-    }
-
-    (lib.mkIf prom.enable {
       services.prometheus = {
         enable = true;
         port = prom.port;
-        
-        scrapeConfigs = [
-          {
-            job_name = "orchestrated-machines";
-            http_sd_configs = lib.singleton {
-              url = prom.httpDiscovery.endpoint;
-              refresh_interval = prom.httpDiscovery.refreshInterval;
-              authorization = {
-                type = "Bearer";
-                credentials_file = prom.tokenFile;
-              };
+
+        scrapeConfigs = lib.optional prom.httpDiscovery.enable {
+          job_name = "orchestrated-machines";
+          http_sd_configs = lib.singleton {
+            url = prom.httpDiscovery.endpoint;
+            refresh_interval = prom.httpDiscovery.refreshInterval;
+            authorization = {
+              type = "Bearer";
+              credentials_file = prom.tokenFile;
             };
-          }
-        ];
+          };
+        };
       };
     })
 

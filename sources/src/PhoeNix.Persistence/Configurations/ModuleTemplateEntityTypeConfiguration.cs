@@ -97,6 +97,35 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
         builder.Navigation(m => m.EditableValueTypes)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.OwnsMany(m => m.RequiredInputs, owned =>
+        {
+            owned.ToTable("ModuleTemplateRequiredInputs");
+
+            owned.WithOwner()
+                .HasForeignKey("ModuleTemplateId");
+
+            owned.Property<Guid>("Id");
+            owned.HasKey("Id");
+
+            owned.Property(e => e.ModuleTemplateId)
+                .HasConversion(
+                    id => id.Value,
+                    value => new ModuleTemplateId(value))
+                .IsRequired();
+
+            owned.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            owned.Property(e => e.Source)
+                .IsRequired();
+
+            owned.HasIndex("ModuleTemplateId");
+        });
+
+        builder.Navigation(m => m.RequiredInputs)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.Navigation(m => m.Tests)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
