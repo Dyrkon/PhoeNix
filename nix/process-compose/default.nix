@@ -4,8 +4,8 @@
   project,
 }: let
   runDir = ".dev-data/nginx-run";
-  devDataDir = ".dev-data"; 
-  
+  devDataDir = ".dev-data";
+
   dbPort = 5432;
   dbUser = "phoenix";
   dbName = "phoenix";
@@ -13,7 +13,7 @@
   nodeExporterPort = 9100;
 
   pgPkg = pkgs.postgresql_18.withPackages (pp: [ pp.pgvector ]);
-  
+
   nginxConf = pkgs.writeText "nginx.conf" ''
     worker_processes  1;
     pid nginx.pid;
@@ -23,7 +23,7 @@
       include       ${pkgs.nginx}/conf/mime.types;
       default_type  application/octet-stream;
       sendfile        on;
-      
+
       client_body_temp_path client_body;
       proxy_temp_path       proxy;
       fastcgi_temp_path     fastcgi;
@@ -37,14 +37,14 @@
 
       server {
         listen 8888;
-        location /api/ { 
-            proxy_pass http://webapi; 
+        location /api/ {
+            proxy_pass http://webapi;
             proxy_set_header Host ''$host;
             proxy_set_header X-Forwarded-For ''$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto ''$scheme;
         }
-        location /prometheus/ { 
-            proxy_pass http://prometheus; 
+        location /prometheus/ {
+            proxy_pass http://prometheus;
             proxy_set_header Host ''$host;
         }
         location = /prometheus { return 301 ''$scheme://''$http_host/prometheus/; }
@@ -64,25 +64,50 @@ in {
         environment:
           - "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 
-      postgres:
-        command: "${pkgs.writeShellScript "run-postgres" ''
+      postgres-init:
+        command: "${pkgs.writeShellScript "init-postgres" ''
           set -euo pipefail
           export PATH="${pgPkg}/bin:$PATH"
           DB_DIR="$(pwd)/${devDataDir}/db"
-          if [ ! -d "$DB_DIR" ]; then
-            initdb -D "$DB_DIR" --auth=trust
-            pg_ctl -D "$DB_DIR" -o "-k /tmp -p ${toString dbPort} -h 127.0.0.1" start
-            until pg_isready -h 127.0.0.1 -p ${toString dbPort} -d postgres; do sleep 1; done
-            psql -h 127.0.0.1 -p ${toString dbPort} -d postgres -c "CREATE USER ${dbUser} WITH SUPERUSER;"
-            psql -h 127.0.0.1 -p ${toString dbPort} -d postgres -c "CREATE DATABASE ${dbName} OWNER ${dbUser};"
-            pg_ctl -D "$DB_DIR" stop
+
+          if [ -f "$DB_DIR/PG_VERSION" ]; then
+            echo "postgres-init: data directory already initialized, skipping"
+            exit 0
           fi
-          exec postgres -D "$DB_DIR" -k /tmp -p ${toString dbPort} -h 127.0.0.1
+
+          echo "postgres-init: running initdb"
+          initdb -D "$DB_DIR" --auth=trust
+
+          echo "postgres-init: starting temporary server for bootstrap"
+          pg_ctl -D "$DB_DIR" -o "-k /tmp -p ${toString dbPort} -h 127.0.0.1" -w start
+
+          echo "postgres-init: creating user and database"
+          psql -h 127.0.0.1 -p ${toString dbPort} -d postgres -c "CREATE USER ${dbUser} WITH SUPERUSER;"
+          psql -h 127.0.0.1 -p ${toString dbPort} -d postgres -c "CREATE DATABASE ${dbName} OWNER ${dbUser};"
+
+          echo "postgres-init: stopping temporary server"
+          pg_ctl -D "$DB_DIR" -w stop
+
+          echo "postgres-init: done"
         ''}"
+        availability:
+          restart: "no"
+
+      postgres:
+        command: "${pkgs.writeShellScript "run-postgres" ''
+          set -euo pipefail
+          DB_DIR="$(pwd)/${devDataDir}/db"
+          exec ${pgPkg}/bin/postgres -D "$DB_DIR" -k /tmp -p ${toString dbPort} -h 127.0.0.1
+        ''}"
+        depends_on:
+          postgres-init:
+            condition: process_completed_successfully
         readiness_probe:
           exec:
             command: "${pgPkg}/bin/pg_isready -h 127.0.0.1 -p ${toString dbPort} -d postgres"
-          initial_delay_seconds: 5
+          initial_delay_seconds: 2
+          period_seconds: 2
+          failure_threshold: 10
 
       webapi:
         command: "${pkgs.writeShellScript "run-api" ''
@@ -100,7 +125,12 @@ in {
           - "ASPNETCORE_URLS=http://0.0.0.0:5001"
           - "ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
           - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}/prometheus"
-                
+        depends_on:
+          postgres:
+            condition: process_healthy
+          build-all:
+            condition: process_completed_successfully
+
       node-exporter:
         command: "${pkgs.prometheus-node-exporter}/bin/node_exporter --web.listen-address=127.0.0.1:${toString nodeExporterPort}"
 
@@ -147,14 +177,14 @@ EOF
           webapi:
             condition: process_started
           build-all:
-            condition: process_completed
+            condition: process_completed_successfully
 
       nginx:
         command: "${pkgs.writeShellScript "run-nginx" ''
           set -euo pipefail
           REAL_RUN_DIR="$(pwd)/${runDir}"
           mkdir -p "$REAL_RUN_DIR/client_body" "$REAL_RUN_DIR/proxy" "$REAL_RUN_DIR/fastcgi" "$REAL_RUN_DIR/uwsgi" "$REAL_RUN_DIR/scgi"
-          
+
           exec ${pkgs.nginx}/bin/nginx -p "$REAL_RUN_DIR" -c "${nginxConf}" -e "$REAL_RUN_DIR/error.log" -g "daemon off;"
         ''}"
         depends_on:

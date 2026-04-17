@@ -49,6 +49,37 @@ public abstract class ApiClientBase
         return SendAsync(HttpMethod.Put, uri, body, cancellationToken);
     }
 
+    protected Task<ApiResult> DeleteAsync(
+        string uri,
+        CancellationToken cancellationToken = default)
+    {
+        return SendAsync(HttpMethod.Delete, uri, null, cancellationToken);
+    }
+
+    protected async Task<ApiResult<TResponse>> PutWithResponseAsync<TResponse>(
+        string uri,
+        object body,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(HttpMethod.Put, uri);
+        request.Content = JsonContent.Create(body);
+
+        using var response = await HttpClient.SendAsync(request, cancellationToken);
+
+        NotifyIfAuthenticationInvalid(response);
+
+        if (!response.IsSuccessStatusCode)
+            return ApiResult<TResponse>.Failure(await ReadErrorAsync(response, cancellationToken));
+
+        var payload = await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
+
+        return payload is null
+            ? ApiResult<TResponse>.Failure(new ApiError(
+                "ResponseBodyInvalid",
+                "The server returned an invalid response body."))
+            : ApiResult<TResponse>.Success(payload);
+    }
+
     protected Task<ApiResult<TResponse>> GetAsync<TResponse>(
         string uri,
         CancellationToken cancellationToken = default)

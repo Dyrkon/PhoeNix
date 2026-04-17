@@ -48,6 +48,7 @@ public static class DependencyInjection
         {
             options.BatchSize = 20;
             options.PollInterval = TimeSpan.FromSeconds(2);
+            options.MaxDegreeOfParallelism = 4;
         });
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>

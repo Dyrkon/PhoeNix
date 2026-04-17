@@ -109,4 +109,37 @@ public sealed class ConfigurationsApiClient(HttpClient httpClient, IAuthenticati
             request,
             cancellationToken);
     }
+
+    public async Task<ApiResult<Contracts.InputResponse>> AddConfigurationInputAsync(
+        Guid configurationId,
+        Contracts.CreateConfigurationInputRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PostWithResponseAsync<Contracts.InputResponse>(
+            $"configurations/{configurationId}/inputs",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult<Contracts.InputResponse>> UpdateConfigurationInputAsync(
+        Guid configurationId,
+        Guid inputId,
+        Contracts.UpdateConfigurationInputRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PutWithResponseAsync<Contracts.InputResponse>(
+            $"configurations/{configurationId}/inputs/{inputId}",
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ApiResult> RemoveConfigurationInputAsync(
+        Guid configurationId,
+        Guid inputId,
+        CancellationToken cancellationToken = default)
+    {
+        return await DeleteAsync(
+            $"configurations/{configurationId}/inputs/{inputId}",
+            cancellationToken);
+    }
 }

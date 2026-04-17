@@ -16,7 +16,8 @@ public sealed record CreateModuleTemplateCommand(
     string Content,
     IReadOnlyList<Architecture> SupportedArchitectures,
     IReadOnlyList<ModuleTemplateEntryValueDefinitionModel> EditableValueTypes,
-    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests) : ICommand<ModuleTemplateResponse>;
+    IReadOnlyList<ModuleTemplateTestUpsertModel> Tests,
+    IReadOnlyList<RequiredInputDefinitionModel> RequiredInputs) : ICommand<ModuleTemplateResponse>;
 
 internal sealed class CreateModuleTemplateHandler(
     IModuleTemplateRepository moduleTemplateRepository)
@@ -49,6 +50,7 @@ internal sealed class CreateModuleTemplateHandler(
                 request.SupportedArchitectures)
             .Tap(template => template.ChangeContent(request.Content, editableValueTypes))
             .Tap(template => template.ReconcileTests(tests))
+            .Tap(template => template.SetRequiredInputs(request.RequiredInputs.Select(r => (r.Name, r.Source))))
             .Tap(moduleTemplateRepository.Add)
             .Map(ModuleMappings.MapModuleToDto);
     }

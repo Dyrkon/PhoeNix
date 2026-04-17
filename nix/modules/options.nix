@@ -11,14 +11,19 @@ in
     stateDir = lib.mkOption { type = lib.types.str; default = "/var/lib/phoenix"; };
 
     api = {
-      package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.system}.webapi; };
+      package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.stdenv.hostPlatform.system}.webapi; };
       program = lib.mkOption { type = lib.types.nullOr lib.types.str; default = null; };
       urls = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5001"; };
       environment = lib.mkOption { type = lib.types.attrsOf lib.types.str; default = { }; };
+      environmentFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Path to an environment file containing secrets (not stored in Nix store).";
+      };
       extraArgs = lib.mkOption { type = lib.types.listOf lib.types.str; default = [ ]; };
     };
 
-    webapp.package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.system}.webapp; };
+    webapp.package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.stdenv.hostPlatform.system}.webapp; };
 
     database = {
       createLocally = lib.mkOption { type = lib.types.bool; default = true; };
@@ -31,9 +36,9 @@ in
       prometheusServer = {
         enable = lib.mkEnableOption "Prometheus server";
         port = lib.mkOption { type = lib.types.port; default = 9090; };
-        tokenFile = lib.mkOption { 
-          type = lib.types.str; 
-          default = "${cfg.stateDir}/prometheus-token"; 
+        tokenFile = lib.mkOption {
+          type = lib.types.str;
+          default = "${cfg.stateDir}/prometheus-token";
           description = "Path where API generates and Prometheus reads the Bearer token.";
         };
         ui = {
@@ -42,7 +47,7 @@ in
         };
         httpDiscovery = {
           enable = lib.mkOption { type = lib.types.bool; default = true; };
-          endpoint = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5000/api/monitoring/targets"; };
+          endpoint = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5001/api/monitoring/targets"; };
           refreshInterval = lib.mkOption { type = lib.types.str; default = "1m"; };
         };
       };
@@ -57,7 +62,7 @@ in
       hostName = lib.mkOption { type = lib.types.str; default = "phoenix.local"; };
       proxyApi = {
         enable = lib.mkOption { type = lib.types.bool; default = true; };
-        upstream = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5000"; };
+        upstream = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5001"; };
       };
     };
 

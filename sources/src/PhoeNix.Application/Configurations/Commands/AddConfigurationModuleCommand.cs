@@ -39,6 +39,9 @@ internal sealed class AddConfigurationModuleHandler(
         if (configuration is null)
             return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
 
+        foreach (var required in moduleTemplate.RequiredInputs)
+            configuration.AddInput(required.Source, required.Name);
+
         return configuration.AddModule(moduleTemplate.Id, request.Enabled)
             .Bind(moduleValue => ModuleEntryFactory.CreateDefaultEntries(
                     moduleValue,

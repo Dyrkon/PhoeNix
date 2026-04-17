@@ -52,4 +52,20 @@ public interface IConfigurationsApiClient
         Guid systemId,
         Contracts.UpdateConfigurationSystemRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResult<Contracts.InputResponse>> AddConfigurationInputAsync(
+        Guid configurationId,
+        Contracts.CreateConfigurationInputRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult<Contracts.InputResponse>> UpdateConfigurationInputAsync(
+        Guid configurationId,
+        Guid inputId,
+        Contracts.UpdateConfigurationInputRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult> RemoveConfigurationInputAsync(
+        Guid configurationId,
+        Guid inputId,
+        CancellationToken cancellationToken = default);
 }

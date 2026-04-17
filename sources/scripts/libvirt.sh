@@ -33,6 +33,8 @@ for entry in "${VMS[@]}"; do
       virsh undefine "$NAME"
   fi
 
+#  --network type=direct,source=eno1,source_mode=bridge,mac="$MAC",model=e1000e \
+
   echo "  -> Starting virt-install for $NAME..."
     virt-install \
       --name "$NAME" \
@@ -41,7 +43,7 @@ for entry in "${VMS[@]}"; do
       --cpu host-passthrough \
       --controller type=scsi,model=virtio-scsi \
       --disk pool="$STORAGE_POOL",size=16,bus=scsi \
-      --network bridge="$BRIDGE",mac="$MAC",model=virtio \
+      --network network=default,mac="$MAC",model=e1000e \
       --boot uefi,hd,network \
       --os-variant fedora-unknown \
       --graphics spice,listen=0.0.0.0 \

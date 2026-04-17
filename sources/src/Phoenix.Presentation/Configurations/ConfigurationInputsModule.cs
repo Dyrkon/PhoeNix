@@ -28,6 +28,11 @@ public sealed class ConfigurationInputsModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
+
+        group.MapDelete("/{inputId:guid}", RemoveInput)
+            .WithName("RemoveConfigurationInput")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> AddInput(
@@ -51,6 +56,17 @@ public sealed class ConfigurationInputsModule : ICarterModule
     {
         var command = new UpdateConfigurationInputCommand(new ConfigurationId(configurationId), new InputId(inputId),
             request.Source, request.Name, request.Follows);
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> RemoveInput(
+        Guid configurationId,
+        Guid inputId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemoveConfigurationInputCommand(new ConfigurationId(configurationId), new InputId(inputId));
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

@@ -199,6 +199,69 @@
 
     <MudCard>
         <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-3">Required Flake Inputs (@_requiredInputs.Count)</MudText>
+
+            <MudGrid Class="mb-2">
+                <MudItem xs="12" sm="5">
+                    <MudTextField T="string"
+                                  @bind-Value="_newRequiredInputName"
+                                  Label="Input Name"
+                                  Placeholder="e.g. nixpkgs"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"/>
+                </MudItem>
+                <MudItem xs="12" sm="5">
+                    <MudTextField T="string"
+                                  @bind-Value="_newRequiredInputSource"
+                                  Label="Source URL"
+                                  Placeholder="e.g. github:NixOS/nixpkgs/nixos-24.05"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"/>
+                </MudItem>
+                <MudItem xs="12" sm="2" Class="d-flex align-center">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddRequiredInput"
+                               FullWidth="true">
+                        Add
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            @if (_requiredInputs.Count > 0)
+            {
+                <MudList T="RequiredInputEditorModel" Dense="true">
+                    @foreach (var input in _requiredInputs)
+                    {
+                        <MudListItem T="RequiredInputEditorModel">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center"
+                                      Style="width: 100%;">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.body2" Style="font-weight: 600;">@input.Name</MudText>
+                                    <MudText Typo="Typo.caption"
+                                             Style="font-family: monospace; word-break: break-all;">@input.Source</MudText>
+                                </MudStack>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => RemoveRequiredInput(input))"/>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    No required inputs defined. Add inputs that this module template requires from the flake.
+                </MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard>
+        <MudCardContent>
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                 <MudText Typo="Typo.h6">Tests (@_tests.Count)</MudText>
                 <MudButton Variant="Variant.Outlined"
