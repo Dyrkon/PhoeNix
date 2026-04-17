@@ -41,11 +41,15 @@ public partial class MainLayout
             if (result is { IsSuccess: true, Value: not null })
                 _userState.SetCurrentUser(result.Value);
             else
+            {
                 _userState.MarkInitialized();
+                NavigationManager.NavigateToLogin();
+            }
         }
         catch
         {
             _userState.MarkInitialized();
+            NavigationManager.NavigateToLogin();
         }
     }
 

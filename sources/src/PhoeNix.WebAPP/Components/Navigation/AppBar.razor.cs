@@ -10,8 +10,6 @@ public partial class AppBar : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         SetupSessionsState.StateChanged += OnStateChanged;
-        // TODO Fix the polling errors
-        // SetupSessionsState.StartPolling();
     }
 
     private void OnStateChanged()

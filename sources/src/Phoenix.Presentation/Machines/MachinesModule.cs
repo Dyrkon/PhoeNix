@@ -29,7 +29,7 @@ public class MachinesModule : ICarterModule
             .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/machines/{machineId:guid}/metrics", GetMachineMetrics)
-            .Produces<PhoeNix.Application.Models.Machines.MachineMetricsResponse>(StatusCodes.Status200OK)
+            .Produces<MachineMetricsResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
     }
 
@@ -91,9 +91,10 @@ public class MachinesModule : ICarterModule
             return result.AsHttpResult();
 
         var m = result.Value!;
-        var response = new PhoeNix.Application.Models.Machines.MachineMetricsResponse(
+        var response = new MachineMetricsResponse(
             m.IsUp,
             m.Uptime,
+            m.DiskSpaceUsed,
             ToSeriesResponse(m.Cpu),
             ToSeriesResponse(m.Ram),
             ToSeriesResponse(m.NetRx),
@@ -104,9 +105,9 @@ public class MachinesModule : ICarterModule
         return Results.Ok(response);
     }
 
-    private static PhoeNix.Application.Models.Machines.MetricSeriesResponse ToSeriesResponse(
+    private static MetricSeriesResponse ToSeriesResponse(
         PhoeNix.Application.Abstractions.Monitoring.PrometheusRangeSeries series)
     {
-        return new PhoeNix.Application.Models.Machines.MetricSeriesResponse(series.Timestamps, series.Values);
+        return new MetricSeriesResponse(series.Timestamps, series.Values);
     }
 }

@@ -136,7 +136,7 @@ public static class DependencyInjection
                 options.Cookie.SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None;
                 options.Cookie.SecurePolicy = isDev ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
                 options.SlidingExpiration = true;
-                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.ExpireTimeSpan = TimeSpan.FromHours(4);
 
                 options.Events = new CookieAuthenticationEvents
                 {

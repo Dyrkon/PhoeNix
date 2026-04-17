@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.Extensions;
-using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Components.Authentication;
 
@@ -12,8 +11,6 @@ public partial class RegistrationForm : ComponentBase
     [Inject] private IAuthenticationApiClient AuthenticationApiClient { get; set; } = null!;
 
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-
-    [CascadingParameter] public UserState UserState { get; set; } = null!;
 
     private readonly RegistrationModel _model = new();
 
@@ -42,8 +39,7 @@ public partial class RegistrationForm : ComponentBase
             return;
         }
 
-        UserState.SetCurrentUser(result.Value);
-        NavigationManager.NavigateToHome();
+        NavigationManager.NavigateToLogin();
     }
 
     private sealed class RegistrationModel
