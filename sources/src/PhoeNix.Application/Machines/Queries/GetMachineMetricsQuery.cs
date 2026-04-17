@@ -18,6 +18,7 @@ public enum MetricsTimeRange
 public record MachineMetricsResult(
     bool IsUp,
     string? Uptime,
+    double DiskSpaceUsed,
     PrometheusRangeSeries Cpu,
     PrometheusRangeSeries Ram,
     PrometheusRangeSeries NetRx,
@@ -55,6 +56,10 @@ internal sealed class GetMachineMetricsQueryHandler(
             $"node_time_seconds{{machine=\"{title}\"}} - node_boot_time_seconds{{machine=\"{title}\"}}",
             cancellationToken);
 
+        var diskSpaceUsed = prometheusQueryClient.QueryInstantAsync(
+            $"100 - ((node_filesystem_avail_bytes{{mountpoint=\"/\",fstype!=\"rootfs\"}} * 100)/node_filesystem_size_bytes{{mountpoint=\"/\",fstype!=\"rootfs\"}})",
+            cancellationToken);
+
         var cpuTask = prometheusQueryClient.QueryRangeAsync(
             $"100 - (avg by(machine)(irate(node_cpu_seconds_total{{mode=\"idle\",machine=\"{title}\"}}[5m])) * 100)",
             start, end, step, cancellationToken);
@@ -79,21 +84,25 @@ internal sealed class GetMachineMetricsQueryHandler(
             $"sum(irate(node_disk_written_bytes_total{{machine=\"{title}\"}}[5m]))",
             start, end, step, cancellationToken);
 
-        await Task.WhenAll(upTask, uptimeTask, cpuTask, ramTask, netRxTask, netTxTask, diskReadTask, diskWriteTask);
+        await Task.WhenAll(upTask, uptimeTask, diskSpaceUsed, cpuTask, ramTask, netRxTask, netTxTask, diskReadTask,
+            diskWriteTask);
 
-        var isUp = (await upTask) is > 0.5;
+        var isUp = await upTask is > 0.5;
         var uptimeSeconds = await uptimeTask;
         var uptimeFormatted = uptimeSeconds.HasValue ? FormatUptime(uptimeSeconds.Value) : null;
+        var diskSpace = await diskSpaceUsed;
+        var diskSpaceUsage = diskSpace ?? -1;
 
         return Result.Success(new MachineMetricsResult(
-            IsUp: isUp,
-            Uptime: uptimeFormatted,
-            Cpu: await cpuTask,
-            Ram: await ramTask,
-            NetRx: await netRxTask,
-            NetTx: await netTxTask,
-            DiskRead: await diskReadTask,
-            DiskWrite: await diskWriteTask
+            isUp,
+            uptimeFormatted,
+            diskSpaceUsage,
+            await cpuTask,
+            await ramTask,
+            await netRxTask,
+            await netTxTask,
+            await diskReadTask,
+            await diskWriteTask
         ));
     }
 

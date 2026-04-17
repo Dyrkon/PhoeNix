@@ -101,6 +101,7 @@ public record MetricSeriesResponse(DateTimeOffset[] Timestamps, double?[] Values
 public record MachineMetricsResponse(
     bool IsUp,
     string? Uptime,
+    double DiskSpaceUsed,
     MetricSeriesResponse Cpu,
     MetricSeriesResponse Ram,
     MetricSeriesResponse NetRx,

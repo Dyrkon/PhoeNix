@@ -6,6 +6,7 @@ using PhoeNix.Application.Models.Setup;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.Extensions;
+using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Pages.SetupSessions;
 
@@ -16,6 +17,7 @@ public partial class SetupWizardPage : ComponentBase
     [Inject] private IConfigurationsApiClient ConfigurationsApiClient { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [CascadingParameter] public SetupSessionsState SetupSessionsState { get; set; } = null!;
 
     private int _activeStep;
 
@@ -73,6 +75,7 @@ public partial class SetupWizardPage : ComponentBase
 
         _sessionId = Guid.Parse(result.Value);
         _sessionStarting = false;
+        SetupSessionsState.StartPolling();
         await InvokeAsync(StateHasChanged);
     }
 

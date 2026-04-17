@@ -22,7 +22,7 @@ public sealed class SetupSessionsState : IDisposable
     public void StartPolling()
     {
         _pollingTimer ??= new Timer(
-            async _ => await PollAsync(),
+            _ => { _ = PollAsync(); },
             null,
             TimeSpan.Zero,
             TimeSpan.FromSeconds(3));
@@ -46,11 +46,17 @@ public sealed class SetupSessionsState : IDisposable
         var isActive = first is not null && IsActiveSession(first);
         var next = isActive ? first : null;
 
-        if (next?.SessionId != ActiveSession?.SessionId)
-        {
-            ActiveSession = next;
+        var changed = next?.SessionId != ActiveSession?.SessionId
+            || next?.TargetsDone != ActiveSession?.TargetsDone
+            || next?.TargetsFailed != ActiveSession?.TargetsFailed;
+
+        ActiveSession = next;
+
+        if (changed)
             StateChanged?.Invoke();
-        }
+
+        if (!isActive)
+            StopPolling();
     }
 
     private static bool IsActiveSession(SetupSessionListResponse session)
