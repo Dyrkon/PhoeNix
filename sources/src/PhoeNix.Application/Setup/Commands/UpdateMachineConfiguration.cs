@@ -4,12 +4,12 @@ using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Setup;
+using PhoeNix.Application.Models.Deployment;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -27,17 +27,15 @@ internal sealed class UpdateMachineConfigurationHandler(
     INixBuildMaterializer nixBuildMaterializer,
     IConfigurationFilesBuilder configurationFilesBuilder,
     IFileSystemService fileSystemService,
-    INixOsMachineUpdater nixOsMachineUpdater,
     IDeploySshKeyProvider deploySshKeyProvider,
-    IDeploymentBindingResolver deploymentBindingResolver)
+    IDeploymentBindingResolver deploymentBindingResolver,
+    IDeploymentJobTracker jobTracker)
     : ICommandHandler<UpdateMachineConfiguration>
 {
     public async Task<Result> Handle(
         UpdateMachineConfiguration request,
         CancellationToken cancellationToken)
     {
-        var nowUtc = DateTime.UtcNow;
-
         var machineResult = await machineRepository
             .GetByIdAsync(request.MachineId, cancellationToken)
             .EnsureNotNull(new Error(
@@ -135,33 +133,25 @@ internal sealed class UpdateMachineConfigurationHandler(
         if (writeResult.IsFailure)
             return writeResult.Error;
 
-        var updateResult = await nixOsMachineUpdater.UpdateAsync(
-            targetIpAddress,
-            writeResult.Value,
-            request.SystemId.ToStringWithPrefix(),
-            deployAccessResult.Value,
-            cancellationToken);
-
-        if (updateResult.IsFailure)
-            return updateResult.Error;
-
         var boundDiskPaths = deploymentSnapshot.BoundDisks
             .OrderBy(d => d.Index)
             .Select(d => d.StableDevicePath)
             .ToList();
 
-        var snapshotResult = machine.RecordDeploymentSnapshot(
-            request.ConfigurationId,
-            configuration.Title,
-            request.SystemId,
-            configuration.SystemSpecifications.First(s => s.Id == request.SystemId).Name,
-            targetIpAddress,
-            nowUtc,
-            boundDiskPaths);
+        var job = new DeploymentJob(
+            MachineId: request.MachineId,
+            TargetIpAddress: targetIpAddress,
+            FlakeDirectory: writeResult.Value,
+            SystemAttribute: request.SystemId.ToStringWithPrefix(),
+            SshMaterial: deployAccessResult.Value,
+            ConfigurationId: request.ConfigurationId,
+            ConfigurationTitle: configuration.Title,
+            SystemId: request.SystemId,
+            SystemName: selectedSystem.Name,
+            BoundDiskPaths: boundDiskPaths);
 
-        if (snapshotResult.IsFailure)
-            return snapshotResult.Error;
+        jobTracker.Enqueue(job);
 
-        return machine.ChangeMachineState(MachineState.Updated, nowUtc);
+        return Result.Success();
     }
 }

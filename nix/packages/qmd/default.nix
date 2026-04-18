@@ -65,7 +65,6 @@ bun2nix.mkDerivation {
 
     chmod -R u+w "$out/lib/qmd"
 
-    # Patch glibc detection (Linux only really matters, harmless elsewhere)
     find "$out/lib/qmd/node_modules" -type f -name 'detectGlibc.js' -print0 | \
       while IFS= read -r -d "" file; do
         substituteInPlace "$file" \
@@ -105,7 +104,6 @@ fi
 
 export LLAMA_CPP_LOCAL_BUILDS_DIR="$QMD_SHARED_CACHE/llama-builds"
 
-# Platform-specific setup
 case "$(uname)" in
   Linux)
     export PATH="@nvcc_bin@:$PATH"

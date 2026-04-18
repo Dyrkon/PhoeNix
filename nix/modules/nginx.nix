@@ -64,7 +64,7 @@ in
             (lib.mkIf (prom.enable && prom.ui.nginxProxy) {
               "/prometheus/" = {
                 recommendedProxySettings = true;
-                proxyPass = "http://127.0.0.1:${toString prom.port}/";
+                proxyPass = "http://127.0.0.1:${toString prom.port}";
                 proxyWebsockets = true;
               };
             })

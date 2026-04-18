@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Application.Models.Machines;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
+using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.WebAPP.ApiClient.Models;
 using PhoeNix.WebAPP.Components.Machines;
 using PhoeNix.WebAPP.States;
 
@@ -23,17 +25,22 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     private bool _isLoading = true;
     private MachineMetricsResponse? _metrics;
     private System.Timers.Timer? _metricsTimer;
+    private CancellationTokenSource? _pollCts;
     private bool _disposed;
 
     private UpdateStatus CurrentStatus => MachineState.GetUpdate(MachineId)?.Status ?? UpdateStatus.None;
 
-    private bool CanUpdate => _machine is { Enabled: true } && _machine.DeploymentSnapshot is not null;
+    private bool CanUpdate => _machine is { Enabled: true }
+        && _machine.DeploymentSnapshot is not null
+        && CurrentStatus != UpdateStatus.InProgress;
 
     private string _canUpdateTooltip => _machine is null || _machine.DeploymentSnapshot is null
         ? "Machine must have a deployment snapshot to update"
         : !_machine.Enabled
             ? "Machine is disabled"
-            : string.Empty;
+            : CurrentStatus == UpdateStatus.InProgress
+                ? "Update is already in progress"
+                : string.Empty;
 
     private string _updateStatusIcon => CurrentStatus switch
     {
@@ -104,25 +111,71 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
             snapshot.SystemId,
             MachineId);
 
-        if (result.IsSuccess)
-        {
-            MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Success,
-                ConfigurationTitle: snapshot.ConfigurationTitle,
-                SystemName: snapshot.SystemName));
-
-            var refreshed = await MachinesApiClient.GetMachineAsync(MachineId);
-            if (refreshed is { IsSuccess: true, Value: not null })
-                _machine = refreshed.Value;
-        }
-        else
+        if (result.IsFailure)
         {
             MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Failed,
                 result.Error,
                 snapshot.ConfigurationTitle,
                 snapshot.SystemName));
+            StateHasChanged();
+            return;
         }
 
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
+        _pollCts = new CancellationTokenSource(TimeSpan.FromMinutes(90));
+        _ = PollDeploymentStatusAsync(snapshot, _pollCts.Token);
+
         StateHasChanged();
+    }
+
+    private async Task PollDeploymentStatusAsync(DeploymentSnapshotResponse snapshot, CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), ct);
+
+                var status = await DeploymentApiClient.GetDeploymentStatusAsync(MachineId, ct);
+                if (!status.IsSuccess || status.Value is null)
+                    continue;
+
+                if (status.Value.State is "Succeeded")
+                {
+                    MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Success,
+                        ConfigurationTitle: snapshot.ConfigurationTitle,
+                        SystemName: snapshot.SystemName));
+
+                    var refreshed = await MachinesApiClient.GetMachineAsync(MachineId);
+                    if (refreshed is { IsSuccess: true, Value: not null })
+                        _machine = refreshed.Value;
+
+                    break;
+                }
+
+                if (status.Value.State is "Failed")
+                {
+                    var error = new ApiError(
+                        status.Value.ErrorCode ?? "DeploymentFailed",
+                        status.Value.ErrorMessage ?? "The deployment failed.");
+
+                    MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Failed,
+                        error,
+                        snapshot.ConfigurationTitle,
+                        snapshot.SystemName));
+
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task OpenUpdateResultDialogAsync()
@@ -175,6 +228,8 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     public void Dispose()
     {
         _disposed = true;
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
         MachineState.StateChanged -= OnMachineStateChanged;
         _metricsTimer?.Stop();
         _metricsTimer?.Dispose();
