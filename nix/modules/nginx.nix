@@ -5,66 +5,71 @@ let
 in
 {
   config = lib.mkIf (cfg.enable && cfg.nginx.enable) {
-    system.activationScripts.phoenix-cert = ''
-      mkdir -p /var/lib/phoenix
-      if [ ! -f /var/lib/phoenix/cert.pem ]; then
-        ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:4096 \
-          -keyout /var/lib/phoenix/cert.key \
-          -out /var/lib/phoenix/cert.pem \
-          -days 365 -nodes \
-          -subj "/CN=${cfg.nginx.hostName}"
-      fi
-      chown nginx:nginx /var/lib/phoenix/cert.pem /var/lib/phoenix/cert.key
-      chmod 0640 /var/lib/phoenix/cert.key
-      chmod 0644 /var/lib/phoenix/cert.pem
-    '';
+    networking.firewall.allowedTCPPorts = [ 80 443 ];
 
-    services.nginx = {
-      enable = true;
-      recommendedProxySettings = true;
-
-      virtualHosts.${cfg.nginx.hostName} = {
-        addSSL = true;
-        sslCertificate = "/var/lib/phoenix/cert.pem";
-        sslCertificateKey = "/var/lib/phoenix/cert.key";
-
-        extraConfig = ''
-          if ($scheme = http) {
-            set $do_redirect "yes";
-          }
-          if ($request_uri ~ ^/api/(v1/boot|setup/bootstrap/callback|setup/finalize|provisioning/files)) {
-            set $do_redirect "no";
-          }
-          if ($do_redirect = "yes") {
-            return 301 https://$host$request_uri;
-          }
+    services.nginx =
+      let
+        tls-cert = pkgs.runCommand "phoenix-selfSignedCert" { buildInputs = [ pkgs.openssl ]; } ''
+          mkdir -p $out
+          openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -days 365 -nodes \
+            -keyout $out/cert.key -out $out/cert.crt \
+            -subj "/CN=${cfg.nginx.hostName}" -addext "subjectAltName=DNS:${cfg.nginx.hostName},IP:127.0.0.1"
         '';
+      in
+      {
+        enable = true;
+        
+        recommendedGzipSettings = true;
+        recommendedBrotliSettings = true;
+        recommendedOptimisation = true;
+        recommendedProxySettings = true;
 
-        locations = {
-          "/" = {
-            root = "${cfg.webapp.package}";
-            extraConfig = "try_files $uri $uri/ /index.html;";
-          };
+        virtualHosts.${cfg.nginx.hostName} = {
+          addSSL = true;
+          
+          sslCertificate = "${tls-cert}/cert.crt";
+          sslCertificateKey = "${tls-cert}/cert.key";
 
-          "/api/" = lib.mkIf cfg.nginx.proxyApi.enable {
-            proxyPass = lib.removeSuffix "/" cfg.nginx.proxyApi.upstream;
-            proxyWebsockets = true;
-            extraConfig = ''
-              proxy_set_header Host $host;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-              proxy_set_header X-Forwarded-Host $host;
-              proxy_cookie_path / /;
-            '';
-          };
+          extraConfig = ''
+            if ($scheme = http) {
+              set $do_redirect "yes";
+            }
+            if ($request_uri ~ ^/api/(v1/boot|setup/bootstrap/callback|setup/finalize|provisioning/files)) {
+              set $do_redirect "no";
+            }
+            if ($do_redirect = "yes") {
+              return 301 https://$host$request_uri;
+            }
+          '';
 
-          "/prometheus/" = lib.mkIf (prom.enable && prom.ui.nginxProxy) {
-            proxyPass = "http://127.0.0.1:${toString prom.port}/";
-          };
+          locations = lib.mkMerge [
+            {
+              "/" = {
+                root = "${cfg.webapp.package}";
+                tryFiles = "$uri $uri/ /index.html =404";
+              };
+            }
+
+            (lib.mkIf cfg.nginx.proxyApi.enable {
+              "/api/" = {
+                recommendedProxySettings = true;
+                proxyPass = lib.removeSuffix "/" cfg.nginx.proxyApi.upstream;
+                proxyWebsockets = true;
+                extraConfig = ''
+                  proxy_cookie_path / /;
+                '';
+              };
+            })
+
+            (lib.mkIf (prom.enable && prom.ui.nginxProxy) {
+              "/prometheus/" = {
+                recommendedProxySettings = true;
+                proxyPass = "http://127.0.0.1:${toString prom.port}/";
+                proxyWebsockets = true;
+              };
+            })
+          ];
         };
       };
-    };
-
-    networking.firewall.allowedTCPPorts = [ 80 443 ];
   };
 }

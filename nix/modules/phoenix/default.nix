@@ -29,6 +29,24 @@ in
       })
     ];
 
+    security.wrappers.pixiecore = {
+      owner = "root";
+      group = "root";
+      source = "${pkgs.pixiecore}/bin/pixiecore";
+      capabilities = "cap_net_raw,cap_net_bind_service+ep";
+      permissions = "0755";
+      setuid = false;
+      setgid = false;
+    };
+
+    systemd.services.phoenix-api = {
+      path = [
+        pkgs.nixos-anywhere
+        pkgs.openssh
+        config.security.wrapperDir
+      ];
+    };
+
     systemd.services.phoenix-api-env = {
       description = "Generate Phoenix API environment file";
       wantedBy = [ "phoenix-api.service" ];

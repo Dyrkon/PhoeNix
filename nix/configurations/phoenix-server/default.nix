@@ -46,7 +46,7 @@
 
       "NetbootHost__HostExecutablePath" = "/run/wrappers/bin/pixiecore";
 
-      "SeedExample__HostName" = "phoenix-demo";
+      "SeedExample__HostName" = "phoenix-orchestrator";
       "SeedExample__StateVersion" = "25.11";
       "SeedExample__RootAuthorizedKeys__0" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com";
       "SeedExample__PublicBaseUrl" = "http://192.168.88.144";
