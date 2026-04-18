@@ -23,6 +23,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     private bool _isLoading = true;
     private MachineMetricsResponse? _metrics;
     private System.Timers.Timer? _metricsTimer;
+    private bool _disposed;
 
     private UpdateStatus CurrentStatus => MachineState.GetUpdate(MachineId)?.Status ?? UpdateStatus.None;
 
@@ -66,6 +67,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 
     protected override async Task OnParametersSetAsync()
     {
+        _metricsTimer?.Stop();
         _isLoading = true;
 
         var response = await MachinesApiClient.GetMachineAsync(MachineId);
@@ -82,7 +84,9 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
         _isLoading = false;
 
         await LoadMetricsAsync();
-        _metricsTimer?.Start();
+
+        if (!_disposed)
+            _metricsTimer?.Start();
     }
 
     private async Task UpdateConfigurationAsync()
@@ -170,6 +174,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         MachineState.StateChanged -= OnMachineStateChanged;
         _metricsTimer?.Stop();
         _metricsTimer?.Dispose();

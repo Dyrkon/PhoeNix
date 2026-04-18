@@ -1,8 +1,7 @@
-using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.SshIdentity;
-using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Shared;
 
@@ -11,13 +10,17 @@ namespace PhoeNix.Infrastructure.Services.Authentication;
 public sealed class SetupSshKeyProvider(
     ISshKeyFileStore fileStore,
     IProcessRunner processRunner,
-    IOptions<SshCaOptions> caOptions
+    IAppSettingsRepository settingsRepository
 ) : ISetupSshKeyProvider
 {
-    private readonly SshCaOptions _ca = caOptions.Value;
-
     public async Task<Result<SshIdentityMaterial>> GetOrCreateAsync(SetupSession session, CancellationToken ct)
     {
+        var settings = await settingsRepository.GetAsync(ct);
+        if (settings is null)
+            return Result.Failure<SshIdentityMaterial>(new Error(
+                "AppSettings.NotFound",
+                "Application settings have not been initialized."));
+
         var nowUtc = DateTime.UtcNow;
 
         var rootDir = fileStore.GetOrCreateRootDirectory();
@@ -32,13 +35,15 @@ public sealed class SetupSshKeyProvider(
         var caPaths = fileStore.GetCaKeyPaths();
         if (caPaths.IsFailure) return Result.Failure<SshIdentityMaterial>(caPaths.Error);
 
-        var ensureCa = EnsureCaKeypairExists(caPaths.Value.CaPrivateKeyPath, ct);
+        var ensureCa = EnsureCaKeypairExists(caPaths.Value.CaPrivateKeyPath, settings.SshCaKeyType, ct);
         if (ensureCa.IsFailure) return Result.Failure<SshIdentityMaterial>(ensureCa.Error);
 
         var sessionPaths = fileStore.GetSessionKeyPaths(session.Id);
         if (sessionPaths.IsFailure) return Result.Failure<SshIdentityMaterial>(sessionPaths.Error);
 
         var (privPath, pubPath, certPath) = sessionPaths.Value;
+
+        var certificateTtl = TimeSpan.FromHours(settings.SshCaCertificateTtlHours);
 
         if (session.SshCredential is not null
             && session.SshCredential.IsValid(nowUtc)
@@ -58,19 +63,21 @@ public sealed class SetupSshKeyProvider(
             if (revoke.IsFailure) return Result.Failure<SshIdentityMaterial>(revoke.Error);
         }
 
-        var ensureSessionKey = EnsureSessionKeypairExists(privPath, ct);
+        var ensureSessionKey = EnsureSessionKeypairExists(privPath, settings.SshCaKeyType, ct);
         if (ensureSessionKey.IsFailure) return Result.Failure<SshIdentityMaterial>(ensureSessionKey.Error);
 
         var chmod = fileStore.EnsurePrivateKeyPermissions(privPath);
         if (chmod.IsFailure) return Result.Failure<SshIdentityMaterial>(chmod.Error);
 
-        var expiresAtUtc = nowUtc.Add(_ca.CertificateTtl);
+        var expiresAtUtc = nowUtc.Add(certificateTtl);
 
         var sign = SignUserCertificate(
             caPaths.Value.CaPrivateKeyPath,
             pubPath,
             session.Id,
             expiresAtUtc,
+            settings.SshCaPrincipal,
+            certificateTtl,
             ct);
 
         if (sign.IsFailure) return Result.Failure<SshIdentityMaterial>(sign.Error);
@@ -108,7 +115,7 @@ public sealed class SetupSshKeyProvider(
         return Task.FromResult(Result.Success());
     }
 
-    private Result EnsureCaKeypairExists(string caPrivateKeyPath, CancellationToken ct)
+    private Result EnsureCaKeypairExists(string caPrivateKeyPath, string keyType, CancellationToken ct)
     {
         var caPub = caPrivateKeyPath + ".pub";
         if (File.Exists(caPrivateKeyPath) && File.Exists(caPub))
@@ -118,7 +125,7 @@ public sealed class SetupSshKeyProvider(
 
         var args = new List<string>
         {
-            "-t", _ca.KeyType,
+            "-t", keyType,
             "-f", caPrivateKeyPath,
             "-N", "",
             "-C", "phoenix-user-ca"
@@ -138,7 +145,7 @@ public sealed class SetupSshKeyProvider(
         return Result.Success();
     }
 
-    private Result EnsureSessionKeypairExists(string sessionPrivateKeyPath, CancellationToken ct)
+    private Result EnsureSessionKeypairExists(string sessionPrivateKeyPath, string keyType, CancellationToken ct)
     {
         var pub = sessionPrivateKeyPath + ".pub";
         if (File.Exists(sessionPrivateKeyPath) && File.Exists(pub))
@@ -148,7 +155,7 @@ public sealed class SetupSshKeyProvider(
 
         var args = new List<string>
         {
-            "-t", _ca.KeyType,
+            "-t", keyType,
             "-f", sessionPrivateKeyPath,
             "-N", "",
             "-C", "phoenix-session"
@@ -173,17 +180,19 @@ public sealed class SetupSshKeyProvider(
         string sessionPublicKeyPath,
         SetupSessionId sessionId,
         DateTime expiresAtUtc,
+        string principal,
+        TimeSpan certificateTtl,
         CancellationToken ct)
     {
-        var validity = $"+{(int)_ca.CertificateTtl.TotalMinutes}m";
-        if (_ca.CertificateTtl.TotalMinutes < 1)
-            validity = $"+{(int)_ca.CertificateTtl.TotalSeconds}s";
+        var validity = $"+{(int)certificateTtl.TotalMinutes}m";
+        if (certificateTtl.TotalMinutes < 1)
+            validity = $"+{(int)certificateTtl.TotalSeconds}s";
 
         var args = new List<string>
         {
             "-s", caPrivateKeyPath,
             "-I", $"phoenix-{sessionId.Value}",
-            "-n", _ca.Principal,
+            "-n", principal,
             "-V", validity,
             sessionPublicKeyPath
         };

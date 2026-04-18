@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Data;
 using PhoeNix.Application.Models.Outbox;
+using PhoeNix.Domain.Entities.AppSettings;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Machines;
@@ -29,6 +30,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<User> Users { get; set; }
     public DbSet<SetupSession> SetupSessions { get; set; }
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
+    public DbSet<AppSettings> AppSettings { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

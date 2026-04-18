@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IMachineReadRepository, MachineReadRepository>();
         services.AddScoped<IPrometheusTargetsRepository, PrometheusTargetsRepository>();
         services.AddScoped<ISetupSessionRepository, SetupSessionRepository>();
+        services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
 
         return services;
     }

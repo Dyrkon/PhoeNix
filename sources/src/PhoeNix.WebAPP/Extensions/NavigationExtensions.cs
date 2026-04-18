@@ -69,8 +69,13 @@ public static class NavigationExtensions
         navigationManager.NavigateTo("/templates/new");
     }
 
-    public static void NavigateToTemplateEditor(this NavigationManager navigationManager, Guid templateId)
+    public static void NavigateToTemplatzeEditor(this NavigationManager navigationManager, Guid templateId)
     {
         navigationManager.NavigateTo($"/templates/{templateId}/edit");
+    }
+
+    public static void NavigateToSettings(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo($"/settings");
     }
 }

@@ -1,39 +1,59 @@
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Models.Setup;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services.Setup;
 
 public sealed class NetbootHostService : INetbootHostService, IDisposable
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly NetbootHostOptions _options;
     private readonly object _sync = new();
     private Timer? _monitorTimer;
     private Process? _process;
     private DateTime? _startedAtUtc;
 
-    public NetbootHostService(IOptions<NetbootHostOptions> options)
+    public NetbootHostService(IServiceScopeFactory scopeFactory, IOptions<NetbootHostOptions> options)
     {
+        _scopeFactory = scopeFactory;
         _options = options.Value;
     }
 
-    public Task<Result> StartAsync(CancellationToken cancellationToken)
+    public async Task<Result> StartAsync(CancellationToken cancellationToken)
     {
+        string hostExecutablePath;
+        int port;
+
+        using (var scope = _scopeFactory.CreateScope())
+        {
+            var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
+            var settings = await repo.GetAsync(cancellationToken);
+            if (settings is null)
+                return Result.Failure(new Error(
+                    "AppSettings.NotFound",
+                    "Application settings have not been initialized."));
+
+            hostExecutablePath = settings.NetbootHostExecutablePath;
+            port = settings.NetbootPort;
+        }
+
         lock (_sync)
         {
             if (IsRunningLocked())
-                return Task.FromResult(Result.Success());
+                return Result.Success();
 
-            var args = BuildArguments();
+            var args = BuildArguments(hostExecutablePath, port);
 
             try
             {
                 var processStartInfo = new ProcessStartInfo
                 {
-                    FileName = _options.HostExecutablePath,
+                    FileName = hostExecutablePath,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -45,9 +65,9 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
 
                 var process = Process.Start(processStartInfo);
                 if (process is null)
-                    return Task.FromResult<Result>(Result.Failure(new Error(
+                    return Result.Failure(new Error(
                         "NetbootHostStartFailed",
-                        "Failed to start netboot host process.")));
+                        "Failed to start netboot host process."));
 
                 Thread.Sleep(750);
                 process.Refresh();
@@ -59,20 +79,20 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
                     var exitCode = process.ExitCode;
                     process.Dispose();
 
-                    return Task.FromResult<Result>(Result.Failure(new Error(
+                    return Result.Failure(new Error(
                         "NetbootHostStartFailed",
-                        $"Pixiecore exited immediately with code {exitCode}. Stdout: {stdout} Stderr: {stderr}")));
+                        $"Pixiecore exited immediately with code {exitCode}. Stdout: {stdout} Stderr: {stderr}"));
                 }
 
                 _process = process;
                 _startedAtUtc = DateTime.UtcNow;
                 StartMonitor();
 
-                return Task.FromResult(Result.Success());
+                return Result.Success();
             }
             catch (Exception e)
             {
-                return Task.FromResult<Result>(Result.Failure(new Error("NetbootHostStartFailed", e.Message)));
+                return Result.Failure(new Error("NetbootHostStartFailed", e.Message));
             }
         }
     }
@@ -127,14 +147,14 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
         }
     }
 
-    private List<string> BuildArguments()
+    private List<string> BuildArguments(string hostExecutablePath, int port)
     {
         return new List<string>
         {
             "api",
             _options.ApiBaseUrl.TrimEnd('/'),
             "--port",
-            _options.Port.ToString(),
+            port.ToString(),
             "--status-port",
             _options.StatusPort.ToString(),
             "--dhcp-no-bind",

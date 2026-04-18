@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Components
+
+<MudStack Spacing="1">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">@Label</MudText>
+        <MudTooltip Text="@Tooltip" Placement="Placement.Top" Arrow="true" MaxWidth="320px">
+            <MudIconButton Icon="@Icons.Material.Outlined.Info"
+                           Size="Size.Small"
+                           Class="pa-0"
+                           Style="min-width: 0; height: auto;"/>
+        </MudTooltip>
+    </MudStack>
+    @ChildContent
+    @if (!string.IsNullOrWhiteSpace(Description))
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height: 1.4;">@Description</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = default!;
+    [Parameter, EditorRequired] public string Tooltip { get; set; } = default!;
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
