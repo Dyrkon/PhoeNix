@@ -59,9 +59,9 @@ public sealed class SetupTarget
         string source,
         DateTime nowUtc)
     {
-        LastErrorCode = error.Code.Truncate(2000);
-        LastErrorDescription = error.Description?.Truncate(2000);
-        LastErrorSource = source.Truncate(2000);
+        LastErrorCode = error.Code.Truncate(500);
+        LastErrorDescription = error.Description?.Truncate(5000);
+        LastErrorSource = source.Truncate(3000);
         LastErrorAtUtc = nowUtc;
 
         return Result.Success();

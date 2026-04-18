@@ -37,7 +37,6 @@
     xorg.libxshmfence
   ];
 
-  # Shell code that sets CHROME_PATH and creates RUNSETTINGS.
   mkRunSettingsShell = ''
     export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
     export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"

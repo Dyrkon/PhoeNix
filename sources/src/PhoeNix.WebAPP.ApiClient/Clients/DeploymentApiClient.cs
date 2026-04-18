@@ -16,4 +16,11 @@ public sealed class DeploymentApiClient(HttpClient httpClient, IAuthenticationIn
         var request = new UpdateMachineRequest(configurationId, systemId, machineId);
         return await PostAsync("deployment/update", request, cancellationToken);
     }
+
+    public Task<ApiResult<DeploymentStatusResponse>> GetDeploymentStatusAsync(
+        Guid machineId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<DeploymentStatusResponse>($"deployment/status/{machineId}", cancellationToken);
+    }
 }

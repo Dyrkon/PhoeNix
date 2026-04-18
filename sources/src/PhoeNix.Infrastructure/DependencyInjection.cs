@@ -4,12 +4,12 @@ using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Deployment;
+using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.HardwareProbing;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Abstractions.Processes;
-using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
 using PhoeNix.Infrastructure.Services;
 using PhoeNix.Infrastructure.Services.Authentication;
@@ -19,6 +19,7 @@ using PhoeNix.Infrastructure.Services.Filesystem;
 using PhoeNix.Infrastructure.Services.HardwareManagement;
 using PhoeNix.Infrastructure.Services.Processes;
 using PhoeNix.Infrastructure.Services.Setup;
+using PhoeNix.Infrastructure.Services.Deployment;
 using PhoeNix.Infrastructure.Services.UtilityWrappers;
 
 namespace PhoeNix.Infrastructure;
@@ -58,6 +59,8 @@ public static class DependencyInjection
         services.AddScoped<IUserSessionService, CookieUserSessionService>();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
         services.AddHostedService<PrometheusTokenWriterService>();
+        services.AddSingleton<IDeploymentJobTracker, DeploymentJobTracker>();
+        services.AddHostedService<DeploymentBackgroundService>();
 
         return services;
     }

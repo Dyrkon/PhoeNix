@@ -14,6 +14,13 @@
 
   pgPkg = pkgs.postgresql_18.withPackages (pp: [ pp.pgvector ]);
 
+  tls-cert = pkgs.runCommand "dev-selfSignedCert" { buildInputs = [ pkgs.openssl ]; } ''
+    mkdir -p $out
+    openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -days 365 -nodes \
+      -keyout $out/cert.key -out $out/cert.crt \
+      -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+  '';
+
   nginxConf = pkgs.writeText "nginx.conf" ''
     worker_processes  1;
     pid nginx.pid;
@@ -37,18 +44,54 @@
 
       server {
         listen 8888;
+        server_name localhost;
+
+        set $do_redirect "yes";
+        if ($request_uri ~ ^/api/(v1/boot|setup/bootstrap/callback|setup/finalize|provisioning/files)) {
+          set $do_redirect "no";
+        }
+        if ($do_redirect = "yes") {
+          return 301 https://$host:8443$request_uri;
+        }
+
         location /api/ {
             proxy_pass http://webapi;
             proxy_set_header Host ''$host;
             proxy_set_header X-Forwarded-For ''$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto ''$scheme;
         }
+      }
+
+      server {
+        listen 8443 ssl;
+        server_name localhost;
+
+        ssl_certificate ${tls-cert}/cert.crt;
+        ssl_certificate_key ${tls-cert}/cert.key;
+
+        location /api/ {
+            proxy_pass http://webapi;
+            proxy_set_header Host ''$host;
+            proxy_set_header X-Forwarded-For ''$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto ''$scheme;
+        }
+        
         location /prometheus/ {
             proxy_pass http://prometheus;
             proxy_set_header Host ''$host;
+            proxy_set_header X-Forwarded-Proto ''$scheme;
         }
-        location = /prometheus { return 301 ''$scheme://''$http_host/prometheus/; }
-        location / { proxy_pass http://webapp/; }
+        
+        location = /prometheus { 
+            return 301 ''$scheme://''$http_host/prometheus/; 
+        }
+        
+        location / { 
+            proxy_pass http://webapp/; 
+            proxy_set_header Host ''$host;
+            proxy_set_header X-Forwarded-For ''$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto ''$scheme;
+        }
       }
     }
   '';

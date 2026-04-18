@@ -43,17 +43,16 @@ in
         port = prom.port;
         checkConfig = false;
         configText = builtins.readFile prometheusYml;
+        webExternalUrl = "/prometheus/";
       };
 
       systemd.services.prometheus = {
         after = [ "phoenix-api.service" ];
         requires = [ "phoenix-api.service" ];
-        serviceConfig.ExecStartPre = ''
-          ${pkgs.bash}/bin/bash -c '
-            while [ ! -s "${runtimeToken}" ]; do
-              sleep 1
-            done
-          '
+        preStart = ''
+          while [ ! -s "${runtimeToken}" ]; do
+            sleep 1
+          done
         '';
       };
     })
