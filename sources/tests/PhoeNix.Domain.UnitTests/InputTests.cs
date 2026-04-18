@@ -78,7 +78,7 @@ public class InputTests
         var result = input.ChangeSource(badSource!);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Source can't be empty");
+        result.Error.Description.Should().Be("Source can't be empty.");
     }
 
     [Theory]
@@ -91,7 +91,7 @@ public class InputTests
         var result = input.ChangeName(badName!);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be("Name can't be empty");
+        result.Error.Description.Should().Be("Name can't be empty.");
     }
 
     [Fact]
@@ -117,8 +117,8 @@ public class InputTests
         var result = input.AddFollow(SnowfallName, "github:someone/else");
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("FlakeInputAlreadyFollows");
-        result.Error.Description.Should().Contain($"This input already follows this input ({input.Name})");
+        result.Error.Code.Should().Be("Inputs.FollowAlreadyExists");
+        result.Error.Description.Should().Contain("already follows");
         input.Followers.Should().ContainSingle(f => f.FollowName == SnowfallName);
     }
 
@@ -130,8 +130,8 @@ public class InputTests
         var result = input.AddFollow(NixpkgsName, Nixpkgs);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("FlakeInputCannotFollowItself");
-        result.Error.Description.Should().Be("Input can't follow itself");
+        result.Error.Code.Should().Be("Inputs.CannotFollowItself");
+        result.Error.Description.Should().Be("Input can't follow itself.");
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class InputTests
         var result = input.RemoveFollow(Guid.NewGuid());
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("FlakeInputUnableToRemoveFollow");
-        result.Error.Description.Should().Contain("There is no follower");
+        result.Error.Code.Should().Be("Inputs.FollowNotFound");
+        result.Error.Description.Should().Contain("There is no follow");
     }
 }

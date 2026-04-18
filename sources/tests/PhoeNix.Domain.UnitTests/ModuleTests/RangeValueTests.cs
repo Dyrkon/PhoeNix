@@ -5,51 +5,107 @@ namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class RangeValueTests
 {
-    private readonly string placeholder = Guid.NewGuid().ToString();
+    private readonly string _placeholder = Guid.NewGuid().ToString();
 
     [Fact]
-    public void RangeValue_Should_Store_Values_And_Respect_Range()
+    public void IntegerRangeValue_Should_Create_With_Upper_And_Lower_Values()
     {
-        var result = RangeValue<int>.Create(new EntryValueId(Guid.NewGuid()), "TempRange", placeholder, 100, 0, 80, 20);
+        var result = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 0,
+            max: 100,
+            upperValue: 80,
+            lowerValue: 20);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.UpperValue.Should().Be(80);
         result.Value.LowerValue.Should().Be(20);
-        result.Value.Placeholder.Should().Be(placeholder);
+        result.Value.Placeholder.Should().Be(_placeholder);
     }
 
     [Fact]
-    public void RangeValue_Should_Fail_When_Upper_Is_Less_Than_Lower()
+    public void IntegerRangeValue_Should_Fail_When_Max_Less_Than_Min()
     {
-        var range = RangeValue<int>.Create(new EntryValueId(Guid.NewGuid()), "TempRange", placeholder, 100, 0, 50, 60);
+        var result = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 100,
+            max: 0,
+            upperValue: 50);
 
-        range.IsFailure.Should().BeTrue();
-        range.Error.Description.Should().Contain("Upper value");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Contain("greater than or equal to min");
+    }
+
+    [Fact]
+    public void IntegerRangeValue_Should_Fail_When_Upper_Less_Than_Lower()
+    {
+        var result = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 0,
+            max: 100,
+            upperValue: 50,
+            lowerValue: 60);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Contain("Upper value");
     }
 
     [Theory]
     [InlineData(150)]
     [InlineData(-10)]
-    public void RangeValue_Should_Fail_When_Value_Outside_Bounds(int value)
+    public void IntegerRangeValue_Should_Fail_SetValue_When_Outside_Bounds(int value)
     {
-        var range = RangeValue<int>.Create(new EntryValueId(Guid.NewGuid()), "TempRange", placeholder, 100, 0, 50)
-            .Value;
+        var range = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 0,
+            max: 100,
+            upperValue: 50).Value;
 
         var result = range.SetValue(value);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Contain("outside");
+        result.Error.Description.Should().Contain("outside of interval");
     }
 
     [Fact]
-    public void RangeValue_Should_Set_Single_Value_Successfully()
+    public void IntegerRangeValue_Should_SetValue_Successfully()
     {
-        var range = RangeValue<int>.Create(new EntryValueId(Guid.NewGuid()), "TempRange", placeholder, 100, 0, 50)
-            .Value;
+        var range = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 0,
+            max: 100,
+            upperValue: 50).Value;
 
         var result = range.SetValue(60);
 
         result.IsSuccess.Should().BeTrue();
-        range.Value.Should().Be("60");
+        range.UpperValue.Should().Be(60);
+    }
+
+    [Fact]
+    public void IntegerRangeValue_Should_Fail_SetValue_When_Lower_Outside_Bounds()
+    {
+        var range = IntegerRangeValue.Create(
+            new EntryValueId(Guid.NewGuid()),
+            "TempRange",
+            _placeholder,
+            min: 0,
+            max: 100,
+            upperValue: 50).Value;
+
+        var result = range.SetValue(80, lowerValue: -5);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Description.Should().Contain("outside of interval");
     }
 }

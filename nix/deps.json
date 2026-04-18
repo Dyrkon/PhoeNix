@@ -25,6 +25,11 @@
     "hash": "sha256-LOGe1h/EOjbJL6aE5gqOx04wSwUU/3/44+uOMtG6qhc="
   },
   {
+    "pname": "Castle.Core",
+    "version": "5.1.1",
+    "hash": "sha256-oVkQB+ON7S6Q27OhXrTLaxTL0kWB58HZaFFuiw4iTrE="
+  },
+  {
     "pname": "coverlet.collector",
     "version": "8.0.0",
     "hash": "sha256-Gwqyodb0UVbrnV5GlEiTyKYSDqhRHjN9/UZBwkh4vnM="
@@ -1730,6 +1735,11 @@
     "hash": "sha256-G5WmWoc02gHTsdBLXESFQ5eMV+liwiO8YjzFKg4NDEk="
   },
   {
+    "pname": "NSubstitute",
+    "version": "5.3.0",
+    "hash": "sha256-fa6Hn9Qmpia2labWOs1Xp2LnJBOHfrWIwxvqKRRccs0="
+  },
+  {
     "pname": "NuGet.Frameworks",
     "version": "6.5.0",
     "hash": "sha256-ElqfN4CcKxT3hP2qvxxObb4mnBlYG89IMxO0Sm5oZ2g="
@@ -1858,6 +1868,11 @@
     "pname": "System.Diagnostics.EventLog",
     "version": "10.0.4",
     "hash": "sha256-gFbdvani74oe8mLZ7bp4Iz5lfP0dJbc+SaUAyko82PY="
+  },
+  {
+    "pname": "System.Diagnostics.EventLog",
+    "version": "6.0.0",
+    "hash": "sha256-zUXIQtAFKbiUMKCrXzO4mOTD5EUphZzghBYKXprowSM="
   },
   {
     "pname": "System.IdentityModel.Tokens.Jwt",

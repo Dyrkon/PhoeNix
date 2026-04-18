@@ -27,8 +27,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
         <ProjectReference Include="..\..\src\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj"/>
-        <ProjectReference Include="..\src\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
-        <ProjectReference Include="..\src\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj"/>
     </ItemGroup>
 
 </Project>

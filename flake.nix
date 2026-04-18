@@ -21,10 +21,12 @@
     };
 
     bun2nix.url = "github:nix-community/bun2nix";
+
+    playwright.url = "github:halfwhey/nix-playwright-nightly";
   };
 
   outputs = inputs @ {
-    self, nixpkgs, flake-utils, disko, nixos-generators, ...
+    self, nixpkgs, flake-utils, disko, nixos-generators, playwright, ...
   }:
   let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
@@ -118,6 +120,7 @@
           inherit pkgs lib project;
           qmd = packages.qmd;
           runtimeDeps = [];
+          playwright = playwright.packages.${system};
         };
 
         pc = import ./nix/process-compose/default.nix {

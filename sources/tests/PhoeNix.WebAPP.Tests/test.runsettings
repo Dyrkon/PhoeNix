@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
-  <RunConfiguration>
-    <EnvironmentVariables>
-      <PLAYWRIGHT_NODEJS_PATH>/nix/store/k5inwzpp6a0295pd3nfckk9hq8wmifhz-nodejs-20.15.1/bin/node</PLAYWRIGHT_NODEJS_PATH>
-    </EnvironmentVariables>
-  </RunConfiguration>
   <Playwright>
     <BrowserName>chromium</BrowserName>
-    <LaunchOptions>
-      <ExecutablePath>/nix/store/nfxfqb4gcdimxwm8yfxkfrfzyfc8k07g-playwright-chromium/chrome-linux/chrome</ExecutablePath>
-    </LaunchOptions>
   </Playwright>
 </RunSettings>

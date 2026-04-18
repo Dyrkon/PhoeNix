@@ -1,0 +1,88 @@
+name: CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            auto-optimise-store = true
+
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('sources/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build Nix Apps
+        run: |
+          nix build .#webapp
+          nix build .#webapi
+
+      - name: Run Tests
+        run: |
+          nix develop --command dotnet test sources/PhoeNix.sln \
+            --filter "FullyQualifiedName!~PhoeNix.WebAPP.Tests" \
+            --configuration Release \
+            --verbosity normal \
+            --logger trx \
+            --collect:"XPlat Code Coverage" \
+            --settings sources/tests/coverlet.runsettings
+
+      - name: Setup .NET for ReportGenerator
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+
+      - name: Combine Coverage Reports
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.5
+        with:
+          reports: "**/*.cobertura.xml"
+          targetdir: "${{ github.workspace }}"
+          reporttypes: "Cobertura"
+          title: "Code Coverage"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-results
+          path: |
+            ${{ github.workspace }}/Cobertura.xml
+            ${{ github.workspace }}/**/TestResults/**/*
+          retention-days: 5
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2.18.0
+        if: always()
+        with:
+          trx_files: "${{ github.workspace }}/**/*.trx"
