@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<ISetupApiClient, SetupApiClient>();
         services.AddScoped<IDeploymentApiClient, DeploymentApiClient>();
         services.AddScoped<IMetricsApiClient, MetricsApiClient>();
+        services.AddScoped<ISettingsApiClient, SettingsApiClient>();
 
         return services;
     }

@@ -29,7 +29,7 @@ public static class DependencyInjection
     {
         services.AddOptions<NetbootHostOptions>();
 
-        services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddScoped<IFileSystemService, FileSystemService>();
         services.AddSingleton<INixFormatterService, NixFormatterService>();
         services.AddSingleton<IModuleFilesBuilder, ModuleFilesBuilder>();
         services.AddSingleton<IConfigurationFilesBuilder, ConfigurationFilesBuilder>();

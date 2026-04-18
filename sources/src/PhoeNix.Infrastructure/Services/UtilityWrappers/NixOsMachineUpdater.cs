@@ -1,11 +1,10 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Processes;
 using PhoeNix.Application.Models.SshIdentity;
-using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services.UtilityWrappers;
@@ -13,16 +12,22 @@ namespace PhoeNix.Infrastructure.Services.UtilityWrappers;
 internal sealed class NixOsMachineUpdater(
     IProcessRunner processRunner,
     ILogger<NixOsMachineUpdater> logger,
-    IOptions<NixOsUpdaterOptions> updaterOptions)
+    IAppSettingsRepository settingsRepository)
     : INixOsMachineUpdater
 {
-    public Task<Result<ProcessResult>> UpdateAsync(
+    public async Task<Result<ProcessResult>> UpdateAsync(
         IPAddress targetIpAddress,
         string flakeDirectory,
         string systemAttribute,
         DeploySshAccessMaterial deployIdentity,
         CancellationToken cancellationToken)
     {
+        var settings = await settingsRepository.GetAsync(cancellationToken);
+        if (settings is null)
+            return Result.Failure<ProcessResult>(new Error(
+                "AppSettings.NotFound",
+                "Application settings have not been initialized."));
+
         var targetHost = $"{deployIdentity.DeployUser}@{targetIpAddress}";
         var arguments = new List<string>
         {
@@ -33,16 +38,16 @@ internal sealed class NixOsMachineUpdater(
             targetHost
         };
 
-        if (!string.IsNullOrWhiteSpace(updaterOptions.Value.BuildHost))
+        if (!string.IsNullOrWhiteSpace(settings.UpdaterBuildHost))
         {
             arguments.Add("--build-host");
-            arguments.Add(updaterOptions.Value.BuildHost.Trim());
+            arguments.Add(settings.UpdaterBuildHost.Trim());
         }
 
-        if (updaterOptions.Value.UseRemoteSudo)
+        if (settings.UpdaterUseRemoteSudo)
             arguments.Add("--sudo");
 
-        if (updaterOptions.Value.Fast)
+        if (settings.UpdaterFast)
             arguments.Add("--no-reexec");
 
         var sshOptions =
@@ -59,7 +64,7 @@ internal sealed class NixOsMachineUpdater(
         logger.LogInformation(
             "Updating machine via nixos-rebuild. TargetHost={TargetHost}, BuildHost={BuildHost}, SystemAttribute={SystemAttribute}",
             targetHost,
-            updaterOptions.Value.BuildHost,
+            settings.UpdaterBuildHost,
             systemAttribute);
 
         var result = processRunner.RunProcess(
@@ -74,8 +79,8 @@ internal sealed class NixOsMachineUpdater(
             });
 
         if (result.IsFailure)
-            return Task.FromResult(Result.Failure<ProcessResult>(result.Error));
+            return Result.Failure<ProcessResult>(result.Error);
 
-        return Task.FromResult(result);
+        return result;
     }
 }

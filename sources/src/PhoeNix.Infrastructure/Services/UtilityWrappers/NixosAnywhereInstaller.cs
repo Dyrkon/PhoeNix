@@ -3,6 +3,7 @@ using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Shared;
 
@@ -11,89 +12,104 @@ namespace PhoeNix.Infrastructure.Services.UtilityWrappers;
 public sealed class NixosAnywhereInstaller(
     IProcessRunner processRunner,
     ISshKeyFileStore sshKeyFileStore,
-    IOptions<NixosInstallerOptions> nixosAnywhereOptions)
+    IOptions<NixosInstallerOptions> nixosAnywhereOptions,
+    IAppSettingsRepository settingsRepository)
     : INixosInstaller
 {
-    private readonly NixosInstallerOptions _options = nixosAnywhereOptions.Value;
-
-    public Task<Result> InstallAsync(
+    public async Task<Result> InstallAsync(
         SetupSession session,
         SetupTarget target,
         string configurationDirectoryPath,
         string configurationName,
         CancellationToken cancellationToken)
     {
+        var settings = await settingsRepository.GetAsync(cancellationToken);
+        if (settings is null)
+            return Result.Failure(new Error(
+                "AppSettings.NotFound",
+                "Application settings have not been initialized."));
+
         if (session.SshCredential is null)
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereSshCredentialMissing",
-                "The setup session does not have an SSH credential assigned.")));
+                "The setup session does not have an SSH credential assigned."));
 
         if (!session.SshCredential.IsValid(DateTime.UtcNow))
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereSshCredentialInvalid",
-                "The setup session SSH credential is expired or revoked.")));
+                "The setup session SSH credential is expired or revoked."));
 
         if (target.IpAddress is null)
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereTargetIpMissing",
-                "The setup target does not have a recorded IP address.")));
+                "The setup target does not have a recorded IP address."));
 
         if (string.IsNullOrWhiteSpace(configurationDirectoryPath))
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereConfigurationPathMissing",
-                "The configuration directory path cannot be empty.")));
+                "The configuration directory path cannot be empty."));
 
         if (!Directory.Exists(configurationDirectoryPath))
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereConfigurationPathNotFound",
-                $"The configuration directory '{configurationDirectoryPath}' does not exist.")));
+                $"The configuration directory '{configurationDirectoryPath}' does not exist."));
 
         var keyPathsResult = sshKeyFileStore.GetSessionKeyPaths(session.Id);
         if (keyPathsResult.IsFailure)
-            return Task.FromResult<Result>(keyPathsResult);
+            return keyPathsResult;
 
         var keyPaths = keyPathsResult.Value;
 
         if (!File.Exists(keyPaths.PrivateKeyPath))
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywherePrivateKeyMissing",
-                $"The SSH private key '{keyPaths.PrivateKeyPath}' was not found.")));
+                $"The SSH private key '{keyPaths.PrivateKeyPath}' was not found."));
 
         if (!File.Exists(keyPaths.CertificatePath))
-            return Task.FromResult(Result.Failure(new Error(
+            return Result.Failure(new Error(
                 "NixosAnywhereCertificateMissing",
-                $"The SSH certificate '{keyPaths.CertificatePath}' was not found.")));
+                $"The SSH certificate '{keyPaths.CertificatePath}' was not found."));
 
         var chmodResult = sshKeyFileStore.EnsurePrivateKeyPermissions(keyPaths.PrivateKeyPath);
         if (chmodResult.IsFailure)
-            return Task.FromResult(chmodResult);
+            return chmodResult;
 
         var arguments = BuildArguments(
             configurationDirectoryPath,
             target.IpAddress.ToString(),
             configurationName,
             keyPaths.PrivateKeyPath,
-            keyPaths.CertificatePath);
+            keyPaths.CertificatePath,
+            settings.InstallerTargetUser,
+            settings.InstallerBuildOnTarget,
+            settings.InstallerCopyHostKeys,
+            settings.InstallerDisableHostKeyChecking,
+            nixosAnywhereOptions.Value.ExtraArguments);
 
         var processResult = processRunner.RunProcess(
-            _options.ExecutableName,
+            settings.InstallerExecutableName,
             arguments,
             cancellationToken,
             workingDirectory: configurationDirectoryPath,
-            timeOut: TimeSpan.FromMinutes(_options.InstallTimeoutMinutes));
+            timeOut: TimeSpan.FromMinutes(settings.InstallerTimeoutMinutes));
 
         if (processResult.IsFailure)
-            return Task.FromResult(Result.Failure(processResult.Error with { Code = "NixosAnywhereInstallFailed" }));
+            return Result.Failure(processResult.Error with { Code = "NixosAnywhereInstallFailed" });
 
-        return Task.FromResult(Result.Success());
+        return Result.Success();
     }
 
-    private List<string> BuildArguments(
+    private static List<string> BuildArguments(
         string configurationDirectoryPath,
         string ipAddress,
         string configurationName,
         string privateKeyPath,
-        string certificatePath)
+        string certificatePath,
+        string targetUser,
+        bool buildOnTarget,
+        bool copyHostKeys,
+        bool disableHostKeyChecking,
+        IReadOnlyList<string> extraArguments)
     {
         var arguments = new List<string>
         {
@@ -101,14 +117,14 @@ public sealed class NixosAnywhereInstaller(
             $"{configurationDirectoryPath}#{configurationName}"
         };
 
-        if (_options.BuildOnTarget)
+        if (buildOnTarget)
             arguments.Add("--build-on-remote");
 
-        if (_options.CopyHostKeys)
+        if (copyHostKeys)
             arguments.Add("--copy-host-keys");
 
         arguments.Add("--target-host");
-        arguments.Add($"{_options.TargetUser}@{ipAddress}");
+        arguments.Add($"{targetUser}@{ipAddress}");
 
         arguments.Add("--ssh-option");
         arguments.Add($"IdentityFile={privateKeyPath}");
@@ -119,7 +135,7 @@ public sealed class NixosAnywhereInstaller(
         arguments.Add("--ssh-option");
         arguments.Add("BatchMode=yes");
 
-        if (_options.DisableHostKeyChecking)
+        if (disableHostKeyChecking)
         {
             arguments.Add("--ssh-option");
             arguments.Add("StrictHostKeyChecking=no");
@@ -128,8 +144,8 @@ public sealed class NixosAnywhereInstaller(
             arguments.Add("UserKnownHostsFile=/dev/null");
         }
 
-        if (_options.ExtraArguments.Count > 0)
-            arguments.AddRange(_options.ExtraArguments);
+        if (extraArguments.Count > 0)
+            arguments.AddRange(extraArguments);
 
         return arguments;
     }

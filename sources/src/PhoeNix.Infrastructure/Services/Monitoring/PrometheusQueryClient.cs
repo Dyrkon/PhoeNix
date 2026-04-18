@@ -1,28 +1,32 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Monitoring;
-using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 
 namespace PhoeNix.Infrastructure.Services.Monitoring;
 
 internal sealed class PrometheusQueryClient : IPrometheusQueryClient
 {
     private readonly HttpClient _httpClient;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public PrometheusQueryClient(HttpClient httpClient, IOptions<MonitoringOptions> options)
+    public PrometheusQueryClient(HttpClient httpClient, IServiceScopeFactory scopeFactory)
     {
         _httpClient = httpClient;
-        _httpClient.BaseAddress = new Uri(options.Value.PrometheusEndpoint.TrimEnd('/') + "/");
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<double?> QueryInstantAsync(string promQl, CancellationToken cancellationToken = default)
     {
+        var baseAddress = await GetBaseAddressAsync(cancellationToken);
         var encoded = Uri.EscapeDataString(promQl);
-        using var httpResponse = await _httpClient.GetAsync($"api/v1/query?query={encoded}", cancellationToken);
+        var url = $"{baseAddress}api/v1/query?query={encoded}";
+
+        using var httpResponse = await _httpClient.GetAsync(url, cancellationToken);
 
         if (!httpResponse.IsSuccessStatusCode)
             return null;
@@ -46,14 +50,15 @@ internal sealed class PrometheusQueryClient : IPrometheusQueryClient
         TimeSpan step,
         CancellationToken cancellationToken = default)
     {
+        var baseAddress = await GetBaseAddressAsync(cancellationToken);
         var encoded = Uri.EscapeDataString(promQl);
         var startUnix = start.ToUnixTimeSeconds();
         var endUnix = end.ToUnixTimeSeconds();
         var stepSeconds = Math.Max(1, (long)step.TotalSeconds);
 
-        using var httpResponse = await _httpClient.GetAsync(
-            $"api/v1/query_range?query={encoded}&start={startUnix}&end={endUnix}&step={stepSeconds}",
-            cancellationToken);
+        var url = $"{baseAddress}api/v1/query_range?query={encoded}&start={startUnix}&end={endUnix}&step={stepSeconds}";
+
+        using var httpResponse = await _httpClient.GetAsync(url, cancellationToken);
 
         if (!httpResponse.IsSuccessStatusCode)
             return new PrometheusRangeSeries([], []);
@@ -84,6 +89,15 @@ internal sealed class PrometheusQueryClient : IPrometheusQueryClient
         }
 
         return new PrometheusRangeSeries(timestamps, points);
+    }
+
+    private async Task<string> GetBaseAddressAsync(CancellationToken cancellationToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
+        var settings = await repo.GetAsync(cancellationToken);
+        var endpoint = settings?.MonitoringPrometheusEndpoint ?? "http://localhost:9090";
+        return endpoint.TrimEnd('/') + "/";
     }
 
     private static double? TryParseDouble(JsonElement? element)

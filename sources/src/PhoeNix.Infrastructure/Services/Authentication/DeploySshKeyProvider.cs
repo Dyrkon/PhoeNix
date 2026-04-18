@@ -1,8 +1,7 @@
-using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
 using PhoeNix.Application.Models.SshIdentity;
-using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Shared;
 
@@ -11,16 +10,21 @@ namespace PhoeNix.Infrastructure.Services.Authentication;
 public sealed class DeploySshKeyProvider(
     ISshKeyFileStore fileStore,
     IProcessRunner processRunner,
-    IOptions<DeploySshCaOptions> caOptions)
+    IAppSettingsRepository settingsRepository)
     : IDeploySshKeyProvider
 {
-    private readonly DeploySshCaOptions _ca = caOptions.Value;
-
     public async Task<Result<DeploySshAccessMaterial>> GetOrCreateAsync(
         MachineId machineId,
         CancellationToken ct)
     {
+        var settings = await settingsRepository.GetAsync(ct);
+        if (settings is null)
+            return Result.Failure<DeploySshAccessMaterial>(new Error(
+                "AppSettings.NotFound",
+                "Application settings have not been initialized."));
+
         var nowUtc = DateTime.UtcNow;
+        var certificateTtl = TimeSpan.FromDays(settings.DeployCaCertificateTtlDays);
 
         var rootDir = fileStore.GetOrCreateRootDirectory();
         if (rootDir.IsFailure)
@@ -38,7 +42,7 @@ public sealed class DeploySshKeyProvider(
         if (caPaths.IsFailure)
             return Result.Failure<DeploySshAccessMaterial>(caPaths.Error);
 
-        var ensureCa = EnsureCaKeypairExists(caPaths.Value.CaPrivateKeyPath, ct);
+        var ensureCa = EnsureCaKeypairExists(caPaths.Value.CaPrivateKeyPath, settings.DeployCaKeyType, ct);
         if (ensureCa.IsFailure)
             return Result.Failure<DeploySshAccessMaterial>(ensureCa.Error);
 
@@ -48,7 +52,7 @@ public sealed class DeploySshKeyProvider(
 
         var (privPath, pubPath, certPath) = deployPaths.Value;
 
-        var ensureKey = EnsureDeployKeypairExists(privPath, ct);
+        var ensureKey = EnsureDeployKeypairExists(privPath, settings.DeployCaKeyType, ct);
         if (ensureKey.IsFailure)
             return Result.Failure<DeploySshAccessMaterial>(ensureKey.Error);
 
@@ -60,6 +64,8 @@ public sealed class DeploySshKeyProvider(
             caPaths.Value.CaPrivateKeyPath,
             pubPath,
             machineId,
+            settings.DeployCaPrincipal,
+            certificateTtl,
             ct);
 
         if (sign.IsFailure)
@@ -78,9 +84,9 @@ public sealed class DeploySshKeyProvider(
             privPath,
             pubPath,
             certPath,
-            nowUtc.Add(_ca.CertificateTtl),
-            _ca.DeployUser,
-            _ca.Principal,
+            nowUtc.Add(certificateTtl),
+            settings.DeployCaDeployUser,
+            settings.DeployCaPrincipal,
             caPublicKeyResult.Value));
     }
 
@@ -95,7 +101,7 @@ public sealed class DeploySshKeyProvider(
         return Task.FromResult(Result.Success());
     }
 
-    private Result EnsureCaKeypairExists(string caPrivateKeyPath, CancellationToken ct)
+    private Result EnsureCaKeypairExists(string caPrivateKeyPath, string keyType, CancellationToken ct)
     {
         var caPub = caPrivateKeyPath + ".pub";
         if (File.Exists(caPrivateKeyPath) && File.Exists(caPub))
@@ -105,7 +111,7 @@ public sealed class DeploySshKeyProvider(
 
         var args = new List<string>
         {
-            "-t", _ca.KeyType,
+            "-t", keyType,
             "-f", caPrivateKeyPath,
             "-N", "",
             "-C", "phoenix-deploy-user-ca"
@@ -123,7 +129,7 @@ public sealed class DeploySshKeyProvider(
         return Result.Success();
     }
 
-    private Result EnsureDeployKeypairExists(string privateKeyPath, CancellationToken ct)
+    private Result EnsureDeployKeypairExists(string privateKeyPath, string keyType, CancellationToken ct)
     {
         var pub = privateKeyPath + ".pub";
         if (File.Exists(privateKeyPath) && File.Exists(pub))
@@ -133,7 +139,7 @@ public sealed class DeploySshKeyProvider(
 
         var args = new List<string>
         {
-            "-t", _ca.KeyType,
+            "-t", keyType,
             "-f", privateKeyPath,
             "-N", "",
             "-C", "phoenix-machine-deploy"
@@ -155,17 +161,19 @@ public sealed class DeploySshKeyProvider(
         string caPrivateKeyPath,
         string machinePublicKeyPath,
         MachineId machineId,
+        string principal,
+        TimeSpan certificateTtl,
         CancellationToken ct)
     {
-        var validity = $"+{(int)_ca.CertificateTtl.TotalMinutes}m";
-        if (_ca.CertificateTtl.TotalMinutes < 1)
-            validity = $"+{(int)_ca.CertificateTtl.TotalSeconds}s";
+        var validity = $"+{(int)certificateTtl.TotalMinutes}m";
+        if (certificateTtl.TotalMinutes < 1)
+            validity = $"+{(int)certificateTtl.TotalSeconds}s";
 
         var args = new List<string>
         {
             "-s", caPrivateKeyPath,
             "-I", $"phoenix-deploy-{machineId.Value}",
-            "-n", _ca.Principal,
+            "-n", principal,
             "-V", validity,
             machinePublicKeyPath
         };

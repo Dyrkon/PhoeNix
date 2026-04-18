@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Options;
+using PhoeNix.Domain.Entities.AppSettings;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 
@@ -8,7 +9,15 @@ namespace PhoeNix.Persistence.Seeding;
 
 internal sealed class ApplicationDbSeeder(
     ApplicationDbContext dbContext,
-    IOptions<SeedExampleOptions> seedExampleOptions)
+    IOptions<SeedExampleOptions> seedExampleOptions,
+    IOptions<FileStorageOptions> fileStorageOptions,
+    IOptions<SshCaOptions> sshCaOptions,
+    IOptions<DeploySshCaOptions> deploySshCaOptions,
+    IOptions<HardwareProbeOptions> hardwareProbeOptions,
+    IOptions<NixosInstallerOptions> nixosInstallerOptions,
+    IOptions<NixOsUpdaterOptions> nixOsUpdaterOptions,
+    IOptions<MonitoringOptions> monitoringOptions,
+    IOptions<NetbootHostOptions> netbootHostOptions)
 {
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
@@ -42,6 +51,47 @@ internal sealed class ApplicationDbSeeder(
                 throw new InvalidOperationException(configurationResult.Error.Description);
 
             dbContext.Set<Configuration>().Add(configurationResult.Value);
+        }
+
+        var appSettingsExist = await dbContext.AppSettings
+            .AnyAsync(cancellationToken);
+
+        if (!appSettingsExist)
+        {
+            var entity = AppSettings.CreateDefault(SeedIds.DefaultAppSettings);
+            entity.Update(
+                fileStorageOptions.Value.RootPath,
+                sshCaOptions.Value.CaKeyName,
+                sshCaOptions.Value.Principal,
+                sshCaOptions.Value.CertificateTtl.TotalHours,
+                sshCaOptions.Value.KeyType,
+                deploySshCaOptions.Value.KeyType,
+                deploySshCaOptions.Value.CaKeyName,
+                deploySshCaOptions.Value.Principal,
+                deploySshCaOptions.Value.DeployUser,
+                deploySshCaOptions.Value.CertificateTtl.TotalDays,
+                hardwareProbeOptions.Value.SshExecutable,
+                hardwareProbeOptions.Value.BootstrapUser,
+                hardwareProbeOptions.Value.ProbeCommand,
+                hardwareProbeOptions.Value.ConnectTimeoutSeconds,
+                hardwareProbeOptions.Value.ProbeTimeoutSeconds,
+                hardwareProbeOptions.Value.DisableHostKeyChecking,
+                nixosInstallerOptions.Value.ExecutableName,
+                nixosInstallerOptions.Value.TargetUser,
+                nixosInstallerOptions.Value.InstallTimeoutMinutes,
+                nixosInstallerOptions.Value.DisableHostKeyChecking,
+                nixosInstallerOptions.Value.BuildOnTarget,
+                nixosInstallerOptions.Value.CopyHostKeys,
+                nixOsUpdaterOptions.Value.BuildHost,
+                nixOsUpdaterOptions.Value.UseRemoteSudo,
+                nixOsUpdaterOptions.Value.Fast,
+                monitoringOptions.Value.PrometheusEndpoint,
+                monitoringOptions.Value.TokenTtl.TotalDays,
+                netbootHostOptions.Value.ApiBasePublicUrl,
+                netbootHostOptions.Value.HostExecutablePath,
+                netbootHostOptions.Value.ListenAddress,
+                netbootHostOptions.Value.Port);
+            dbContext.AppSettings.Add(entity);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

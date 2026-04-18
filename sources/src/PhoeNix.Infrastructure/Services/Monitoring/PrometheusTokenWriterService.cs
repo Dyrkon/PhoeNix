@@ -1,14 +1,17 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 
 namespace PhoeNix.Infrastructure.Services.Monitoring;
 
 internal sealed class PrometheusTokenWriterService(
     IPrometheusTokenService tokenService,
     IOptions<MonitoringOptions> options,
+    IServiceScopeFactory scopeFactory,
     ILogger<PrometheusTokenWriterService> logger)
     : BackgroundService
 {
@@ -19,12 +22,13 @@ internal sealed class PrometheusTokenWriterService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var stateDir = ResolveStateDir();
+        var tokenTtl = await GetTokenTtlAsync(stoppingToken);
 
         logger.LogInformation("Writing Prometheus token to {StateDir}.", stateDir);
         await WriteTokenAsync(stateDir, stoppingToken);
 
         var lastWrittenAt = DateTime.UtcNow;
-        var refreshThreshold = _options.TokenTtl - TimeSpan.FromDays(1);
+        var refreshThreshold = tokenTtl - TimeSpan.FromDays(1);
 
         using var timer = new PeriodicTimer(TimeSpan.FromHours(1));
 
@@ -65,5 +69,15 @@ internal sealed class PrometheusTokenWriterService(
                   ?? "/var/lib/phoenix";
 
         return Path.GetFullPath(dir);
+    }
+
+    private async Task<TimeSpan> GetTokenTtlAsync(CancellationToken cancellationToken)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
+        var settings = await repo.GetAsync(cancellationToken);
+        return settings is not null
+            ? TimeSpan.FromDays(settings.MonitoringTokenTtlDays)
+            : _options.TokenTtl;
     }
 }

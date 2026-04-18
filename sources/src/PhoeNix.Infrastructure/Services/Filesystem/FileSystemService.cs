@@ -3,29 +3,42 @@ using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services.Filesystem;
 
-public class FileSystemService(
-    IOptions<FileStorageOptions> storageOptions,
-    INixFormatterService nixFormatterService)
-    : IFileSystemService
+public class FileSystemService : IFileSystemService
 {
-    public Result<string> GetRootFolder()
+    private readonly bool _useTemp;
+    private readonly string _rootPath;
+    private readonly string _configurationsPath;
+    private readonly INixFormatterService _nixFormatterService;
+
+    public FileSystemService(
+        IOptions<FileStorageOptions> storageOptions,
+        IAppSettingsRepository settingsRepository,
+        INixFormatterService nixFormatterService)
     {
         var options = storageOptions.Value;
+        var settings = settingsRepository.GetAsync().GetAwaiter().GetResult();
 
-        if (options.UseTemp)
+        _useTemp = options.UseTemp;
+        _rootPath = settings is not null && !string.IsNullOrWhiteSpace(settings.FileStorageRootPath)
+            ? settings.FileStorageRootPath
+            : (string.IsNullOrWhiteSpace(options.RootPath) ? "/var/lib/phoenix" : options.RootPath);
+        _configurationsPath = options.ConfigurationsPath;
+        _nixFormatterService = nixFormatterService;
+    }
+
+    public Result<string> GetRootFolder()
+    {
+        if (_useTemp)
             return Result.Success(Path.Combine(Path.GetTempPath(), "phoenix"));
 
-        var rootBase = string.IsNullOrWhiteSpace(options.RootPath)
-            ? "/var/lib/phoenix"
-            : options.RootPath;
-
-        var fullPath = PathResolver.CombineWithBase(rootBase, options.ConfigurationsPath);
+        var fullPath = PathResolver.CombineWithBase(_rootPath, _configurationsPath);
         return Result.Success(fullPath);
     }
 
@@ -55,7 +68,7 @@ public class FileSystemService(
 
             await WriteFolderContentsAsync(configurationPath, configurationFolder, cancellationToken);
 
-            return nixFormatterService.FormatNixFilesInPlace(configurationPath, cancellationToken);
+            return _nixFormatterService.FormatNixFilesInPlace(configurationPath, cancellationToken);
         }
         catch (Exception e)
         {

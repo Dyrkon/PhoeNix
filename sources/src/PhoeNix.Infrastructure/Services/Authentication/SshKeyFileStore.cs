@@ -1,7 +1,6 @@
-using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
-using PhoeNix.Application.Options;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Extensions;
@@ -11,26 +10,26 @@ namespace PhoeNix.Infrastructure.Services.Authentication;
 
 public sealed class SshKeyFileStore : ISshKeyFileStore
 {
-    private SshKeyStorageOptions Storage => _storageOptions.Value;
-    private SshCaOptions Ca => _caOptions.Value;
+    private const string CaFolderName = "ca";
+    private const string SessionsFolderName = "sessions";
+    private const string MachinesFolderName = "machines";
 
     private readonly string _rootPath;
-    private readonly IOptions<SshKeyStorageOptions> _storageOptions;
-    private readonly IOptions<SshCaOptions> _caOptions;
+    private readonly string _sshCaKeyName;
+    private readonly string _deployCaKeyName;
     private readonly IProcessRunner _processRunner;
 
-    public SshKeyFileStore(
-        IOptions<SshKeyStorageOptions> storageOptions,
-        IOptions<SshCaOptions> caOptions,
-        IProcessRunner processRunner)
+    public SshKeyFileStore(IAppSettingsRepository settingsRepository, IProcessRunner processRunner)
     {
-        _storageOptions = storageOptions;
-        _caOptions = caOptions;
-        _processRunner = processRunner;
+        var settings = settingsRepository.GetAsync().GetAwaiter().GetResult();
 
-        _rootPath = string.IsNullOrWhiteSpace(Storage.RootPath)
-            ? "/var/lib/phoenix"
-            : Storage.RootPath;
+        _rootPath = settings is not null && !string.IsNullOrWhiteSpace(settings.FileStorageRootPath)
+            ? settings.FileStorageRootPath
+            : "/var/lib/phoenix";
+
+        _sshCaKeyName = settings?.SshCaKeyName ?? "phoenix_user_ca";
+        _deployCaKeyName = settings?.DeployCaKeyName ?? "phoenix-deploy-user-ca";
+        _processRunner = processRunner;
     }
 
     public Result<string> GetOrCreateRootDirectory()
@@ -40,13 +39,13 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 
     public Result<string> GetOrCreateCaDirectory()
     {
-        return CreateDirectoryIfMissing(Path.Combine(_rootPath, Storage.CaFolderName));
+        return CreateDirectoryIfMissing(Path.Combine(_rootPath, CaFolderName));
     }
 
     public Result<string> GetOrCreateSessionDirectory(SetupSessionId sessionId)
     {
         return CreateDirectoryIfMissing(
-            Path.Combine(_rootPath, Storage.SessionsFolderName, sessionId.Value.ToString()));
+            Path.Combine(_rootPath, SessionsFolderName, sessionId.Value.ToString()));
     }
 
     public Result<(string CaPrivateKeyPath, string CaPublicKeyPath)> GetCaKeyPaths()
@@ -54,7 +53,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
         return GetOrCreateCaDirectory()
             .Map(caDir =>
             {
-                var priv = Path.Combine(caDir, Ca.CaKeyName);
+                var priv = Path.Combine(caDir, _sshCaKeyName);
                 var pub = priv + ".pub";
                 return (priv, pub);
             });
@@ -109,7 +108,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 
     public Result DeleteSessionDirectory(SetupSessionId sessionId)
     {
-        var dir = Path.Combine(_rootPath, Storage.SessionsFolderName, sessionId.Value.ToString());
+        var dir = Path.Combine(_rootPath, SessionsFolderName, sessionId.Value.ToString());
 
         try
         {
@@ -154,13 +153,13 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
     public Result<string> GetOrCreateMachineDirectory(MachineId machineId)
     {
         return CreateDirectoryIfMissing(
-            Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString()));
+            Path.Combine(_rootPath, MachinesFolderName, machineId.Value.ToString()));
     }
 
     public Result<string> GetOrCreateMachineDeployDirectory(MachineId machineId)
     {
         return CreateDirectoryIfMissing(
-            Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString(), "deploy-ssh"));
+            Path.Combine(_rootPath, MachinesFolderName, machineId.Value.ToString(), "deploy-ssh"));
     }
 
     public Result<(string CaPrivateKeyPath, string CaPublicKeyPath)> GetDeployCaKeyPaths()
@@ -168,7 +167,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
         return GetOrCreateCaDirectory()
             .Map(caDir =>
             {
-                var priv = Path.Combine(caDir, "phoenix-deploy-user-ca");
+                var priv = Path.Combine(caDir, _deployCaKeyName);
                 var pub = priv + ".pub";
                 return (priv, pub);
             });
@@ -223,7 +222,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 
     public Result DeleteMachineDeployDirectory(MachineId machineId)
     {
-        var dir = Path.Combine(_rootPath, Storage.MachinesFolderName, machineId.Value.ToString(), "deploy-ssh");
+        var dir = Path.Combine(_rootPath, MachinesFolderName, machineId.Value.ToString(), "deploy-ssh");
 
         try
         {

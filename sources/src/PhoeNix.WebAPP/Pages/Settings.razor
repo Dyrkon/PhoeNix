@@ -1,0 +1,458 @@
+@page "/settings"
+@using PhoeNix.WebAPP.Components.Settings
+
+<MudText Typo="Typo.h4" Class="mb-4">Settings</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+}
+else if (_loadError is not null)
+{
+    <MudAlert Severity="Severity.Error" Dense="true">@_loadError</MudAlert>
+}
+else
+{
+    <MudStack Spacing="4">
+        @if (_saveError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" ShowCloseIcon="true"
+                      CloseIconClicked="() => _saveError = null">
+                @_saveError
+            </MudAlert>
+        }
+
+        <MudExpansionPanels MultiExpansion="true" Elevation="1">
+
+            <MudExpansionPanel IsInitiallyExpanded="true">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.FolderOpen" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">File Storage</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Root Path"
+                                           Description="Base directory on the server where PhoeNix stores all persistent data including SSH keys, configuration exports, and session files."
+                                           Tooltip="All PhoeNix data lives under this path. Make sure the directory exists and the service has write access.">
+                                <MudTextField @bind-Value="_model.FileStorageRootPath"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.VpnKey" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">SSH Certificate Authority (Setup Sessions)</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="CA Key Name"
+                                           Description="File name of the SSH CA key that signs temporary user certificates during machine setup sessions."
+                                           Tooltip="The key pair will be stored under {Root Path}/ca/{CA Key Name}. Changing this after initial setup requires re-generating the CA.">
+                                <MudTextField @bind-Value="_model.SshCaKeyName"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Principal"
+                                           Description="SSH principal (username) that the signed certificates will grant access to on target machines."
+                                           Tooltip="The target machine must list this principal in its authorised_principals file for the certificate to be accepted.">
+                                <MudTextField @bind-Value="_model.SshCaPrincipal"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Certificate TTL (hours)"
+                                           Description="How long a signed setup certificate remains valid, in hours. It expires automatically after this period."
+                                           Tooltip="Shorter values reduce exposure if a certificate is leaked. 1 hour is a reasonable default for interactive setup sessions.">
+                                <MudNumericField @bind-Value="_model.SshCaCertificateTtlHours"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="0.1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Key Type"
+                                           Description="Cryptographic algorithm used when generating the SSH CA key pair."
+                                           Tooltip="ed25519 is recommended — it is fast, small, and considered highly secure. rsa is available for legacy compatibility.">
+                                <MudTextField @bind-Value="_model.SshCaKeyType"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Key" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Deploy SSH Certificate Authority</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="CA Key Name"
+                                           Description="File name of the CA key used to issue long-lived certificates for the deploy user on managed machines."
+                                           Tooltip="Stored alongside the setup CA key. Used for ongoing management operations after initial provisioning.">
+                                <MudTextField @bind-Value="_model.DeployCaKeyName"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Key Type"
+                                           Description="Cryptographic algorithm used for the deploy CA key."
+                                           Tooltip="ed25519 is recommended for the same reasons as the setup CA key type.">
+                                <MudTextField @bind-Value="_model.DeployCaKeyType"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Principal"
+                                           Description="SSH principal embedded in deploy certificates, controlling which account is accessed on managed machines."
+                                           Tooltip="Must match an entry in authorised_principals on the machine's phoenix-deploy user.">
+                                <MudTextField @bind-Value="_model.DeployCaPrincipal"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Deploy User"
+                                           Description="System user account that PhoeNix authenticates as when performing deployment and configuration operations on managed machines."
+                                           Tooltip="This user must exist on every managed machine and have sufficient privileges to apply NixOS configurations.">
+                                <MudTextField @bind-Value="_model.DeployCaDeployUser"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Certificate TTL (days)"
+                                           Description="How long deploy certificates remain valid, in days. Longer values reduce how often certificates need to be rotated."
+                                           Tooltip="Deploy certificates are intended for stable long-term access. 365 days is a practical default; reduce if your security policy requires shorter lifetimes.">
+                                <MudNumericField @bind-Value="_model.DeployCaCertificateTtlDays"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.SettingsInputComponent" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Hardware Probe</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="SSH Executable"
+                                           Description="Path or name of the SSH binary used to connect to machines during hardware probing."
+                                           Tooltip="Use the full path (e.g. /usr/bin/ssh) if the binary is not on the system PATH when PhoeNix runs.">
+                                <MudTextField @bind-Value="_model.HardwareProbeSshExecutable"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Bootstrap User"
+                                           Description="SSH username used for the initial connection to a fresh machine before a deploy user exists."
+                                           Tooltip="This is typically root or a cloud-init provisioned user present on newly booted machines.">
+                                <MudTextField @bind-Value="_model.HardwareProbeBootstrapUser"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Probe Command"
+                                           Description="Command executed on the target machine to collect structured hardware information."
+                                           Tooltip="nixos-facter outputs JSON describing CPUs, memory, disks and peripherals. The output drives automatic NixOS hardware configuration generation.">
+                                <MudTextField @bind-Value="_model.HardwareProbeProbeCommand"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Connect Timeout (seconds)"
+                                           Description="Maximum seconds to wait when establishing the initial SSH connection to a target machine."
+                                           Tooltip="Increase this if machines are on a slow or high-latency network. Decrease it to fail fast during automated provisioning pipelines.">
+                                <MudNumericField @bind-Value="_model.HardwareProbeConnectTimeoutSeconds"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Probe Timeout (seconds)"
+                                           Description="Maximum seconds allowed for the probe command to finish running after the SSH connection is established."
+                                           Tooltip="Machines with many attached devices or slow storage may take longer to enumerate. Increase this value if probing times out on well-equipped machines.">
+                                <MudNumericField @bind-Value="_model.HardwareProbeProbeTimeoutSeconds"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Disable Host Key Checking"
+                                           Description="When enabled, SSH will accept the target machine's host key without verifying it against known_hosts."
+                                           Tooltip="Safe for fresh machines with no prior host key. Disable in production environments where machine identity verification is required.">
+                                <MudSwitch @bind-Value="_model.HardwareProbeDisableHostKeyChecking"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Download" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">NixOS Installer</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Executable Name"
+                                           Description="Name or path of the nixos-anywhere binary used to install NixOS on target machines over SSH."
+                                           Tooltip="Use the full path if the binary is not on PATH. The NixOS module for PhoeNix typically wraps this at /run/wrappers/bin/nixos-anywhere.">
+                                <MudTextField @bind-Value="_model.InstallerExecutableName"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Target User"
+                                           Description="SSH user account that nixos-anywhere connects as on the target machine to perform the installation."
+                                           Tooltip="Usually root. The user must have permission to partition disks and write to the filesystem during the install.">
+                                <MudTextField @bind-Value="_model.InstallerTargetUser"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Install Timeout (minutes)"
+                                           Description="Maximum time allowed for a full NixOS installation to complete before the operation is considered failed."
+                                           Tooltip="Installations involve downloading and extracting large closures. Increase this on slow networks or when installing large configurations.">
+                                <MudNumericField @bind-Value="_model.InstallerTimeoutMinutes"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Disable Host Key Checking"
+                                           Description="When enabled, SSH will not verify the target machine's host key during installation."
+                                           Tooltip="Appropriate for brand-new machines that have never been contacted before. The host key will be established after install.">
+                                <MudSwitch @bind-Value="_model.InstallerDisableHostKeyChecking"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Build on Target"
+                                           Description="When enabled, the NixOS closure is compiled on the target machine instead of being transferred from the PhoeNix server."
+                                           Tooltip="Useful when the target has a different CPU architecture (e.g. aarch64) that requires native compilation. Significantly slower than copying a pre-built closure.">
+                                <MudSwitch @bind-Value="_model.InstallerBuildOnTarget"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Copy Host Keys"
+                                           Description="When enabled, the target machine's existing SSH host keys are preserved and copied into the newly installed system."
+                                           Tooltip="Keeps the machine's SSH identity stable across reinstalls. Useful when machines are tracked by host key fingerprint elsewhere (e.g. Ansible inventory, known_hosts).">
+                                <MudSwitch @bind-Value="_model.InstallerCopyHostKeys"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Upgrade" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">NixOS Updater</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Build Host"
+                                           Description="Hostname or SSH address of a remote machine that builds NixOS closures before they are deployed. Leave empty to build locally on the PhoeNix server."
+                                           Tooltip="Offloading builds to a dedicated build host speeds up deployments when the PhoeNix server has limited CPU or when cross-compilation is needed.">
+                                <MudTextField @bind-Value="_model.UpdaterBuildHost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Placeholder="(empty = build on PhoeNix server)"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Use Remote Sudo"
+                                           Description="When enabled, nixos-rebuild runs the activation script on the remote machine via sudo."
+                                           Tooltip="Required when connecting as a non-root user that has sudo rights. Disable only if connecting directly as root.">
+                                <MudSwitch @bind-Value="_model.UpdaterUseRemoteSudo"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Fast Mode"
+                                           Description="When enabled, nixos-rebuild uses the --fast flag to skip redundant rebuilds when the configuration has not changed."
+                                           Tooltip="Speeds up repeated updates significantly. Safe in most cases — disable only if you suspect stale build artifacts are causing issues.">
+                                <MudSwitch @bind-Value="_model.UpdaterFast"
+                                           Color="Color.Primary"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.BarChart" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Monitoring</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Prometheus Endpoint"
+                                           Description="Base URL of the Prometheus server that PhoeNix queries to display machine metrics and health charts."
+                                           Tooltip="Must be reachable from the PhoeNix server process. Include scheme and port (e.g. http://localhost:9090).">
+                                <MudTextField @bind-Value="_model.MonitoringPrometheusEndpoint"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Token TTL (days)"
+                                           Description="How long monitoring tokens issued to managed machines remain valid before they need to be renewed."
+                                           Tooltip="Longer tokens reduce rotation overhead. Shorten if you want tighter revocation control over individual machine monitoring access.">
+                                <MudNumericField @bind-Value="_model.MonitoringTokenTtlDays"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Router" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Netboot (PXE)</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Public API Base URL"
+                                           Description="Publicly accessible URL that netbooting machines use to fetch their boot kernels and configuration from the PhoeNix API."
+                                           Tooltip="Must be reachable from machines on the network at boot time — before they have an OS or DNS configured. Use an IP address if DNS is not available.">
+                                <MudTextField @bind-Value="_model.NetbootApiBasePublicUrl"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Host Executable Path"
+                                           Description="Path to the pixiecore binary that serves PXE boot files to machines on the local network."
+                                           Tooltip="On NixOS the wrapped binary is typically at /run/wrappers/bin/pixiecore. Use this path when pixiecore needs to run with elevated privileges for DHCP/TFTP.">
+                                <MudTextField @bind-Value="_model.NetbootHostExecutablePath"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Listen Address"
+                                           Description="Network interface address the netboot API server binds to. Use 0.0.0.0 to accept requests on all interfaces."
+                                           Tooltip="Restrict to a specific interface (e.g. 192.168.1.1) to limit PXE boot availability to a particular network segment.">
+                                <MudTextField @bind-Value="_model.NetbootListenAddress"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Port"
+                                           Description="TCP port the netboot API server listens on for incoming machine boot requests."
+                                           Tooltip="Ensure this port is open in your firewall and not in use by another service.">
+                                <MudNumericField @bind-Value="_model.NetbootPort"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="1"
+                                                 Max="65535"
+                                                 FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+        </MudExpansionPanels>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveAsync"
+                       Disabled="_isSaving">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2"/>
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Settings</span>
+                }
+            </MudButton>
+        </MudStack>
+    </MudStack>
+}

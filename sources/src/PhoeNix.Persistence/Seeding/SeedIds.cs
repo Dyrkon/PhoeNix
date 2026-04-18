@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Entities.AppSettings;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
@@ -26,4 +27,6 @@ internal static class SeedIds
     public static readonly ConfigurationId ExampleConfiguration = new(new Guid("20000000-0000-0000-0000-000000000001"));
 
     public static readonly SystemId ExampleSystem = new(new Guid("30000000-0000-0000-0000-000000000001"));
+
+    public static readonly AppSettingsId DefaultAppSettings = new(new Guid("50000000-0000-0000-0000-000000000001"));
 }
