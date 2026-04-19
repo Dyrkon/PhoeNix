@@ -2,6 +2,7 @@ using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Machines.Queries;
@@ -35,18 +36,22 @@ internal sealed class GetMachineMetricsQueryHandler(
     IPrometheusQueryClient prometheusQueryClient)
     : IQueryHandler<GetMachineMetricsQuery, MachineMetricsResult>
 {
-    public async Task<Result<MachineMetricsResult>> Handle(
+    public Task<Result<MachineMetricsResult>> Handle(
         GetMachineMetricsQuery request,
         CancellationToken cancellationToken)
     {
-        var machine = await machineReadRepository
-            .GetByIdAsync(request.MachineId.Value, cancellationToken);
+        return machineReadRepository
+            .GetByIdAsync(request.MachineId.Value, cancellationToken)
+            .EnsureNotNull(MachineErrors.NotFound(request.MachineId))
+            .Bind(machine => HandleAsync(machine.Title, request.Range, cancellationToken));
+    }
 
-        if (machine is null)
-            return Result.Failure<MachineMetricsResult>(MachineErrors.NotFound(request.MachineId));
-
-        var title = machine.Title;
-        var (start, end, step) = ResolveTimeWindow(request.Range);
+    private async Task<Result<MachineMetricsResult>> HandleAsync(
+        string title,
+        MetricsTimeRange range,
+        CancellationToken cancellationToken)
+    {
+        var (start, end, step) = ResolveTimeWindow(range);
 
         var upTask = prometheusQueryClient.QueryInstantAsync(
             $"up{{job=\"orchestrated-machines\",machine=\"{title}\"}}",

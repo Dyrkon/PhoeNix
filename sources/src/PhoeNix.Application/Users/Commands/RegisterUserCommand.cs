@@ -18,34 +18,21 @@ internal sealed class RegisterUserCommandHandler(
     IUnitOfWork unitOfWork)
     : ICommandHandler<RegisterUserCommand, AuthenticatedUserResponse>
 {
-    public async Task<Result<AuthenticatedUserResponse>> Handle(
+    public Task<Result<AuthenticatedUserResponse>> Handle(
         RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
-        var validatedRequestResult = Result.Success(new RegisterUserRequest(request.Name, request.Password))
-            .Bind(Validate);
-
-        if (validatedRequestResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(validatedRequestResult.Error);
-
-        var uniquenessResult = await EnsureNameIsUnique(validatedRequestResult.Value, cancellationToken);
-
-        if (uniquenessResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(uniquenessResult.Error);
-
-        var userResult = CreateUser(validatedRequestResult.Value)
-            .Bind(user => SetPasswordHash(user, validatedRequestResult.Value.Password));
-
-        if (userResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(userResult.Error);
-
-        await userRepository.AddAsync(userResult.Value, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        await userSessionService.SignInAsync(userResult.Value, cancellationToken);
-
-        return Result.Success(new AuthenticatedUserResponse(
-            userResult.Value.Id.Value,
-            userResult.Value.Name));
+        return Result.Success(new RegisterUserRequest(request.Name, request.Password))
+            .Bind(Validate)
+            .Bind(validated => EnsureNameIsUnique(validated, cancellationToken))
+            .Bind(validated => CreateUser(validated).Bind(user => SetPasswordHash(user, validated.Password)))
+            .Bind(async user =>
+            {
+                await userRepository.AddAsync(user, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+                await userSessionService.SignInAsync(user, cancellationToken);
+                return Result.Success(new AuthenticatedUserResponse(user.Id.Value, user.Name));
+            });
     }
 
     private static Result<RegisterUserRequest> Validate(RegisterUserRequest request)
@@ -78,11 +65,7 @@ internal sealed class RegisterUserCommandHandler(
     private Result<User> SetPasswordHash(User user, string password)
     {
         var passwordHash = userPasswordHasher.HashPassword(user, password);
-        var setPasswordResult = user.SetPasswordHash(passwordHash);
-
-        return setPasswordResult.IsFailure
-            ? Result.Failure<User>(setPasswordResult.Error)
-            : Result.Success(user);
+        return user.SetPasswordHash(passwordHash).Map(() => user);
     }
 
     private sealed record RegisterUserRequest(string Name, string Password);

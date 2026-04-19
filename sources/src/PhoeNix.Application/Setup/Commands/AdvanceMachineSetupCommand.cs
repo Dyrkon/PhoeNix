@@ -37,7 +37,7 @@ internal sealed class AdvanceMachineSetupCommandHandler(
                 .EnsureNotNull(MachineErrors.NotFound(request.MachineId))
                 .Bind(machine =>
                     machine.ChangeMachineState(MachineState.Failed, DateTime.Now))
-                .TryCatch(() => sessionResult);
+                .Bind(() => sessionResult);
 
         var session = sessionResult.Value;
 

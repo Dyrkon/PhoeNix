@@ -1,5 +1,6 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Settings.Commands;
@@ -40,50 +41,49 @@ public sealed record UpdateAppSettingsCommand(
 internal sealed class UpdateAppSettingsCommandHandler(IAppSettingsRepository settingsRepository)
     : ICommandHandler<UpdateAppSettingsCommand>
 {
-    public async Task<Result> Handle(
+    public Task<Result> Handle(
         UpdateAppSettingsCommand request,
         CancellationToken cancellationToken)
     {
-        var settings = await settingsRepository.GetAsync(cancellationToken);
+        return settingsRepository
+            .GetAsync(cancellationToken)
+            .EnsureNotNull(new Error("AppSettings.NotFound", "Application settings have not been initialized."))
+            .Bind(settings =>
+            {
+                settings.Update(
+                    request.FileStorageRootPath,
+                    request.SshCaKeyName,
+                    request.SshCaPrincipal,
+                    request.SshCaCertificateTtlHours,
+                    request.SshCaKeyType,
+                    request.DeployCaKeyType,
+                    request.DeployCaKeyName,
+                    request.DeployCaPrincipal,
+                    request.DeployCaDeployUser,
+                    request.DeployCaCertificateTtlDays,
+                    request.HardwareProbeSshExecutable,
+                    request.HardwareProbeBootstrapUser,
+                    request.HardwareProbeProbeCommand,
+                    request.HardwareProbeConnectTimeoutSeconds,
+                    request.HardwareProbeProbeTimeoutSeconds,
+                    request.HardwareProbeDisableHostKeyChecking,
+                    request.InstallerExecutableName,
+                    request.InstallerTargetUser,
+                    request.InstallerTimeoutMinutes,
+                    request.InstallerDisableHostKeyChecking,
+                    request.InstallerBuildOnTarget,
+                    request.InstallerCopyHostKeys,
+                    request.UpdaterBuildHost,
+                    request.UpdaterUseRemoteSudo,
+                    request.UpdaterFast,
+                    request.MonitoringPrometheusEndpoint,
+                    request.MonitoringTokenTtlDays,
+                    request.NetbootApiBasePublicUrl,
+                    request.NetbootHostExecutablePath,
+                    request.NetbootListenAddress,
+                    request.NetbootPort);
 
-        if (settings is null)
-            return Result.Failure(new Error(
-                "AppSettings.NotFound",
-                "Application settings have not been initialized."));
-
-        settings.Update(
-            request.FileStorageRootPath,
-            request.SshCaKeyName,
-            request.SshCaPrincipal,
-            request.SshCaCertificateTtlHours,
-            request.SshCaKeyType,
-            request.DeployCaKeyType,
-            request.DeployCaKeyName,
-            request.DeployCaPrincipal,
-            request.DeployCaDeployUser,
-            request.DeployCaCertificateTtlDays,
-            request.HardwareProbeSshExecutable,
-            request.HardwareProbeBootstrapUser,
-            request.HardwareProbeProbeCommand,
-            request.HardwareProbeConnectTimeoutSeconds,
-            request.HardwareProbeProbeTimeoutSeconds,
-            request.HardwareProbeDisableHostKeyChecking,
-            request.InstallerExecutableName,
-            request.InstallerTargetUser,
-            request.InstallerTimeoutMinutes,
-            request.InstallerDisableHostKeyChecking,
-            request.InstallerBuildOnTarget,
-            request.InstallerCopyHostKeys,
-            request.UpdaterBuildHost,
-            request.UpdaterUseRemoteSudo,
-            request.UpdaterFast,
-            request.MonitoringPrometheusEndpoint,
-            request.MonitoringTokenTtlDays,
-            request.NetbootApiBasePublicUrl,
-            request.NetbootHostExecutablePath,
-            request.NetbootListenAddress,
-            request.NetbootPort);
-
-        return Result.Success();
+                return Result.Success();
+            });
     }
 }

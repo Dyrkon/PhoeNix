@@ -128,10 +128,7 @@ public class Machine : AggregateRoot<MachineId>
         Architecture architecture,
         InstallDiskSelectionPreference installDiskSelectionPreference)
     {
-        return new Result<Machine>(
-                true,
-                Error.None,
-                new Machine(machineId)
+        return Result.Success(new Machine(machineId)
                 {
                     Title = title,
                     Enabled = enabled,

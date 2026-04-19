@@ -15,6 +15,6 @@ internal sealed class AddUserCommandHandler(IUserRepository userRepository) : IC
         return User
             .Create(new UserId(Guid.NewGuid()), request.Name)
             .Tap(userRepository.Add)
-            .Bind(user => Task.FromResult(Result.Success(user.Id)));
+            .Map(user => user.Id);
     }
 }
