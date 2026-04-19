@@ -1,5 +1,4 @@
 using System.Text.Json;
-using PhoeNix.Application.Models.Modules;
 using PhoeNix.Domain.Entities.Modules;
 
 namespace PhoeNix.Application.Mappings;
@@ -69,8 +68,8 @@ public static class ModuleMappings
     {
         return new EntryValueDefinition(
             moduleTemplateId,
-            model.Name,
-            model.Placeholder,
+            model.Name!,
+            model.Placeholder!,
             model.BindingKind,
             model.ValueKind,
             model.DefaultValue,
@@ -88,9 +87,9 @@ public static class ModuleMappings
     {
         return new ModuleTemplateTestDefinition(
             model.Id is null ? null : new TestId(model.Id.Value),
-            model.Name,
-            model.Content,
-            model.VariableNames);
+            model.Name!,
+            model.Content!,
+            model.VariableNames!);
     }
 
     public static ModuleValueResponse MapModuleValueToDto(ModuleValue moduleValue)

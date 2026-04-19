@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Users.Commands;
 using PhoeNix.Application.Users.Queries;
+using PhoeNix.Contracts.Auth;
 using PhoeNix.Domain.Shared;
-using Phoenix.Presentation.Contracts;
 
 namespace Phoenix.Presentation.Users;
 

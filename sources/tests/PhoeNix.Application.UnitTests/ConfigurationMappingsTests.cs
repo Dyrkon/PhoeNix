@@ -176,7 +176,7 @@ public class ConfigurationMappingsTests
         return (config, module, moduleTemplateId);
     }
 
-    private static Application.Models.Configurations.ConfigurationResponse MapConfig(
+    private static Contracts.Configurations.ConfigurationResponse MapConfig(
         Configuration config, ModuleTemplateId moduleTemplateId)
     {
         var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, "M", true, ModuleType.Generic,

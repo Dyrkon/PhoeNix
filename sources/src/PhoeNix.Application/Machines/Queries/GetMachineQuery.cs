@@ -1,5 +1,4 @@
 using PhoeNix.Application.Abstractions.Messaging;
-using PhoeNix.Application.Models.Machines;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Extensions;

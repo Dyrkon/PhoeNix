@@ -1,6 +1,5 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
-using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Extensions;

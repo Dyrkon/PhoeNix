@@ -1,5 +1,5 @@
-using PhoeNix.Application.Models.Machines;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Common.Models;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Abstractions;

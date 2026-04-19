@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Setup;
+using PhoeNix.Contracts.Setup;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.Components.SetupSessions;

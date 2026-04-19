@@ -1,0 +1,8 @@
+global using PhoeNix.Contracts.Auth;
+global using PhoeNix.Contracts.Configurations;
+global using PhoeNix.Contracts.Deployment;
+global using PhoeNix.Contracts.Inputs;
+global using PhoeNix.Contracts.Machines;
+global using PhoeNix.Contracts.Modules;
+global using PhoeNix.Contracts.Settings;
+global using PhoeNix.Contracts.Setup;

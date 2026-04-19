@@ -882,11 +882,19 @@
           "MediatR": "[14.0.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.4, )",
           "PhoeNix.Common": "[1.0.0, )",
+          "PhoeNix.Contracts": "[1.0.0, )",
           "PhoeNix.Domain": "[1.0.0, )"
         }
       },
       "phoenix.common": {
         "type": "Project"
+      },
+      "phoenix.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "PhoeNix.Common": "[1.0.0, )",
+          "PhoeNix.Domain": "[1.0.0, )"
+        }
       },
       "phoenix.domain": {
         "type": "Project",
@@ -924,6 +932,7 @@
           "MediatR": "[14.0.0, )",
           "Microsoft.CodeAnalysis.Common": "[5.0.0, )",
           "PhoeNix.Application": "[1.0.0, )",
+          "PhoeNix.Contracts": "[1.0.0, )",
           "PhoeNix.Domain": "[1.0.0, )",
           "PhoeNix.Persistence": "[1.0.0, )"
         }

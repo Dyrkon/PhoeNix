@@ -1,6 +1,6 @@
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
-using PhoeNix.Application.Models.Systems;
+using PhoeNix.Contracts.Systems;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;

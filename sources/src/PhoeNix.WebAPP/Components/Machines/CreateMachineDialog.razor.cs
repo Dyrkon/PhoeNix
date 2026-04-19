@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Settings;
+using PhoeNix.Contracts.Settings;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 
 namespace PhoeNix.WebAPP.Pages;

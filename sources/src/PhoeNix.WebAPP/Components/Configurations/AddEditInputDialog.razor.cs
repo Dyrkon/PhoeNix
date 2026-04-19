@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.Contracts.Configurations;
+using PhoeNix.Contracts.Inputs;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using CreateConfigurationInputRequest = PhoeNix.WebAPP.ApiClient.Contracts.CreateConfigurationInputRequest;
-using InputFollowUpsertModel = PhoeNix.WebAPP.ApiClient.Contracts.InputFollowUpsertModel;
-using UpdateConfigurationInputRequest = PhoeNix.WebAPP.ApiClient.Contracts.UpdateConfigurationInputRequest;
 
 namespace PhoeNix.WebAPP.Components.Configurations;
 
@@ -14,7 +13,7 @@ public partial class AddEditInputDialog : ComponentBase
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public Guid ConfigurationId { get; set; }
-    [Parameter] public PhoeNix.Application.Models.Inputs.InputResponse? ExistingInput { get; set; }
+    [Parameter] public InputResponse? ExistingInput { get; set; }
 
     private string _name = string.Empty;
     private string _source = string.Empty;

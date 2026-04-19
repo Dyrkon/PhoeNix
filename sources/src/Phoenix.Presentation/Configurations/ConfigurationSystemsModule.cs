@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Contracts.Configurations;
 using PhoeNix.Domain.Entities.Systems;
-using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Configurations;

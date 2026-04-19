@@ -1,12 +1,12 @@
 using Humanizer;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Configurations;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Auth;
+using PhoeNix.Contracts.Configurations;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.Common.Models;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.Components.Machines;
-using ApiError = PhoeNix.WebAPP.ApiClient.Contracts.ApiError;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.Helpers;

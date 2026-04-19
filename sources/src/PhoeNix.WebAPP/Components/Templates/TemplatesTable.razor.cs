@@ -3,7 +3,7 @@ using MudBlazor;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.WebAPP.Extensions;
 
 namespace PhoeNix.WebAPP.Components.Templates;

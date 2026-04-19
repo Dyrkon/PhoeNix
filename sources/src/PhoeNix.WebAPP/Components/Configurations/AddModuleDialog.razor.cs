@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using PhoeNix.Contracts.Configurations;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Models;
 using static PhoeNix.WebAPP.Components.Configurations.ModuleEntryEditorHelpers;
-using UpdateSharedRequest = PhoeNix.WebAPP.ApiClient.Contracts.UpdateConfigurationModuleRequest;
-using UpdateSystemRequest = PhoeNix.WebAPP.ApiClient.Contracts.UpdateConfigurationSystemModuleRequest;
+using UpdateSharedRequest = PhoeNix.Contracts.Configurations.UpdateConfigurationModuleRequest;
+using UpdateSystemRequest = PhoeNix.Contracts.Configurations.UpdateConfigurationSystemModuleRequest;
 
 namespace PhoeNix.WebAPP.Components.Configurations;
 

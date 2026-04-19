@@ -16,7 +16,3 @@ public record UserResponse(
     Shell Shell,
     List<string> ExtraGroups
 );
-
-public sealed record LoginRequest(string Name, string Password);
-
-public sealed record AuthenticatedUserResponse(Guid Id, string Name);

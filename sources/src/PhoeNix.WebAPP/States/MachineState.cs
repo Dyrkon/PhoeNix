@@ -1,4 +1,4 @@
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Auth;
 
 namespace PhoeNix.WebAPP.States;
 

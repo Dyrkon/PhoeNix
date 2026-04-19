@@ -1,6 +1,6 @@
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Common.Models;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Helpers;
 using PhoeNix.WebAPP.ApiClient.Models;
 

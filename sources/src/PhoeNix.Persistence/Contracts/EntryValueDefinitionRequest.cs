@@ -1,4 +1,4 @@
-using PhoeNix.Application.Models.Modules;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Persistence.Contracts;

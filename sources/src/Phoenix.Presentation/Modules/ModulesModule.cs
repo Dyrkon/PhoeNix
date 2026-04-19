@@ -3,11 +3,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Modules.Queries;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.Domain.Entities.Modules;
-using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
 
 namespace Phoenix.Presentation.Modules;
@@ -72,11 +71,8 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var requiredInputs = (request.RequiredInputs ?? [])
-            .Select(r => new RequiredInputDefinitionModel(r.Name, r.Source))
-            .ToList();
         var command = new CreateModuleTemplateCommand(request.Name, request.Enabled, request.Type, request.Content,
-            request.SupportedArchitectures, request.EditableValueTypes, request.Tests, requiredInputs);
+            request.SupportedArchitectures, request.EditableValueTypes, request.Tests, request.RequiredInputs);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
@@ -87,13 +83,10 @@ public sealed class ModulesModule : ICarterModule
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var updateRequiredInputs = (request.RequiredInputs ?? [])
-            .Select(r => new RequiredInputDefinitionModel(r.Name, r.Source))
-            .ToList();
         var command = new UpdateModuleTemplateCommand(new ModuleTemplateId(moduleTemplateId), request.Name,
             request.Enabled, request.Type,
             request.Content, request.SupportedArchitectures, request.EditableValueTypes, request.Tests,
-            updateRequiredInputs);
+            request.RequiredInputs);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

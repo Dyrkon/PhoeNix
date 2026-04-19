@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Configurations;
+using PhoeNix.Contracts.Configurations;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using InputResponse = PhoeNix.Application.Models.Inputs.InputResponse;
+using InputResponse = PhoeNix.Contracts.Inputs.InputResponse;
 using PhoeNix.WebAPP.Components.Configurations;
 
 namespace PhoeNix.WebAPP.Pages.Configurations;

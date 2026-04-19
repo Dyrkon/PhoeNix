@@ -1,5 +1,8 @@
-using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Common.Models;
+using PhoeNix.Contracts.Configurations;
+using PhoeNix.Contracts.Inputs;
+using PhoeNix.Contracts.Modules;
+using PhoeNix.Contracts.Systems;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Abstractions;
@@ -18,50 +21,50 @@ public interface IConfigurationsApiClient
         CreateConfigurationRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Contracts.ModuleValueResponse>> AddConfigurationModuleAsync(
+    Task<ApiResult<ModuleValueResponse>> AddConfigurationModuleAsync(
         Guid configurationId,
-        Contracts.CreateConfigurationModuleRequest request,
+        CreateConfigurationModuleRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Contracts.ModuleValueResponse>> AddConfigurationSystemModuleAsync(
+    Task<ApiResult<ModuleValueResponse>> AddConfigurationSystemModuleAsync(
         Guid configurationId,
         Guid systemId,
-        Contracts.CreateConfigurationSystemModuleRequest request,
+        CreateConfigurationSystemModuleRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ApiResult> UpdateConfigurationModuleAsync(
         Guid configurationId,
         Guid moduleValueId,
-        Contracts.UpdateConfigurationModuleRequest request,
+        UpdateConfigurationModuleRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ApiResult> UpdateConfigurationSystemModuleAsync(
         Guid configurationId,
         Guid systemId,
         Guid moduleValueId,
-        Contracts.UpdateConfigurationSystemModuleRequest request,
+        UpdateConfigurationSystemModuleRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Contracts.SystemResponse>> AddConfigurationSystemAsync(
+    Task<ApiResult<SystemResponse>> AddConfigurationSystemAsync(
         Guid configurationId,
-        Contracts.CreateConfigurationSystemRequest request,
+        CreateConfigurationSystemRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ApiResult> UpdateConfigurationSystemAsync(
         Guid configurationId,
         Guid systemId,
-        Contracts.UpdateConfigurationSystemRequest request,
+        UpdateConfigurationSystemRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Contracts.InputResponse>> AddConfigurationInputAsync(
+    Task<ApiResult<InputResponse>> AddConfigurationInputAsync(
         Guid configurationId,
-        Contracts.CreateConfigurationInputRequest request,
+        CreateConfigurationInputRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Contracts.InputResponse>> UpdateConfigurationInputAsync(
+    Task<ApiResult<InputResponse>> UpdateConfigurationInputAsync(
         Guid configurationId,
         Guid inputId,
-        Contracts.UpdateConfigurationInputRequest request,
+        UpdateConfigurationInputRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ApiResult> RemoveConfigurationInputAsync(

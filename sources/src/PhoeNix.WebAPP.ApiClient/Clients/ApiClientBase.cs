@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Auth;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Clients;

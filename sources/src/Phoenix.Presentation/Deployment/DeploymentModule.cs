@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Abstractions.Deployment;
-using PhoeNix.Application.Models.Deployment;
+using PhoeNix.Contracts.Deployment;
 using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;

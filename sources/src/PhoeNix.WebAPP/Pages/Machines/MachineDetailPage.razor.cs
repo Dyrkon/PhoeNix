@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Auth;
+using PhoeNix.Contracts.Deployment;
 using PhoeNix.WebAPP.ApiClient.Models;
 using PhoeNix.WebAPP.Components.Machines;
 using PhoeNix.WebAPP.States;

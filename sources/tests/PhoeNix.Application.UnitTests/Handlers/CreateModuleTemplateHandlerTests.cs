@@ -1,6 +1,6 @@
 using FluentAssertions;
 using NSubstitute;
-using PhoeNix.Application.Models.Modules;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Modules;

@@ -1,4 +1,4 @@
-using PhoeNix.Application.Models.Setup;
+using PhoeNix.Contracts.Setup;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 
 namespace PhoeNix.WebAPP.States;

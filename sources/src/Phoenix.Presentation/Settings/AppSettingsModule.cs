@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using PhoeNix.Application.Models.Settings;
+using PhoeNix.Contracts.Settings;
 using PhoeNix.Application.Settings.Commands;
 using PhoeNix.Application.Settings.Queries;
 using Phoenix.Presentation.Extensions;

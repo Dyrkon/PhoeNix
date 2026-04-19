@@ -1,9 +1,16 @@
-using System.Net;
-using FluentValidation;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 
-namespace PhoeNix.Application.Models.Machines;
+namespace PhoeNix.Contracts.Machines;
+
+public enum MachineSortField
+{
+    Title = 0,
+    MacAddress = 1,
+    Architecture = 2,
+    MachineState = 3,
+    Enabled = 4
+}
 
 public record CreateMachineRequest(
     string Title,
@@ -40,8 +47,7 @@ public record MachineDetailResponse(
     HardwareProfileResponse? HardwareProfile,
     SoftwareSnapshotResponse? SoftwareSnapshot,
     DeploymentSnapshotResponse? DeploymentSnapshot,
-    MachineStatusResponse MachineStatus
-);
+    MachineStatusResponse MachineStatus);
 
 public record HardwareProfileResponse(
     CpuProfileResponse CpuProfile,
@@ -50,11 +56,7 @@ public record HardwareProfileResponse(
     IReadOnlyList<DiskProfileResponse> DiskProfiles,
     IReadOnlyList<PeripheralProfileResponse> PeripheralProfiles);
 
-public record CpuProfileResponse(
-    string? Vendor,
-    string? Model,
-    int? CoreCount,
-    int? ThreadCount);
+public record CpuProfileResponse(string? Vendor, string? Model, int? CoreCount, int? ThreadCount);
 
 public record MemoryProfileResponse(
     long? TotalBytes,
@@ -108,11 +110,3 @@ public record MachineMetricsResponse(
     MetricSeriesResponse NetTx,
     MetricSeriesResponse DiskRead,
     MetricSeriesResponse DiskWrite);
-
-public sealed class CreateMachineRequestValidator : AbstractValidator<CreateMachineRequest>
-{
-    public CreateMachineRequestValidator()
-    {
-        // TODO
-    }
-}

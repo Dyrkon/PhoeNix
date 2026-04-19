@@ -1,7 +1,7 @@
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Enums;
 
-namespace PhoeNix.WebAPP.ApiClient.Contracts;
+namespace PhoeNix.Contracts.Modules;
 
 public sealed record ModuleTemplateListResponse(
     Guid Id,
@@ -97,14 +97,9 @@ public sealed record EntryValueResponse(
     IReadOnlyList<string>? Options,
     IReadOnlyList<string>? ListItems = null);
 
-public sealed record ModuleValueResponse(
-    Guid Id,
-    bool Enabled,
-    List<EntryValueResponse> EditableValues);
+public sealed record ModuleValueResponse(Guid Id, bool Enabled, List<EntryValueResponse> EditableValues);
 
-public sealed record ModuleValueListResponse(
-    Guid Id,
-    bool Enabled);
+public sealed record ModuleValueListResponse(Guid Id, bool Enabled);
 
 public sealed record CreateModuleTemplateRequest(
     string? Name,
@@ -149,3 +144,5 @@ public sealed record ModuleScaffoldingResponse(
 public sealed record NixModuleScaffoldingDto(string Prefix, string Suffix);
 
 public sealed record NixTestScaffoldingDto(string TestName, string Prefix, string Suffix);
+
+public sealed record GetScaffoldingPreviewRequest(ModuleType Type, string? TestNames);

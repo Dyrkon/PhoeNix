@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PhoeNix.Common\PhoeNix.Common.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Contracts\PhoeNix.Contracts.csproj"/>
         <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
     </ItemGroup>
 
