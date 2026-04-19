@@ -18,31 +18,25 @@ internal sealed class UpdateConfigurationHandler(
     IModuleTemplateRepository moduleTemplateRepository)
     : ICommandHandler<UpdateConfigurationCommand, ConfigurationResponse>
 {
-    public async Task<Result<ConfigurationResponse>> Handle(
+    public Task<Result<ConfigurationResponse>> Handle(
         UpdateConfigurationCommand request,
         CancellationToken cancellationToken)
     {
-        var configuration = await configurationRepository.GetByIdAsync(
-            request.ConfigurationId,
-            cancellationToken);
+        return configurationRepository
+            .GetByIdAsync(request.ConfigurationId, cancellationToken)
+            .EnsureNotNull(ConfigurationErrors.NotFound(request.ConfigurationId))
+            .Tap(configuration => configuration.EditConfiguration(request.Title, request.Description))
+            .Bind(async configuration =>
+            {
+                var moduleTemplateIds = configuration.Modules
+                    .Select(x => x.ModuleTemplateId)
+                    .Distinct()
+                    .ToList();
 
-        if (configuration is null)
-            return Result.Failure<ConfigurationResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
+                var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
+                var templatesById = moduleTemplates.ToDictionary(x => x.Id);
 
-        var result = configuration.EditConfiguration(request.Title, request.Description);
-
-        if (result.IsFailure)
-            return Result.Failure<ConfigurationResponse>(result.Error);
-
-        var moduleTemplateIds = configuration.Modules
-            .Select(x => x.ModuleTemplateId)
-            .Distinct()
-            .ToList();
-
-        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
-
-        var templatesById = moduleTemplates.ToDictionary(x => x.Id);
-
-        return ConfigurationMappings.MapConfigurationToDto(configuration, templatesById);
+                return Result.Success(ConfigurationMappings.MapConfigurationToDto(configuration, templatesById));
+            });
     }
 }

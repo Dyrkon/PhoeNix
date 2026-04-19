@@ -16,34 +16,19 @@ internal sealed class LoginUserCommandHandler(
     IUserSessionService userSessionService)
     : ICommandHandler<LoginUserCommand, AuthenticatedUserResponse>
 {
-    public async Task<Result<AuthenticatedUserResponse>> Handle(
+    public Task<Result<AuthenticatedUserResponse>> Handle(
         LoginUserCommand request,
         CancellationToken cancellationToken)
     {
-        var validatedRequestResult = Result.Success(new LoginRequest(request.Name, request.Password))
-            .Bind(Validate);
-
-        if (validatedRequestResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(validatedRequestResult.Error);
-
-        var userResult = await GetUser(validatedRequestResult.Value, cancellationToken);
-
-        if (userResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(userResult.Error);
-
-        var passwordResult = Result.Success(userResult.Value)
-            .Ensure(
-                user => userPasswordHasher.VerifyPassword(user, validatedRequestResult.Value.Password),
-                UserErrors.InvalidCredentials);
-
-        if (passwordResult.IsFailure)
-            return Result.Failure<AuthenticatedUserResponse>(passwordResult.Error);
-
-        await userSessionService.SignInAsync(passwordResult.Value, cancellationToken);
-
-        return Result.Success(new AuthenticatedUserResponse(
-            passwordResult.Value.Id.Value,
-            passwordResult.Value.Name));
+        return Result.Success(new LoginRequest(request.Name, request.Password))
+            .Bind(Validate)
+            .Bind(validated => GetUser(validated, cancellationToken)
+                .Ensure(user => userPasswordHasher.VerifyPassword(user, validated.Password), UserErrors.InvalidCredentials)
+                .Bind(async user =>
+                {
+                    await userSessionService.SignInAsync(user, cancellationToken);
+                    return Result.Success(new AuthenticatedUserResponse(user.Id.Value, user.Name));
+                }));
     }
 
     private static Result<LoginRequest> Validate(LoginRequest request)

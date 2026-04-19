@@ -3,6 +3,7 @@ using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Models.Users;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Users.Queries;
@@ -23,11 +24,9 @@ internal sealed class GetCurrentUserQueryHandler(
         if (userIdResult.IsFailure)
             return Result.Failure<AuthenticatedUserResponse>(UserErrors.Unauthenticated);
 
-        var user = await userRepository.GetByIdAsync(userIdResult.Value, cancellationToken);
-
-        if (user is null)
-            return Result.Failure<AuthenticatedUserResponse>(UserErrors.UserNotFound);
-
-        return Result.Success(new AuthenticatedUserResponse(user.Id.Value, user.Name));
+        return await userRepository
+            .GetByIdAsync(userIdResult.Value, cancellationToken)
+            .EnsureNotNull(UserErrors.UserNotFound)
+            .Map(user => new AuthenticatedUserResponse(user.Id.Value, user.Name));
     }
 }

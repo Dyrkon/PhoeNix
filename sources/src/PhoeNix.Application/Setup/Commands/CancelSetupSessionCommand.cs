@@ -28,14 +28,14 @@ internal sealed class CancelSetupSessionCommandHandler(
                 $"Setup session '{request.SessionId.Value}' was not found."));
 
         if (sessionResult.IsFailure)
-            return sessionResult.Error;
+            return sessionResult;
 
         var session = sessionResult.Value;
 
         var revokeSshResult = session.RevokeSshCredential(nowUtc);
         if (revokeSshResult.IsFailure &&
             revokeSshResult.Error.Code != "SetupSessionSshCredentialMissing")
-            return revokeSshResult.Error;
+            return revokeSshResult;
 
         foreach (var target in session.Targets)
         {
@@ -43,7 +43,7 @@ internal sealed class CancelSetupSessionCommandHandler(
             {
                 var revokeTokenResult = session.RevokeMachineCallbackToken(target.MachineId, nowUtc);
                 if (revokeTokenResult.IsFailure)
-                    return revokeTokenResult.Error;
+                    return revokeTokenResult;
             }
 
             if (target.Stage is SetupStage.Finished or SetupStage.Cancelled)
@@ -51,12 +51,12 @@ internal sealed class CancelSetupSessionCommandHandler(
 
             var stageResult = session.UpdateMachineStage(target.MachineId, SetupStage.Cancelled, nowUtc);
             if (stageResult.IsFailure)
-                return stageResult.Error;
+                return stageResult;
         }
 
         var stopHostResult = await netbootHostService.StopAsync(cancellationToken);
         if (stopHostResult.IsFailure)
-            return stopHostResult.Error;
+            return stopHostResult;
 
         return Result.Success();
     }

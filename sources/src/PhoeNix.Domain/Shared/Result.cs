@@ -56,4 +56,9 @@ public sealed class Result<T> : Result
     {
         return value is not null ? Success<T>(value) : Failure<T>(Error.NullValue);
     }
+
+    public static implicit operator Task<Result<T>>(Result<T> value)
+    {
+        return Task.FromResult(value);
+    }
 }

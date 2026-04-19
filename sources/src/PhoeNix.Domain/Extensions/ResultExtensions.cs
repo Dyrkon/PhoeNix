@@ -253,12 +253,15 @@ public static class ResultExtensions
         return Result.Success();
     }
 
-    public static async Task<Result> TryCatch(this Task<Result> resultTask, Func<Result> success)
+    public static async Task<Result> Bind(this Task<Result> resultTask, Func<Result> bind)
     {
         var result = await resultTask;
-        if (result.IsFailure)
-            return result;
+        return result.IsFailure ? result : bind();
+    }
 
-        return success.Invoke();
+    public static async Task<Result> Bind(this Task<Result> resultTask, Func<Task<Result>> bind)
+    {
+        var result = await resultTask;
+        return result.IsFailure ? result : await bind();
     }
 }
