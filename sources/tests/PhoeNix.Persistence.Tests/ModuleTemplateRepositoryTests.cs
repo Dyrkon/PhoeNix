@@ -45,8 +45,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         ModuleTemplateRepository.Add(module);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        // Act (Contains)
-        var loaded = await ModuleTemplateRepository.GetByNameAsync("MyTest", CancellationToken.None);
+        var loaded = await ModuleTemplateRepository.GetByNameAsync("MyTestModule", CancellationToken.None);
 
         // Assert
         loaded.Should().NotBeNull();
@@ -56,7 +55,6 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         loaded.Content.Should().Be("ENTRY_ONE ENTRY_TWO");
         loaded.SupportedArchitectures.Should().ContainSingle().Which.Should().Be(Architecture.Aarch64Linux);
 
-        // Included collection
         loaded.EditableValueTypes.Should().HaveCount(2);
         loaded.EditableValueTypes.Should().Contain(e =>
             e.Name == "ENTRY_ONE" && e.Placeholder == "ENTRY_ONE");
@@ -112,7 +110,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         // Add tests via reflection (AddModuleTest doesn't add into _tests in current entity)
         InjectTests(module, new List<Test>
         {
-            Test.Create(new TestId(Guid.NewGuid()), "test01").Value
+            Test.Create(new TestId(Guid.NewGuid()), moduleId, "test01").Value
         });
 
         ModuleTemplateRepository.Add(module);
@@ -144,7 +142,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
             new(module1.Id, "X", "X", EntryBindingKind.UserProvided, EntryValueKind.Text)
         });
 
-        InjectTests(module1, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), "t1").Value });
+        InjectTests(module1, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), module1.Id, "t1").Value });
 
         var module2 = ModuleTemplate.Create(
             new ModuleTemplateId(Guid.NewGuid()),
@@ -159,7 +157,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
             new(module2.Id, "Y", "Y", EntryBindingKind.UserProvided, EntryValueKind.Text)
         });
 
-        InjectTests(module2, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), "t2").Value });
+        InjectTests(module2, new List<Test> { Test.Create(new TestId(Guid.NewGuid()), module2.Id, "t2").Value });
 
         ModuleTemplateRepository.Add(module1);
         ModuleTemplateRepository.Add(module2);

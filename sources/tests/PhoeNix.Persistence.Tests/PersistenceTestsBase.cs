@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Common.Tests;
-using PhoeNix.Domain.Repositories;
+using PhoeNix.Application.Repositories;
 using Xunit.Abstractions;
 
 namespace PhoeNix.Persistence.Tests;

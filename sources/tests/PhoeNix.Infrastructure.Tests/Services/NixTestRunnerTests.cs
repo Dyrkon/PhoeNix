@@ -129,7 +129,7 @@ public class NixTestRunnerTests
             "--flake",
             $"{path}#{systemId.ToStringWithPrefix()}",
             "--vm-test");
-        call.TimeOut.Should().Be(TimeSpan.FromMinutes(3));
+        call.TimeOut.Should().Be(TimeSpan.FromMinutes(15));
     }
 
     [Fact]

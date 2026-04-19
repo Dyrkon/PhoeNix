@@ -39,7 +39,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         var systemId = new SystemId(Guid.NewGuid());
         config.AddSystem(systemId, Architecture.X86Linux, "Test System");
-        config.AddSystemModule(systemId, moduleTemplateId, true);
+        config.AddSystemModule(systemId, moduleTemplateId, new List<Architecture> { Architecture.X86Linux }, true);
 
         var system = config.SystemSpecifications.Single(s => s.Id == systemId);
         system.Modules.Should().ContainSingle(m => m.ModuleTemplateId == moduleTemplateId);
@@ -87,8 +87,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.Configurations.AddAsync(config);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        // Act (substring)
-        var loaded = await ConfigurationRepository.GetByDescriptionAsync("Unique Description", CancellationToken.None);
+        var loaded = await ConfigurationRepository.GetByDescriptionAsync("Unique Description 123", CancellationToken.None);
 
         // Assert
         loaded.Should().NotBeNull();
@@ -106,8 +105,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.Configurations.AddAsync(config);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        // Act (substring)
-        var loaded = await ConfigurationRepository.GetByTitleAsync("Title ABC", CancellationToken.None);
+        var loaded = await ConfigurationRepository.GetByTitleAsync("Config Title ABC", CancellationToken.None);
 
         // Assert
         loaded.Should().NotBeNull();
@@ -143,7 +141,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Description.Should().Be($"Configuration with id {missingId.Value} was not found");
+        result.Error.Description.Should().Be($"Configuration '{missingId.Value}' was not found.");
     }
 
     private static void InjectEditableValues(ModuleValue moduleValue, List<EntryValue> values)

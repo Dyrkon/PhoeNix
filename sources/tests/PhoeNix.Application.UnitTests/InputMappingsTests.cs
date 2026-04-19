@@ -16,10 +16,10 @@ public class InputMappingsTests
 
         var dto = InputMappings.MapInputToDto(input);
 
-        dto.Id.Should().Be(input.Id);
+        dto.Id.Should().Be(input.Id.Value);
         dto.Source.Should().Be("github:nixos");
         dto.Name.Should().Be("nixpkgs");
-        dto.Follows.Should().BeEmpty();
+        dto.Followers.Should().BeEmpty();
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class InputMappingsTests
 
         var dto = InputMappings.MapInputToDto(input);
 
-        dto.Follows.Should().ContainSingle(f =>
+        dto.Followers.Should().ContainSingle(f =>
             f.FollowName == "flake-utils" &&
             f.FollowValue == "github:numtide/flake-utils");
     }
