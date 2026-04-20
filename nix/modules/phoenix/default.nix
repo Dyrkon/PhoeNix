@@ -8,6 +8,7 @@ in
   imports = [
     (import ../options.nix { inherit self lib pkgs; })
     ../api.nix
+    ../mcpserver.nix
     ../database.nix
     ../monitoring.nix
     ../nginx.nix
@@ -24,6 +25,14 @@ in
     services.phoenix.api.environmentFile = lib.mkDefault envFile;
 
     services.phoenix.api.environment = lib.mkMerge [
+      (lib.mkIf cfg.database.createLocally {
+        "ConnectionStrings__PhoeNix" = "Host=/run/postgresql;Username=${cfg.database.user};Database=${cfg.database.name};Maximum Pool Size=20;";
+      })
+    ];
+
+    services.phoenix.mcpServer.environmentFile = lib.mkDefault envFile;
+
+    services.phoenix.mcpServer.environment = lib.mkMerge [
       (lib.mkIf cfg.database.createLocally {
         "ConnectionStrings__PhoeNix" = "Host=/run/postgresql;Username=${cfg.database.user};Database=${cfg.database.name};Maximum Pool Size=20;";
       })

@@ -95,6 +95,10 @@
             inherit pkgs lib project csprojSrc;
           };
 
+          mcpserver = import ./nix/packages/mcpserver/default.nix {
+            inherit pkgs lib project csprojSrc;
+          };
+
           webapp = import ./nix/packages/webapp/default.nix {
             inherit pkgs lib project csprojSrc;
           };
