@@ -68,6 +68,14 @@ in
                 proxyWebsockets = true;
               };
             })
+
+            (lib.mkIf cfg.mcpServer.enable {
+              "/mcp/" = {
+                recommendedProxySettings = true;
+                proxyPass = lib.removeSuffix "/" cfg.mcpServer.urls;
+                proxyWebsockets = true;
+              };
+            })
           ];
         };
       };

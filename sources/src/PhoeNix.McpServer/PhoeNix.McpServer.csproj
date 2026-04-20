@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PhoeNix.Application\PhoeNix.Application.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Persistence\PhoeNix.Persistence.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Infrastructure\PhoeNix.Infrastructure.csproj"/>
+    </ItemGroup>
+
+</Project>

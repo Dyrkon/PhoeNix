@@ -67,6 +67,8 @@
     };
 
     nginx.enable = true;
+
+    mcpServer.enable = true;
   };
 
   networking.hostName = "phoenix-orchestrator";

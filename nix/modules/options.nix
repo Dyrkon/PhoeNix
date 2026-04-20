@@ -25,6 +25,20 @@ in
 
     webapp.package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.stdenv.hostPlatform.system}.webapp; };
 
+    mcpServer = {
+      enable = lib.mkOption { type = lib.types.bool; default = true; };
+      package = lib.mkOption { type = lib.types.package; default = self.packages.${pkgs.stdenv.hostPlatform.system}.mcpserver; };
+      program = lib.mkOption { type = lib.types.nullOr lib.types.str; default = null; };
+      urls = lib.mkOption { type = lib.types.str; default = "http://127.0.0.1:5003"; };
+      environment = lib.mkOption { type = lib.types.attrsOf lib.types.str; default = { }; };
+      environmentFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Path to an environment file containing secrets (not stored in Nix store).";
+      };
+      extraArgs = lib.mkOption { type = lib.types.listOf lib.types.str; default = [ ]; };
+    };
+
     database = {
       createLocally = lib.mkOption { type = lib.types.bool; default = true; };
       name = lib.mkOption { type = lib.types.str; default = "phoenix"; };

@@ -11,6 +11,7 @@
   dbName = "phoenix";
   promPort = 9090;
   nodeExporterPort = 9100;
+  mcpPort = 5003;
 
   pgPkg = pkgs.postgresql_18.withPackages (pp: [ pp.pgvector ]);
 
@@ -41,6 +42,7 @@
       upstream webapi { server 127.0.0.1:5001; }
       upstream webapp { server 127.0.0.1:5002; }
       upstream prometheus { server 127.0.0.1:${toString promPort}; }
+      upstream mcpserver { server 127.0.0.1:${toString mcpPort}; }
 
       server {
         listen 8888;
@@ -81,9 +83,16 @@
             proxy_set_header Host ''$host;
             proxy_set_header X-Forwarded-Proto ''$scheme;
         }
-        
-        location = /prometheus { 
-            return 301 ''$scheme://''$http_host/prometheus/; 
+
+        location = /prometheus {
+            return 301 ''$scheme://''$http_host/prometheus/;
+        }
+
+        location /mcp {
+            proxy_pass http://mcpserver;
+            proxy_set_header Host ''$host;
+            proxy_set_header X-Forwarded-For ''$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto ''$scheme;
         }
         
         location / { 
@@ -103,7 +112,7 @@ in {
     version: "0.5"
     processes:
       build-all:
-        command: "${project.dotnetSdk}/bin/dotnet build sources/src/PhoeNix.WebAPI/PhoeNix.WebAPI.csproj --configuration Release && ${project.dotnetSdk}/bin/dotnet build sources/src/PhoeNix.WebAPP/PhoeNix.WebAPP.csproj --configuration Release"
+        command: "${project.dotnetSdk}/bin/dotnet build sources/src/PhoeNix.WebAPI/PhoeNix.WebAPI.csproj --configuration Release && ${project.dotnetSdk}/bin/dotnet build sources/src/PhoeNix.WebAPP/PhoeNix.WebAPP.csproj --configuration Release && ${project.dotnetSdk}/bin/dotnet build sources/src/PhoeNix.McpServer/PhoeNix.McpServer.csproj --configuration Release"
         environment:
           - "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 
@@ -168,6 +177,28 @@ in {
           - "ASPNETCORE_URLS=http://0.0.0.0:5001"
           - "ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
           - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}/prometheus"
+        depends_on:
+          postgres:
+            condition: process_healthy
+          build-all:
+            condition: process_completed_successfully
+
+      mcpserver:
+        command: "${pkgs.writeShellScript "run-mcp" ''
+          set -euo pipefail
+          exec ${project.dotnetSdk}/bin/dotnet run \
+            --project ./sources/src/PhoeNix.McpServer/PhoeNix.McpServer.csproj \
+            --configuration Release \
+            --no-build \
+            --no-launch-profile
+        ''}"
+        environment:
+          - "ASPNETCORE_ENVIRONMENT=Development"
+          - "ASPNETCORE_URLS=http://0.0.0.0:${toString mcpPort}"
+          - "ConnectionStrings__PhoeNix=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
+          - "CallbackToken__SigningKey=dev-only-insecure-signing-key-32ch"
+          - "CallbackToken__Issuer=phoenix"
+          - "CallbackToken__Audience=phoenix"
         depends_on:
           postgres:
             condition: process_healthy

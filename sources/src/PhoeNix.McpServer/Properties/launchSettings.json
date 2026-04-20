@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5003",
+        "ConnectionStrings__PhoeNix": "Host=localhost;Database=phoenix;Username=phoenix;Password=phoenix",
+        "CallbackToken__SigningKey": "dev-only-insecure-signing-key-32ch",
+        "CallbackToken__Issuer": "phoenix",
+        "CallbackToken__Audience": "phoenix"
+      }
+    }
+  }
+}
