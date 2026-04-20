@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PhoeNix.Application.Models.Modules;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Modules;

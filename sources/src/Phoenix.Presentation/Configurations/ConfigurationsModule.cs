@@ -5,11 +5,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Application.Configurations.Queries;
-using PhoeNix.Application.Models.Configurations;
+using PhoeNix.Contracts.Configurations;
 using PhoeNix.Domain.Entities.Configurations;
-using Phoenix.Presentation.Contracts;
 using Phoenix.Presentation.Extensions;
-using CreateConfigurationRequest = PhoeNix.Application.Models.Configurations.CreateConfigurationRequest;
 
 namespace Phoenix.Presentation.Configurations;
 

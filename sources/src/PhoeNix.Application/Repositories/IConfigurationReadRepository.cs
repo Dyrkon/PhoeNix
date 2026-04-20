@@ -1,4 +1,3 @@
-using PhoeNix.Application.Models.Configurations;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Configurations;
 

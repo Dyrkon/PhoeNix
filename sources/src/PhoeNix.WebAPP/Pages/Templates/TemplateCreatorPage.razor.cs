@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.WebAPP.Components.Templates;
 using PhoeNix.WebAPP.Extensions;
 using PhoeNix.WebAPP.Helpers;

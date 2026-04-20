@@ -1,5 +1,4 @@
 using PhoeNix.Application.Abstractions.Messaging;
-using PhoeNix.Application.Models.Settings;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;

@@ -1,6 +1,7 @@
+using PhoeNix.Common.Models;
+using PhoeNix.Contracts.Modules;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
-using PhoeNix.WebAPP.ApiClient.Contracts;
 using PhoeNix.WebAPP.ApiClient.Helpers;
 using PhoeNix.WebAPP.ApiClient.Models;
 

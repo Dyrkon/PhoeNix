@@ -1,4 +1,3 @@
-using PhoeNix.Application.Models.Inputs;
 using PhoeNix.Domain.Entities.Inputs;
 
 namespace PhoeNix.Application.Mappings;
@@ -26,6 +25,6 @@ public static class InputMappings
 
     public static InputFollowDraft MapInputFollowToDomain(InputFollowUpsertModel model)
     {
-        return new InputFollowDraft(model.FollowName, model.FollowValue);
+        return new InputFollowDraft(model.FollowName!, model.FollowValue!);
     }
 }

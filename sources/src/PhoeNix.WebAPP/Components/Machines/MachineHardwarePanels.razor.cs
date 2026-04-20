@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 
 namespace PhoeNix.WebAPP.Components.Machines;
 

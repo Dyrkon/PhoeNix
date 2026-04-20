@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhoeNix.Application\PhoeNix.Application.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Contracts\PhoeNix.Contracts.csproj"/>
     </ItemGroup>
 
 </Project>

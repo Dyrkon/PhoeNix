@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using PhoeNix.Application.Models.Setup;
+using PhoeNix.Contracts.Setup;
 
 namespace PhoeNix.WebAPP.Components.SetupSessions;
 

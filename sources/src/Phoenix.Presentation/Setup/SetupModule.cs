@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Models.Setup;
+using PhoeNix.Contracts.Setup;
 using PhoeNix.Application.Setup.Commands;
 using PhoeNix.Application.Setup.Queries;
 using PhoeNix.Common.Models;

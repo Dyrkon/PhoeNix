@@ -1,4 +1,3 @@
-using PhoeNix.Application.Models.Machines;
 using PhoeNix.Domain.Entities.Machines;
 
 namespace PhoeNix.Application.Mappings;

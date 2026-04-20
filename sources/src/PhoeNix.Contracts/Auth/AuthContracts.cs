@@ -1,4 +1,4 @@
-namespace PhoeNix.WebAPP.ApiClient.Contracts;
+namespace PhoeNix.Contracts.Auth;
 
 public sealed record UserLoginRequest(string Name, string Password);
 

@@ -1,4 +1,4 @@
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.WebAPP.ApiClient.Models;
 
 namespace PhoeNix.WebAPP.ApiClient.Abstractions;

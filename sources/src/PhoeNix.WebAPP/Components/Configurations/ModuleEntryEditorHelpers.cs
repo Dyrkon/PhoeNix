@@ -1,6 +1,6 @@
-using PhoeNix.Application.Models.Configurations;
+using PhoeNix.Contracts.Configurations;
 using PhoeNix.Domain.Enums;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Modules;
 
 namespace PhoeNix.WebAPP.Components.Configurations;
 

@@ -1,4 +1,3 @@
-using PhoeNix.Application.Models.Machines;
 using PhoeNix.Common.Models;
 
 namespace PhoeNix.Application.Repositories;

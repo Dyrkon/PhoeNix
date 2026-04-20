@@ -20,6 +20,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PhoeNix.Application\PhoeNix.Application.csproj"/>
+        <ProjectReference Include="..\PhoeNix.Contracts\PhoeNix.Contracts.csproj"/>
         <ProjectReference Include="..\PhoeNix.Domain\PhoeNix.Domain.csproj"/>
         <ProjectReference Include="..\PhoeNix.Persistence\PhoeNix.Persistence.csproj"/>
     </ItemGroup>

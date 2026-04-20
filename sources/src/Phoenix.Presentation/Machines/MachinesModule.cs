@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Machines.Commands;
 using PhoeNix.Application.Machines.Queries;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.Domain.Entities.Machines;
 using Phoenix.Presentation.Extensions;
 

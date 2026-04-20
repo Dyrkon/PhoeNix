@@ -1,4 +1,4 @@
-using PhoeNix.Application.Models.Systems;
+using PhoeNix.Contracts.Systems;
 using PhoeNix.Domain.Entities.Systems;
 
 namespace PhoeNix.Application.Mappings;

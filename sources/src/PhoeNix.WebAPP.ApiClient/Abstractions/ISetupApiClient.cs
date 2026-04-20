@@ -1,9 +1,6 @@
-using PhoeNix.Application.Models.Setup;
 using PhoeNix.Common.Models;
-using PhoeNix.WebAPP.ApiClient.Contracts;
+using PhoeNix.Contracts.Setup;
 using PhoeNix.WebAPP.ApiClient.Models;
-using SetupStatusResponse = PhoeNix.Application.Models.Setup.SetupStatusResponse;
-using StartMachineSetupRequest = PhoeNix.Application.Models.Setup.StartMachineSetupRequest;
 
 namespace PhoeNix.WebAPP.ApiClient.Abstractions;
 
@@ -23,7 +20,7 @@ public interface ISetupApiClient
         Guid machineId,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<Common.Models.PagedResponse<SetupSessionListResponse>>> GetSessionsAsync(
+    Task<ApiResult<PagedResponse<SetupSessionListResponse>>> GetSessionsAsync(
         int page = 1,
         int pageSize = 10,
         CancellationToken cancellationToken = default);

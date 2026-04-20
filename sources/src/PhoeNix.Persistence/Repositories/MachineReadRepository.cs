@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Mappings;
-using PhoeNix.Application.Models.Machines;
+using PhoeNix.Contracts.Machines;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Machines;
