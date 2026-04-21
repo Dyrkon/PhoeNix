@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
@@ -12,6 +13,7 @@ public partial class TemplatesDetailPage : ComponentBase
 {
     [Inject] private IModulesApiClient ModulesApiClient { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public Guid TemplateId { get; set; }
 
@@ -116,6 +118,23 @@ public partial class TemplatesDetailPage : ComponentBase
             }
         }
     }
+
+    private async Task ExportAsync()
+    {
+        if (_template is null)
+            return;
+
+        var json = JsonSerializer.Serialize(_template, new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            WriteIndented = true
+        });
+
+        var filename = $"template-{SanitizeFilename(_template.Name)}.json";
+        await JS.InvokeVoidAsync("downloadFile", filename, "application/json", json);
+    }
+
+    private static string SanitizeFilename(string name) =>
+        string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 
     private void ToggleModuleScaffolding()
     {

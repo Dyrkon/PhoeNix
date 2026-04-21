@@ -8,7 +8,7 @@
                 <MudText Typo="Typo.h6">@System.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Size="Size.Small"
-                               OnClick="OpenEditSystemDialogAsync"/>
+                               OnClick="@OpenEditSystemDialogAsync"/>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -38,7 +38,8 @@
                     <MudExpansionPanel>
                         <TitleContent>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")" @onclick:stopPropagation="true">
+                                <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
+                                         @onclick:stopPropagation="true">
                                     @module.TemplateName
                                 </MudLink>
                                 <MudChip T="string"

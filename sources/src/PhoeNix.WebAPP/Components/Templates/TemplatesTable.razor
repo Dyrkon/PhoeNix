@@ -10,7 +10,7 @@
     <MudStack Row="true" Spacing="2" Class="mb-4" AlignItems="AlignItems.End">
         <MudTextField T="string"
                       Value="_search"
-                      ValueChanged="OnSearchChangedAsync"
+                      ValueChanged="@OnSearchChangedAsync"
                       Label="Search"
                       Placeholder="Name"
                       Immediate="true"
@@ -32,6 +32,10 @@
                 </MudSelectItem>
             }
         </MudSelect>
+
+        <MudIconButton OnClick="OpenImportDialogAsync"
+                       Icon="@Icons.Material.Filled.FileUpload"
+                       Color="Color.Secondary"></MudIconButton>
 
         <MudIconButton OnClick="NavigationManager.NavigateToTemplateCreator"
                        Icon="@Icons.Material.Filled.Add"

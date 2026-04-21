@@ -41,6 +41,11 @@ public sealed class ConfigurationsModule : ICarterModule
             .WithName("BuildConfiguration")
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/import", ImportConfiguration)
+            .WithName("ImportConfiguration")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> GetConfigurations(
@@ -95,6 +100,16 @@ public sealed class ConfigurationsModule : ICarterModule
         CancellationToken cancellationToken)
     {
         var command = new ExportConfigurationCommand(new ConfigurationId(configurationId));
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> ImportConfiguration(
+        ConfigurationResponse request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new ImportConfigurationCommand(request);
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }

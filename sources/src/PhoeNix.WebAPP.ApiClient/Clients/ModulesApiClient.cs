@@ -56,4 +56,11 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         var url = $"modules/scaffolding/preview?type={type}&testNames={Uri.EscapeDataString(testNamesParam)}";
         return GetAsync<ModuleScaffoldingResponse>(url, cancellationToken);
     }
+
+    public Task<ApiResult<ModuleTemplateResponse>> ImportModuleTemplateAsync(
+        ModuleTemplateResponse request,
+        CancellationToken cancellationToken = default)
+    {
+        return PostWithResponseAsync<ModuleTemplateResponse>("modules/import", request, cancellationToken);
+    }
 }

@@ -45,6 +45,11 @@ public sealed class ModulesModule : ICarterModule
         group.MapGet("/scaffolding/preview", GetScaffoldingPreview)
             .WithName("GetScaffoldingPreview")
             .Produces(StatusCodes.Status200OK);
+
+        group.MapPost("/import", ImportModuleTemplate)
+            .WithName("ImportModuleTemplate")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> GetModuleTemplates(
@@ -111,6 +116,16 @@ public sealed class ModulesModule : ICarterModule
             : request.TestNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
         var result = await sender.Send(new GetScaffoldingPreviewQuery(request.Type, testNames), cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private static async Task<IResult> ImportModuleTemplate(
+        ModuleTemplateResponse request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new ImportModuleTemplateCommand(request);
+        var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();
     }
 }

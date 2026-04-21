@@ -62,6 +62,26 @@ public partial class ConfigurationsTable : ComponentBase
         return Task.CompletedTask;
     }
 
+    private async Task OpenImportDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<ImportConfigurationDialog>(
+            "Import configuration",
+            new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            });
+
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (_dataGrid is not null)
+            await _dataGrid.ReloadServerData();
+    }
+
     private async Task OpenCreateDialogAsync()
     {
         var dialog = await DialogService.ShowAsync<CreateConfigurationDialog>(

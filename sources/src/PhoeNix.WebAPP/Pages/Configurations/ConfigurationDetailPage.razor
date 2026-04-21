@@ -18,6 +18,13 @@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
             <MudText Typo="Typo.h4">@_configuration.Title</MudText>
 
+            <MudSpacer></MudSpacer>
+
+            <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                           Color="Color.Secondary"
+                           Title="Export configuration"
+                           OnClick="ExportAsync"/>
+
             <MudButton Variant="Variant.Outlined"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
                        Href="/configurations">
@@ -160,7 +167,8 @@
                 <ChildContent>
                     @if (_configuration.Modules.Count == 0)
                     {
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No shared modules configured.</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No shared modules configured.
+                        </MudText>
                     }
                     else
                     {

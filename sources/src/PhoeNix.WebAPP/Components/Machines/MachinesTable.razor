@@ -11,7 +11,7 @@
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Sync"
                    Disabled="@(!SelectedUpdatableItems.Any())"
-                   OnClick="UpdateSelectedAsync">
+                   OnClick="@UpdateSelectedAsync">
             Update Selected (@SelectedUpdatableItems.Count())
         </MudButton>
     </MudStack>
@@ -114,11 +114,13 @@
                     else if (entry?.Status is UpdateStatus.Success or UpdateStatus.Failed)
                     {
                         <span @onclick:stopPropagation="true">
-                            <MudTooltip Text="@(entry.Status == UpdateStatus.Success ? "Update succeeded — click for details" : "Update failed — click for details")">
-                                <MudIconButton Icon="@(entry.Status == UpdateStatus.Success ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
-                                               Color="@(entry.Status == UpdateStatus.Success ? Color.Success : Color.Error)"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenUpdateResultDialogAsync(context.Item.Id))"/>
+                            <MudTooltip
+                                Text="@(entry.Status == UpdateStatus.Success ? "Update succeeded — click for details" : "Update failed — click for details")">
+                                <MudIconButton
+                                    Icon="@(entry.Status == UpdateStatus.Success ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                                    Color="@(entry.Status == UpdateStatus.Success ? Color.Success : Color.Error)"
+                                    Size="Size.Small"
+                                    OnClick="@(() => OpenUpdateResultDialogAsync(context.Item.Id))"/>
                             </MudTooltip>
                         </span>
                     }

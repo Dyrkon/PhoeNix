@@ -12,6 +12,7 @@ public partial class TemplatesTable : ComponentBase
 {
     [Inject] private IModulesApiClient ModulesApiClient { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
     private MudDataGrid<ModuleTemplateTableRow>? _dataGrid;
@@ -61,6 +62,26 @@ public partial class TemplatesTable : ComponentBase
             Items = items,
             TotalItems = response.Value.TotalItems
         };
+    }
+
+    private async Task OpenImportDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<ImportModuleTemplateDialog>(
+            "Import module template",
+            new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            });
+
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (_dataGrid is not null)
+            await _dataGrid.ReloadServerData();
     }
 
     private Task OnRowClickAsync(DataGridRowClickEventArgs<ModuleTemplateTableRow> args)
