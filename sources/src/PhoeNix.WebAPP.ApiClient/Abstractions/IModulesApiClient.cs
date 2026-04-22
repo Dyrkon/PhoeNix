@@ -32,4 +32,8 @@ public interface IModulesApiClient
         ModuleType type,
         List<string> testNames,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResult<ModuleTemplateResponse>> ImportModuleTemplateAsync(
+        ModuleTemplateResponse request,
+        CancellationToken cancellationToken = default);
 }

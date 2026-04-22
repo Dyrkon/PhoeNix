@@ -145,4 +145,11 @@ public sealed class ConfigurationsApiClient(HttpClient httpClient, IAuthenticati
             $"configurations/{configurationId}/inputs/{inputId}",
             cancellationToken);
     }
+
+    public Task<ApiResult<ConfigurationResponse>> ImportConfigurationAsync(
+        ConfigurationResponse request,
+        CancellationToken cancellationToken = default)
+    {
+        return PostWithResponseAsync<ConfigurationResponse>("configurations/import", request, cancellationToken);
+    }
 }

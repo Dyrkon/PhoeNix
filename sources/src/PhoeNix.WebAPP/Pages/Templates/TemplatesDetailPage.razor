@@ -30,6 +30,11 @@
                     </MudButton>
                 </MudButtonGroup>
 
+                <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                               Color="Color.Secondary"
+                               Title="Export template"
+                               OnClick="ExportAsync"/>
+
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Edit"
@@ -358,7 +363,7 @@
                                                             <pre
                                                                 style="margin: 4px 0 0 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.875rem;">@testParts.Suffix</pre>
                                                         </MudCollapse>
-                                                        <div @onclick="@(() => ToggleTestScaffolding(test.Id))"
+                                                        <div @onclick="@(() => @ToggleTestScaffolding(test.Id))"
                                                              style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 4px; color: #9E9E9E; font-size: 0.75rem; font-family: 'Fira Code', 'Consolas', monospace; user-select: none;">
                                                             <MudIcon
                                                                 Icon="@(testScaffoldingExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ChevronRight)"

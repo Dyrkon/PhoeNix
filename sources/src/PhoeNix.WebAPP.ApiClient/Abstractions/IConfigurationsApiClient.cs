@@ -71,4 +71,8 @@ public interface IConfigurationsApiClient
         Guid configurationId,
         Guid inputId,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResult<ConfigurationResponse>> ImportConfigurationAsync(
+        ConfigurationResponse request,
+        CancellationToken cancellationToken = default);
 }

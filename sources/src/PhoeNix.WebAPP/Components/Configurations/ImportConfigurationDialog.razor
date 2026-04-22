@@ -1,0 +1,50 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Select a JSON file exported from a configuration detail view. Single objects and arrays are both supported.
+            </MudText>
+
+            <InputFile id="configImportFile" OnChange="OnFileSelectedAsync" accept=".json" style="display:none"/>
+            <MudButton HtmlTag="label"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.AttachFile"
+                       for="configImportFile">
+                Choose File
+            </MudButton>
+
+            @if (_parseError is not null)
+            {
+                <MudAlert Severity="Severity.Error">@_parseError</MudAlert>
+            }
+
+            @if (_parsed.Count > 0)
+            {
+                <MudAlert Severity="Severity.Info">
+                    Ready to import: <strong>@_parsed.Count configuration@(_parsed.Count != 1 ? "s" : "")</strong>
+                    @if (_parsed.Count <= 5)
+                    {
+                        <ul style="margin: 4px 0 0 0; padding-left: 1.2em;">
+                            @foreach (var c in _parsed)
+                            {
+                                <li>@c.Title</li>
+                            }
+                        </ul>
+                    }
+                </MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="SubmitAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(_parsed.Count == 0 || _isSubmitting)">
+            Import
+        </MudButton>
+    </DialogActions>
+</MudDialog>

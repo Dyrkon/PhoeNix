@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using PhoeNix.Contracts.Configurations;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
@@ -12,6 +14,7 @@ public partial class ConfigurationDetailPage : ComponentBase
     [Inject] private IConfigurationsApiClient ConfigurationsApiClient { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public Guid ConfigurationId { get; set; }
 
@@ -100,6 +103,23 @@ public partial class ConfigurationDetailPage : ComponentBase
         if (result is { Canceled: false })
             await ReloadAsync();
     }
+
+    private async Task ExportAsync()
+    {
+        if (_configuration is null)
+            return;
+
+        var json = JsonSerializer.Serialize(_configuration, new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            WriteIndented = true
+        });
+
+        var filename = $"configuration-{SanitizeFilename(_configuration.Title)}.json";
+        await JS.InvokeVoidAsync("downloadFile", filename, "application/json", json);
+    }
+
+    private static string SanitizeFilename(string name) =>
+        string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 
     private async Task ReloadAsync()
     {
