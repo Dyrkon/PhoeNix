@@ -14,6 +14,7 @@ public static class ConfigurationRepositoryExtensions
             .ThenInclude(i => i.Followers)
             .Include(c => c.SystemSpecifications)
             .ThenInclude(s => s.Modules)
-            .ThenInclude(s => s.EditableValues);
+            .ThenInclude(s => s.EditableValues)
+            .Include(c => c.Revisions);
     }
 }

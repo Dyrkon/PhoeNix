@@ -13,6 +13,7 @@ namespace PhoeNix.WebAPP.Pages.Machines;
 public partial class MachineDetailPage : ComponentBase, IDisposable
 {
     [Inject] private IMachinesApiClient MachinesApiClient { get; set; } = null!;
+    [Inject] private IConfigurationsApiClient ConfigurationsApiClient { get; set; } = null!;
     [Inject] private IDeploymentApiClient DeploymentApiClient { get; set; } = null!;
     [Inject] private IMetricsApiClient MetricsApiClient { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
@@ -32,8 +33,8 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     private UpdateStatus CurrentStatus => MachineState.GetUpdate(MachineId)?.Status ?? UpdateStatus.None;
 
     private bool CanUpdate => _machine is { Enabled: true }
-        && _machine.DeploymentSnapshot is not null
-        && CurrentStatus != UpdateStatus.InProgress;
+                              && _machine.DeploymentSnapshot is not null
+                              && CurrentStatus != UpdateStatus.InProgress;
 
     private string _canUpdateTooltip => _machine is null || _machine.DeploymentSnapshot is null
         ? "Machine must have a deployment snapshot to update"
@@ -106,6 +107,35 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
         MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.InProgress,
             ConfigurationTitle: snapshot.ConfigurationTitle,
             SystemName: snapshot.SystemName));
+
+        var configuration = await ConfigurationsApiClient.GetConfigurationAsync(snapshot.ConfigurationId);
+
+        if (configuration.IsFailure)
+        {
+            MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Failed,
+                configuration.Error,
+                snapshot.ConfigurationTitle,
+                snapshot.SystemName));
+            StateHasChanged();
+            return;
+        }
+
+        var parameters = new DialogParameters<UpdateReviewDialog>
+        {
+            { x => x.Configuration, configuration.Value! }
+        };
+
+        var dialogResult = await DialogService.ShowAsync<UpdateReviewDialog>("Update Result", parameters);
+
+        if (dialogResult.Result.IsCompletedSuccessfully)
+        {
+            MachineState.SetUpdate(MachineId, new MachineUpdateEntry(UpdateStatus.Failed,
+                new ApiError("UpdateAborted", "Machine update aborted by the user"),
+                snapshot.ConfigurationTitle,
+                snapshot.SystemName));
+            StateHasChanged();
+            return;
+        }
 
         var result = await DeploymentApiClient.UpdateMachineAsync(
             snapshot.ConfigurationId,
@@ -197,7 +227,10 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
         await DialogService.ShowAsync<UpdateConfigurationResultDialog>("Update Result", parameters);
     }
 
-    private void OnMachineStateChanged() => InvokeAsync(StateHasChanged);
+    private void OnMachineStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     private async Task LoadMetricsAsync()
     {

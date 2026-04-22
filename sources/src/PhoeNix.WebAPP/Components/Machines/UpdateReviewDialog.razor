@@ -1,0 +1,41 @@
+<MudDialog>
+    <DialogContent>
+        @if (!_currentConfiguration.Any())
+        {
+            <MudAlert Severity="Severity.Success">No changes detected between configurations.</MudAlert>
+        }
+        else
+        {
+            <MudExpansionPanels MultiExpansion="true">
+                @foreach (var key in _currentConfiguration.Keys)
+                {
+                    <MudExpansionPanel Text="@($"{key} Changes")" IsExpanded="true">
+                        <MudGrid>
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mb-2">Previous</MudText>
+                                <div class="mud-elevation-1 pa-3 rounded"
+                                     style="max-height: 400px; overflow-y: auto; background-color: var(--mud-palette-background-grey);">
+                                    <pre
+                                        style="white-space: pre-wrap; word-wrap: break-word;">@(_previousConfiguration.GetValueOrDefault(key, "{}"))</pre>
+                                </div>
+                            </MudItem>
+
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Success" Class="mb-2">Current</MudText>
+                                <div class="mud-elevation-1 pa-3 rounded"
+                                     style="max-height: 400px; overflow-y: auto; background-color: var(--mud-palette-background-grey);">
+                                    <pre
+                                        style="white-space: pre-wrap; word-wrap: break-word;">@_currentConfiguration[key]</pre>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Default">Close</MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">Update</MudButton>
+    </DialogActions>
+</MudDialog>

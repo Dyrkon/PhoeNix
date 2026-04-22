@@ -29,6 +29,24 @@ public sealed record ConfigurationResponse(
     IReadOnlyList<ConfiguredSystemResponse> Systems,
     IReadOnlyList<Architecture> SupportedArchitectures);
 
+public sealed record ConfigurationWithRevisionsResponse(
+    Guid Id,
+    string Title,
+    string Description,
+    IReadOnlyList<InputResponse> Inputs,
+    IReadOnlyList<ConfiguredModuleResponse> Modules,
+    IReadOnlyList<ConfiguredSystemResponse> Systems,
+    IReadOnlyList<Architecture> SupportedArchitectures,
+    IReadOnlyCollection<ConfigurationRevisionResponse> Revisions);
+
+public sealed record ConfigurationRevisionResponse(
+    string Title,
+    string Description,
+    DateTime TimeStamp,
+    int RevisionNumber,
+    string JsonSnapshot
+);
+
 public sealed record ConfiguredModuleResponse(
     Guid ModuleValueId,
     Guid ModuleTemplateId,

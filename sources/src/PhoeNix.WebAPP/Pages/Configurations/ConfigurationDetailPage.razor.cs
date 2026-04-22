@@ -15,7 +15,7 @@ public partial class ConfigurationDetailPage : ComponentBase
 
     [Parameter] public Guid ConfigurationId { get; set; }
 
-    private ConfigurationResponse? _configuration;
+    private ConfigurationWithRevisionsResponse? _configuration;
     private bool _isLoading = true;
 
     protected override async Task OnParametersSetAsync()

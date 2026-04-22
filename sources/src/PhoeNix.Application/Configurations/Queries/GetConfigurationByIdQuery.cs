@@ -7,14 +7,15 @@ using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.Configurations.Queries;
 
-public sealed record GetConfigurationByIdQuery(ConfigurationId ConfigurationId) : IQuery<ConfigurationResponse>;
+public sealed record GetConfigurationByIdQuery(ConfigurationId ConfigurationId)
+    : IQuery<ConfigurationWithRevisionsResponse>;
 
 internal sealed class GetConfigurationByIdHandler(
     IConfigurationRepository configurationRepository,
     IModuleTemplateRepository moduleTemplateRepository)
-    : IQueryHandler<GetConfigurationByIdQuery, ConfigurationResponse>
+    : IQueryHandler<GetConfigurationByIdQuery, ConfigurationWithRevisionsResponse>
 {
-    public Task<Result<ConfigurationResponse>> Handle(
+    public Task<Result<ConfigurationWithRevisionsResponse>> Handle(
         GetConfigurationByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -25,14 +26,17 @@ internal sealed class GetConfigurationByIdHandler(
             {
                 var moduleTemplateIds = configuration.Modules
                     .Select(module => module.ModuleTemplateId)
-                    .Concat(configuration.SystemSpecifications.SelectMany(system => system.Modules.Select(module => module.ModuleTemplateId)))
+                    .Concat(configuration.SystemSpecifications.SelectMany(system =>
+                        system.Modules.Select(module => module.ModuleTemplateId)))
                     .Distinct()
                     .ToList();
 
-                var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
+                var moduleTemplates =
+                    await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
                 var templatesById = moduleTemplates.ToDictionary(template => template.Id);
 
-                return Result.Success(ConfigurationMappings.MapConfigurationToDto(configuration, templatesById));
+                return Result.Success(
+                    ConfigurationMappings.MapConfigurationWithRevisionsToDto(configuration, templatesById));
             });
     }
 }

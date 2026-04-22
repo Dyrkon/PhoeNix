@@ -19,6 +19,12 @@ internal sealed class ConfigurationEntityTypeConfiguration : IApplicationEntityT
                 value => new ConfigurationId(value))
             .ValueGeneratedNever();
 
+        builder.HasMany(c => c.Revisions)
+            .WithOne()
+            .HasForeignKey(r => r.ConfigurationId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Property(c => c.Title)
             .IsRequired()
             .HasMaxLength(50);

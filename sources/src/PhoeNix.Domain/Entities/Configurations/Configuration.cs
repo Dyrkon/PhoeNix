@@ -11,9 +11,14 @@ namespace PhoeNix.Domain.Entities.Configurations;
 
 public sealed class Configuration : AggregateRoot<ConfigurationId>
 {
+    private const int MaxRevisions = 20;
+    public DateTime TimeStamp { get; private set; }
+    public int Revision { get; private set; }
+
     private readonly List<Input> _inputs = [];
     private readonly List<ModuleValue> _modules = [];
     private readonly List<Systems.System> _systemSpecifications = [];
+    private List<ConfigurationRevision>? _revisions;
 
     private Configuration(ConfigurationId id) : base(id)
     {
@@ -28,6 +33,27 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
     public IReadOnlyList<ModuleValue> Modules => _modules;
 
     public IReadOnlyList<Systems.System> SystemSpecifications => _systemSpecifications;
+
+    public List<ConfigurationRevision> Revisions => _revisions ??= new List<ConfigurationRevision>();
+
+    private void CreateRevision()
+    {
+        TimeStamp = DateTime.UtcNow;
+        Revision += 1;
+        var revisionId = new ConfigurationId(Guid.NewGuid());
+
+        if (Revisions.Count > MaxRevisions)
+        {
+            var obsoleteRevisions = Revisions
+                .OrderBy(r => r.Revision)
+                .Take(Revisions.Count - MaxRevisions)
+                .ToList();
+
+            foreach (var oldRevision in obsoleteRevisions) Revisions.Remove(oldRevision);
+        }
+
+        Revisions.Add(new ConfigurationRevision(revisionId, this));
+    }
 
     public Result EditConfiguration(string? newTitle = null, string? newDescription = null)
     {
@@ -49,6 +75,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             Description = newDescription.Trim();
         }
 
+        CreateRevision();
         return Result.Success();
     }
 
@@ -65,7 +92,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             {
                 _modules.Add(configurationModule);
                 RaiseChangedEventIfNeeded();
-            });
+            }).Tap(_ => CreateRevision());
     }
 
     public Result<ModuleValue> UpdateModule(
@@ -84,7 +111,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
         return module.SetEnabled(enabled)
             .Tap(() => module.ReplaceEntries(entries))
             .Tap(RaiseChangedEventIfNeeded)
-            .Map(() => module);
+            .Map(() => module)
+            .Tap(_ => CreateRevision());
     }
 
     public Result RemoveModule(ModuleValueId moduleValueId)
@@ -97,6 +125,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.ModuleNotFound",
                     $"Module value '{moduleValueId.Value}' was not found in configuration '{Title}'."));
 
+        CreateRevision();
         RaiseChangedEventIfNeeded();
         return Result.Success();
     }
@@ -118,7 +147,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             {
                 _systemSpecifications.Add(system);
                 RaiseChangedEventIfNeeded();
-            });
+            })
+            .Tap(_ => CreateRevision());
     }
 
     public Result<Systems.System> UpdateSystem(SystemId systemId, string newName)
@@ -139,7 +169,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
 
         return system.ChangeName(newName)
             .Tap(RaiseChangedEventIfNeeded)
-            .Map(() => system);
+            .Map(() => system)
+            .Tap(_ => CreateRevision());
     }
 
     public Result<ModuleValue> AddSystemModule(
@@ -157,7 +188,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
         return system.AddModule(moduleTemplateId, supportedArchitectures, enabled)
-            .Tap(_ => RaiseChangedEventIfNeeded());
+            .Tap(_ => RaiseChangedEventIfNeeded())
+            .Tap(_ => CreateRevision());
     }
 
     public Result<ModuleValue> UpdateSystemModule(
@@ -175,7 +207,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
         return system.UpdateModule(moduleValueId, enabled, entries)
-            .Tap(_ => RaiseChangedEventIfNeeded());
+            .Tap(_ => RaiseChangedEventIfNeeded())
+            .Tap(_ => CreateRevision());
     }
 
     public Result RemoveSystemModule(SystemId systemId, ModuleValueId moduleValueId)
@@ -188,6 +221,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' is not in configuration '{Title}'."));
 
+        CreateRevision();
         return system.RemoveModule(moduleValueId)
             .Tap(RaiseChangedEventIfNeeded);
     }
@@ -202,6 +236,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.SystemNotFound",
                     $"System '{systemId.Value}' was not found in configuration '{Title}'."));
 
+        CreateRevision();
         RaiseChangedEventIfNeeded();
         return Result.Success();
     }
@@ -219,7 +254,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             {
                 _inputs.Add(i);
                 RaiseChangedEventIfNeeded();
-            });
+            })
+            .Tap(_ => CreateRevision());
     }
 
     public Result<Input> UpdateInput(
@@ -246,13 +282,16 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             .Tap(() => input.ChangeName(name))
             .Tap(() => input.ReplaceFollows(follows))
             .Tap(RaiseChangedEventIfNeeded)
-            .Map(() => input);
+            .Map(() => input)
+            .Tap(_ => CreateRevision());
     }
 
     public Result AddInputFollow(InputId inputId, string followName, string followValue)
     {
         var input = _inputs.FirstOrDefault(i => i.Id == inputId);
 
+        if (input is not null)
+            CreateRevision();
         return input is null
             ? Result.Failure(new Error("Configurations.InputNotFound", $"Cannot find input '{inputId.Value}'."))
             : input.AddFollow(followName, followValue)
@@ -263,6 +302,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
     {
         var input = _inputs.FirstOrDefault(i => i.Followers.Any(f => f.Id == followId));
 
+        if (input is not null)
+            CreateRevision();
         return input is null
             ? Result.Failure(new Error("Configurations.InputFollowNotFound", $"Cannot find follow '{followId}'."))
             : input.RemoveFollow(followId)
@@ -279,6 +320,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
                     "Configurations.InputNotFound",
                     $"Input '{inputId.Value}' was not found in configuration '{Title}'."));
 
+        CreateRevision();
         RaiseChangedEventIfNeeded();
         return Result.Success();
     }

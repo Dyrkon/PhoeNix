@@ -39,7 +39,7 @@ public partial class SetupWizardPage : ComponentBase
     private List<ConfigurationSelectionRow> _availableConfigurations = [];
     private HashSet<ConfigurationSelectionRow> _selectedConfigurationItems = [];
 
-    private readonly Dictionary<Guid, ConfigurationResponse> _configurationDetailsCache = new();
+    private readonly Dictionary<Guid, ConfigurationWithRevisionsResponse> _configurationDetailsCache = new();
     private List<SystemOption> _availableSystems = [];
     private List<MachineAssignment> _machineAssignments = [];
 

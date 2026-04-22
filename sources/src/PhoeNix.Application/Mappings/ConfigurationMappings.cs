@@ -23,6 +23,25 @@ public static class ConfigurationMappings
             configuration.SupportedSystemArchitectures().ToList());
     }
 
+    public static ConfigurationWithRevisionsResponse MapConfigurationWithRevisionsToDto(
+        Configuration configuration,
+        IReadOnlyDictionary<ModuleTemplateId, ModuleTemplate> templatesById)
+    {
+        return new ConfigurationWithRevisionsResponse(
+            configuration.Id.Value,
+            configuration.Title,
+            configuration.Description,
+            configuration.Inputs.Select(InputMappings.MapInputToDto).ToList(),
+            configuration.Modules
+                .Select(module => MapConfiguredModuleToDto(module, templatesById))
+                .ToList(),
+            configuration.SystemSpecifications
+                .Select(system => MapConfiguredSystemToDto(system, templatesById))
+                .ToList(),
+            configuration.SupportedSystemArchitectures().ToList(),
+            configuration.Revisions.Select(MapConfigurationRevisionToDto).ToList());
+    }
+
     public static ConfigurationListResponse MapConfigurationToListDto(Configuration configuration)
     {
         return new ConfigurationListResponse(
@@ -42,6 +61,16 @@ public static class ConfigurationMappings
             system.Modules
                 .Select(module => MapConfiguredModuleToDto(module, templatesById))
                 .ToList());
+    }
+
+    public static ConfigurationRevisionResponse MapConfigurationRevisionToDto(ConfigurationRevision revision)
+    {
+        return new ConfigurationRevisionResponse(
+            revision.Title,
+            revision.Description,
+            revision.TimeStamp,
+            revision.Revision,
+            revision.SnapshotJson);
     }
 
     private static ConfiguredModuleResponse MapConfiguredModuleToDto(

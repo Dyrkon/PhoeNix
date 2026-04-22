@@ -23,11 +23,11 @@ public sealed class ConfigurationsApiClient(HttpClient httpClient, IAuthenticati
             cancellationToken);
     }
 
-    public async Task<ApiResult<ConfigurationResponse>> GetConfigurationAsync(
+    public async Task<ApiResult<ConfigurationWithRevisionsResponse>> GetConfigurationAsync(
         Guid configurationId,
         CancellationToken cancellationToken = default)
     {
-        return await GetAsync<ConfigurationResponse>(
+        return await GetAsync<ConfigurationWithRevisionsResponse>(
             $"configurations/{configurationId}",
             cancellationToken);
     }

@@ -13,7 +13,7 @@ public interface IConfigurationsApiClient
         ListConfigurationsRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult<ConfigurationResponse>> GetConfigurationAsync(
+    Task<ApiResult<ConfigurationWithRevisionsResponse>> GetConfigurationAsync(
         Guid configurationId,
         CancellationToken cancellationToken = default);
 
