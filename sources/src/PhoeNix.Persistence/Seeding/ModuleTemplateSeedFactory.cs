@@ -17,7 +17,20 @@ internal static class ModuleTemplateSeedFactory
             CreatePrometheusTemplate(),
             CreateTimezoneSyncTemplate(),
             CreateNixFlakeSettingsTemplate(),
-            CreateNixBuildOptimisationTemplate()
+            CreateNixBuildOptimisationTemplate(),
+            CreatePhoeNixServiceTemplate(),
+            CreateNcpsCacheServerTemplate(),
+            CreateNcpsCacheClientTemplate(),
+            CreateKdeWorkstationTemplate(),
+            CreateGnomeWorkstationTemplate(),
+            CreateSystemHardeningTemplate(),
+            CreateItSupportTemplate(),
+            CreateAmdGpuTemplate(),
+            CreateNvidiaGpuTemplate(),
+            CreateDiskoEfiBtrfsTemplate(),
+            CreateDiskoEfiLuksExt4Template(),
+            CreateDiskoEfiZfsTemplate(),
+            CreateDiskoSsdHddTemplate()
         };
 
         var failure = results.FirstOrDefault(r => r.IsFailure);
@@ -27,30 +40,39 @@ internal static class ModuleTemplateSeedFactory
         return results.Select(r => r.Value).ToList();
     }
 
+    private static Result<ModuleTemplate> BuildTemplate(
+        ModuleTemplateId templateId,
+        string name,
+        ModuleType moduleType,
+        string content,
+        List<EntryValueDefinition> definitions,
+        string testName,
+        string testContent,
+        List<string> testPlaceholders,
+        Architecture[]? architectures = null)
+    {
+        architectures ??= [Architecture.X86Linux, Architecture.Aarch64Linux];
+
+        return ModuleTemplate.Create(templateId, name, true, moduleType, architectures)
+            .Tap(t => t.ChangeContent(content, definitions))
+            .Tap(t => t.AddModuleTest(testName))
+            .Tap(t =>
+            {
+                var test = t.Tests.Single(x => x.Name == testName);
+                t.ChangeModuleTest(test.Id, testContent, testPlaceholders);
+            });
+    }
+
     private static Result<ModuleTemplate> CreateMinimalBaseTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.MinimalBaseTemplate,
-                SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "\"machineone\""),
-            new(
-                SeedIds.MinimalBaseTemplate,
-                SeedPlaceholders.StateVersion,
-                SeedPlaceholders.StateVersion,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "\"25.11\""),
-            new(
-                SeedIds.MinimalBaseTemplate,
-                SeedPlaceholders.RootAuthorizedKeys,
-                SeedPlaceholders.RootAuthorizedKeys,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.List,
+            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.HostName, SeedPlaceholders.HostName,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"machineone\""),
+            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.StateVersion, SeedPlaceholders.StateVersion,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"25.11\""),
+            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.RootAuthorizedKeys, SeedPlaceholders.RootAuthorizedKeys,
+                EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                 {
                     "\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\""
@@ -66,198 +88,129 @@ internal static class ModuleTemplateSeedFactory
             "boot.initrd.availableKernelModules = [ \"virtio_pci\" \"virtio_scsi\" \"virtio_blk\" \"sd_mod\" \"sr_mod\" ];\n" +
             $"system.stateVersion = {SeedPlaceholders.StateVersion};";
 
-        return ModuleTemplate.Create(
-                SeedIds.MinimalBaseTemplate,
-                "MinimalBaseSystem",
-                true,
-                ModuleType.System,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("minimal-base-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "minimal-base-test");
-                var testContent =
-                    "hostNameSet = { expr = HostName != \"\"; expected = true; };\n" +
-                    "stateVersionSet = { expr = StateVersion != \"\"; expected = true; };\n" +
-                    "keysSet = { expr = RootAuthorizedKeys != []; expected = true; };";
-                t.ChangeModuleTest(
-                    test.Id,
-                    testContent,
-                    [SeedPlaceholders.HostName, SeedPlaceholders.StateVersion, SeedPlaceholders.RootAuthorizedKeys]);
-            });
+        var testContent =
+            "hostNameSet = { expr = HostName != \"\"; expected = true; };\n" +
+            "stateVersionSet = { expr = StateVersion != \"\"; expected = true; };\n" +
+            "keysSet = { expr = RootAuthorizedKeys != []; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.MinimalBaseTemplate,
+            "MinimalBaseSystem",
+            ModuleType.System,
+            content,
+            definitions,
+            "minimal-base-test",
+            testContent,
+            [SeedPlaceholders.HostName, SeedPlaceholders.StateVersion, SeedPlaceholders.RootAuthorizedKeys]
+        );
     }
 
     private static Result<ModuleTemplate> CreateDiskoTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.DiskoEfiExt4Template,
-                SeedPlaceholders.InstallDisk,
-                SeedPlaceholders.InstallDisk,
-                EntryBindingKind.RankedDiskCandidate,
-                EntryValueKind.Text,
-                "\"/dev/sda\"",
-                BindingIndex: 0)
+            new(SeedIds.DiskoEfiExt4Template, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
         };
 
         var content =
-            "imports = [ inputs.disko.nixosModules.disko ];\n" +
-            "\n" +
+            "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
             "disko.devices.disk.main = {\n" +
             "  type = \"disk\";\n" +
             $"  device = {SeedPlaceholders.InstallDisk};\n" +
             "  content = {\n" +
             "    type = \"gpt\";\n" +
             "    partitions = {\n" +
-            "      ESP = {\n" +
-            "        size = \"512M\";\n" +
-            "        type = \"EF00\";\n" +
-            "        content = {\n" +
-            "          type = \"filesystem\";\n" +
-            "          format = \"vfat\";\n" +
-            "          mountpoint = \"/boot\";\n" +
-            "        };\n" +
-            "      };\n" +
-            "      root = {\n" +
-            "        size = \"100%\";\n" +
-            "        content = {\n" +
-            "          type = \"filesystem\";\n" +
-            "          format = \"ext4\";\n" +
-            "          mountpoint = \"/\";\n" +
-            "        };\n" +
-            "      };\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "      root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; }; };\n" +
             "    };\n" +
             "  };\n" +
             "};";
 
-        return ModuleTemplate.Create(
-                SeedIds.DiskoEfiExt4Template,
-                "DiskoEfiExt4System",
-                true,
-                ModuleType.System,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("disko-install-disk-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "disko-install-disk-test");
-                var testContent =
-                    "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
-                t.ChangeModuleTest(test.Id, testContent, [SeedPlaceholders.InstallDisk]);
-            });
+        var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.DiskoEfiExt4Template,
+            "DiskoEfiExt4System",
+            ModuleType.System,
+            content,
+            definitions,
+            "disko-install-disk-test",
+            testContent,
+            [SeedPlaceholders.InstallDisk]
+        );
     }
 
     private static Result<ModuleTemplate> CreatePrometheusTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.PrometheusTemplate,
-                SeedPlaceholders.MetricsPort,
-                SeedPlaceholders.MetricsPort,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "9100"),
-            new(
-                SeedIds.PrometheusTemplate,
-                SeedPlaceholders.OpenFirewall,
-                SeedPlaceholders.OpenFirewall,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "true")
+            new(SeedIds.PrometheusTemplate, SeedPlaceholders.MetricsPort, SeedPlaceholders.MetricsPort,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "9100"),
+            new(SeedIds.PrometheusTemplate, SeedPlaceholders.OpenFirewall, SeedPlaceholders.OpenFirewall,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" }))
         };
 
         var content =
-            "systemd.tmpfiles.rules = [\n" +
-            "  \"d /var/lib/phoenix 0755 root root -\"\n" +
-            "  \"d /var/lib/phoenix/prometheus-textfiles 0755 root root -\"\n" +
-            "];\n" +
-            "\n" +
+            "systemd.tmpfiles.rules = [\n  \"d /var/lib/phoenix 0755 root root -\"\n  \"d /var/lib/phoenix/prometheus-textfiles 0755 root root -\"\n];\n\n" +
             "services.prometheus.exporters.node = {\n" +
             "  enable = true;\n" +
             $"  port = {SeedPlaceholders.MetricsPort};\n" +
             $"  openFirewall = {SeedPlaceholders.OpenFirewall};\n" +
             "  enabledCollectors = [ \"systemd\" \"textfile\" ];\n" +
-            "  extraFlags = [\n" +
-            "    \"--collector.textfile.directory=/var/lib/phoenix/prometheus-textfiles\"\n" +
-            "  ];\n" +
+            "  extraFlags = [ \"--collector.textfile.directory=/var/lib/phoenix/prometheus-textfiles\" ];\n" +
             "};";
 
-        return ModuleTemplate.Create(
-                SeedIds.PrometheusTemplate,
-                "PrometheusNodeExporter",
-                true,
-                ModuleType.System,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("prometheus-port-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "prometheus-port-test");
-                var testContent =
-                    "portRange = { expr = MetricsPort >= 1 && MetricsPort <= 65535; expected = true; };\n" +
-                    "firewallValue = { expr = OpenFirewall == true || OpenFirewall == false; expected = true; };";
-                t.ChangeModuleTest(
-                    test.Id,
-                    testContent,
-                    [SeedPlaceholders.MetricsPort, SeedPlaceholders.OpenFirewall]);
-            });
+        var testContent =
+            "portRange = { expr = MetricsPort >= 1 && MetricsPort <= 65535; expected = true; };\n" +
+            "firewallValue = { expr = OpenFirewall == true || OpenFirewall == false; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.PrometheusTemplate,
+            "PrometheusNodeExporter",
+            ModuleType.System,
+            content,
+            definitions,
+            "prometheus-port-test",
+            testContent,
+            [SeedPlaceholders.MetricsPort, SeedPlaceholders.OpenFirewall]
+        );
     }
 
     private static Result<ModuleTemplate> CreateTimezoneSyncTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.TimezoneSyncTemplate,
-                SeedPlaceholders.Timezone,
-                SeedPlaceholders.Timezone,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "\"Europe/Prague\"")
+            new(SeedIds.TimezoneSyncTemplate, SeedPlaceholders.Timezone, SeedPlaceholders.Timezone,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"Europe/Prague\"")
         };
 
-        var content =
-            $"time.timeZone = {SeedPlaceholders.Timezone};\n" +
-            "services.timesyncd.enable = true;";
+        var content = $"time.timeZone = {SeedPlaceholders.Timezone};\nservices.timesyncd.enable = true;";
+        var testContent = "timezoneSet = { expr = Timezone != \"\"; expected = true; };";
 
-        return ModuleTemplate.Create(
-                SeedIds.TimezoneSyncTemplate,
-                "TimezoneSync",
-                true,
-                ModuleType.Generic,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("timezone-sync-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "timezone-sync-test");
-                var testContent =
-                    "timezoneSet = { expr = Timezone != \"\"; expected = true; };";
-                t.ChangeModuleTest(test.Id, testContent, [SeedPlaceholders.Timezone]);
-            });
+        return BuildTemplate(
+            SeedIds.TimezoneSyncTemplate,
+            "TimezoneSync",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "timezone-sync-test",
+            testContent,
+            [SeedPlaceholders.Timezone]
+        );
     }
 
     private static Result<ModuleTemplate> CreateNixFlakeSettingsTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.NixFlakeSettingsTemplate,
-                SeedPlaceholders.NixTrustedSubstituters,
-                SeedPlaceholders.NixTrustedSubstituters,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.List,
+            new(SeedIds.NixFlakeSettingsTemplate, SeedPlaceholders.NixTrustedSubstituters,
+                SeedPlaceholders.NixTrustedSubstituters, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                     { "\"https://cache.nixos.org\"", "\"https://nix-community.cachix.org\"" })),
-            new(
-                SeedIds.NixFlakeSettingsTemplate,
-                SeedPlaceholders.NixTrustedPublicKeys,
-                SeedPlaceholders.NixTrustedPublicKeys,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.List,
+            new(SeedIds.NixFlakeSettingsTemplate, SeedPlaceholders.NixTrustedPublicKeys,
+                SeedPlaceholders.NixTrustedPublicKeys, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                 {
                     "\"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\"",
@@ -272,79 +225,658 @@ internal static class ModuleTemplateSeedFactory
             $"  trusted-public-keys = {SeedPlaceholders.NixTrustedPublicKeys};\n" +
             "};";
 
-        return ModuleTemplate.Create(
-                SeedIds.NixFlakeSettingsTemplate,
-                "NixFlakeSettings",
-                true,
-                ModuleType.Generic,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("nix-flake-settings-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "nix-flake-settings-test");
-                var testContent =
-                    "substitutersSet = { expr = NixTrustedSubstituters != []; expected = true; };\n" +
-                    "publicKeysSet = { expr = NixTrustedPublicKeys != []; expected = true; };";
-                t.ChangeModuleTest(
-                    test.Id,
-                    testContent,
-                    [SeedPlaceholders.NixTrustedSubstituters, SeedPlaceholders.NixTrustedPublicKeys]);
-            });
+        var testContent =
+            "substitutersSet = { expr = NixTrustedSubstituters != []; expected = true; };\n" +
+            "publicKeysSet = { expr = NixTrustedPublicKeys != []; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.NixFlakeSettingsTemplate,
+            "NixFlakeSettings",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "nix-flake-settings-test",
+            testContent,
+            [SeedPlaceholders.NixTrustedSubstituters, SeedPlaceholders.NixTrustedPublicKeys]
+        );
     }
 
     private static Result<ModuleTemplate> CreateNixBuildOptimisationTemplate()
     {
         var definitions = new List<EntryValueDefinition>
         {
-            new(
-                SeedIds.NixBuildOptimisationTemplate,
-                SeedPlaceholders.NixMaxJobs,
-                SeedPlaceholders.NixMaxJobs,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "\"auto\""),
-            new(
-                SeedIds.NixBuildOptimisationTemplate,
-                SeedPlaceholders.NixCores,
-                SeedPlaceholders.NixCores,
-                EntryBindingKind.UserProvided,
-                EntryValueKind.Text,
-                "1")
+            new(SeedIds.NixBuildOptimisationTemplate, SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixMaxJobs,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"auto\""),
+            new(SeedIds.NixBuildOptimisationTemplate, SeedPlaceholders.NixCores, SeedPlaceholders.NixCores,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "1")
         };
 
         var content =
-            "nix = {\n" +
-            "  settings = {\n" +
+            "nix = {\n  settings = {\n" +
             $"    max-jobs = {SeedPlaceholders.NixMaxJobs};\n" +
             $"    cores = {SeedPlaceholders.NixCores};\n" +
-            "    auto-optimise-store = true;\n" +
+            "    auto-optimise-store = true;\n  };\n" +
+            "  gc = {\n    automatic = true;\n    dates = \"weekly\";\n    options = \"--delete-older-than 7d\";\n  };\n};";
+
+        var testContent =
+            "maxJobsPositive = { expr = NixMaxJobs > 0; expected = true; };\n" +
+            "coresPositive = { expr = NixCores > 0; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.NixBuildOptimisationTemplate,
+            "NixBuildOptimisation",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "nix-build-optimisation-test",
+            testContent,
+            [SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixCores]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreatePhoeNixServiceTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.PhoeNixServiceTemplate, SeedPlaceholders.PhoenixPublicBaseUrl,
+                SeedPlaceholders.PhoenixPublicBaseUrl, EntryBindingKind.UserProvided, EntryValueKind.Text,
+                "\"http://192.168.88.1\""),
+            new(SeedIds.PhoeNixServiceTemplate, SeedPlaceholders.NcpsServerAddress,
+                SeedPlaceholders.NcpsServerAddress, EntryBindingKind.UserProvided, EntryValueKind.Text,
+                "\":8501\"")
+        };
+
+        var content =
+            "imports = [ inputs.phoenix.nixosModules.default ];\n\n" +
+            "services.phoenix = {\n" +
+            "  enable = true;\n" +
+            "  api.environment = {\n" +
+            "    \"Logging__LogLevel__Default\" = \"Information\";\n" +
+            "    \"Logging__LogLevel__Microsoft.AspNetCore\" = \"Warning\";\n" +
+            "    \"NetbootHost__HostExecutablePath\" = \"/run/wrappers/bin/pixiecore\";\n" +
+            "    \"SeedExample__HostName\" = \"phoenix-demo\";\n" +
+            "    \"SeedExample__StateVersion\" = \"25.11\";\n" +
+            "    \"SeedExample__RootAuthorizedKeys__0\" = \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\";\n" +
+            $"    \"SeedExample__PublicBaseUrl\" = {SeedPlaceholders.PhoenixPublicBaseUrl};\n" +
+            "    \"SeedExample__MetricsPort\" = \"9100\";\n" +
+            "    \"SeedExample__OpenFirewall\" = \"true\";\n" +
             "  };\n" +
-            "  gc = {\n" +
-            "    automatic = true;\n" +
-            "    dates = \"weekly\";\n" +
-            "    options = \"--delete-older-than 7d\";\n" +
+            "  monitoring = {\n" +
+            "    enable = true;\n" +
+            "    prometheusServer = {\n" +
+            "      enable = true;\n" +
+            "      ui = { public = true; nginxProxy = true; };\n" +
+            "    };\n" +
+            "    nodeExporter.enable = true;\n" +
+            "  };\n" +
+            "  nginx.enable = true;\n" +
+            "};\n\n" +
+            "services.ncps = {\n" +
+            "  enable = true;\n" +
+            "  cache.hostName = \"machineone.lan\";\n" +
+            $"  server.addr = {SeedPlaceholders.NcpsServerAddress};\n" +
+            "  upstream = {\n" +
+            "    caches = [ \"https://cache.nixos.org\" ];\n" +
+            "    publicKeys = [ \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\" ];\n" +
+            "  };\n" +
+            "};\n" +
+            "networking.firewall.allowedTCPPorts = [ 8501 ];";
+
+        var testContent = "publicUrlSet = { expr = PhoenixPublicBaseUrl != \"\"; expected = true; };\n" +
+                          "serverAddrSet = { expr = NcpsServerAddress != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.PhoeNixServiceTemplate,
+            "PhoeNixService",
+            ModuleType.System,
+            content,
+            definitions,
+            "phoenix-service-test",
+            testContent,
+            [SeedPlaceholders.PhoenixPublicBaseUrl, SeedPlaceholders.NcpsServerAddress]
+        ).Tap(t => t.SetRequiredInputs([("phoenix", "git+ssh://git@github.com/Dyrkon/PhoeNix")]));
+    }
+
+    private static Result<ModuleTemplate> CreateNcpsCacheServerTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.NcpsCacheServerTemplate, SeedPlaceholders.NcpsCacheHostName,
+                SeedPlaceholders.NcpsCacheHostName, EntryBindingKind.UserProvided, EntryValueKind.Text,
+                "\"machine-hostname.lan\""),
+            new(SeedIds.NcpsCacheServerTemplate, SeedPlaceholders.NcpsServerAddress,
+                SeedPlaceholders.NcpsServerAddress, EntryBindingKind.UserProvided, EntryValueKind.Text,
+                "\":8501\"")
+        };
+
+        var content =
+            "services.ncps = {\n" +
+            "  enable = true;\n" +
+            $"  cache.hostName = {SeedPlaceholders.NcpsCacheHostName};\n" +
+            $"  server.addr = {SeedPlaceholders.NcpsServerAddress};\n" +
+            "  upstream = {\n" +
+            "    caches = [ \"https://cache.nixos.org\" ];\n" +
+            "    publicKeys = [ \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\" ];\n" +
+            "  };\n" +
+            "};\n" +
+            "networking.firewall.allowedTCPPorts = [ 8501 ];";
+
+        var testContent = "hostNameSet = { expr = NcpsCacheHostName != \"\"; expected = true; };\n" +
+                          "serverAddrSet = { expr = NcpsServerAddress != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.NcpsCacheServerTemplate,
+            "NcpsCacheServer",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "ncps-cache-server-test",
+            testContent,
+            [SeedPlaceholders.NcpsCacheHostName, SeedPlaceholders.NcpsServerAddress]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateNcpsCacheClientTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.NcpsCacheClientTemplate, SeedPlaceholders.LocalCacheSubstituters,
+                SeedPlaceholders.LocalCacheSubstituters, EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string> { "\"http://machine-hostname.lan:8501\"" })),
+            new(SeedIds.NcpsCacheClientTemplate, SeedPlaceholders.LocalCachePublicKeys,
+                SeedPlaceholders.LocalCachePublicKeys, EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>
+                    { "\"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\"" }))
+        };
+
+        var content =
+            "nix.settings = {\n" +
+            $"  substituters = {SeedPlaceholders.LocalCacheSubstituters};\n" +
+            $"  trusted-public-keys = {SeedPlaceholders.LocalCachePublicKeys};\n" +
+            "};";
+
+        var testContent = "substitutersSet = { expr = LocalSubstituters != []; expected = true; };\n" +
+                          "publicKeysSet = { expr = LocalTrustedPublicKeys != []; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.NcpsCacheClientTemplate,
+            "NcpsCacheClient",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "ncps-cache-client-test",
+            testContent,
+            [SeedPlaceholders.LocalCacheSubstituters, SeedPlaceholders.LocalCachePublicKeys]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateKdeWorkstationTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.KdeTemplate, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"en_US.UTF-8\""),
+            new(SeedIds.KdeTemplate, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"us\""),
+            new(SeedIds.KdeTemplate, SeedPlaceholders.KdePrinting, SeedPlaceholders.KdePrinting,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
+            new(SeedIds.KdeTemplate, SeedPlaceholders.KdeConnect, SeedPlaceholders.KdeConnect,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" }))
+        };
+
+        var content =
+            $"i18n.defaultLocale = {SeedPlaceholders.Locale};\n" +
+            $"services.xserver.xkb.layout = {SeedPlaceholders.KeyboardLayout};\n" +
+            "services.desktopManager.plasma6.enable = true;\n" +
+            "services.displayManager.sddm.enable = true;\n" +
+            "services.displayManager.sddm.wayland.enable = true;\n" +
+            "environment.systemPackages = with pkgs; [\n" +
+            "  firefox\n" +
+            "  libreoffice-qt\n" +
+            "  okular\n" +
+            "  gwenview\n" +
+            "];\n" +
+            $"services.printing.enable = {SeedPlaceholders.KdePrinting};\n" +
+            $"programs.kdeconnect.enable = {SeedPlaceholders.KdeConnect};";
+
+        var testContent = "localeSet = { expr = Locale != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.KdeTemplate,
+            "KdeWorkstation",
+            ModuleType.System,
+            content,
+            definitions,
+            "kde-workstation-test",
+            testContent,
+            [
+                SeedPlaceholders.Locale, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KdePrinting,
+                SeedPlaceholders.KdeConnect
+            ]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateGnomeWorkstationTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.GnomeTemplate, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"en_US.UTF-8\""),
+            new(SeedIds.GnomeTemplate, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"us\""),
+            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeCoreApps, SeedPlaceholders.GnomeCoreApps,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
+            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeGames, SeedPlaceholders.GnomeGames,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
+            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeDeveloperTools, SeedPlaceholders.GnomeDeveloperTools,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" }))
+        };
+
+        var content =
+            $"i18n.defaultLocale = {SeedPlaceholders.Locale};\n" +
+            $"services.xserver.xkb.layout = {SeedPlaceholders.KeyboardLayout};\n" +
+            "services.displayManager.gdm.enable = true;\n" +
+            "services.desktopManager.gnome.enable = true;\n" +
+            $"services.gnome.core-apps.enable = {SeedPlaceholders.GnomeCoreApps};\n" +
+            $"services.gnome.games.enable = {SeedPlaceholders.GnomeGames};\n" +
+            $"services.gnome.core-developer-tools.enable = {SeedPlaceholders.GnomeDeveloperTools};\n" +
+            "environment.gnome.excludePackages = with pkgs; [ gnome-tour gnome-user-docs ];\n" +
+            "environment.systemPackages = with pkgs; [\n" +
+            "  firefox\n" +
+            "  libreoffice-fresh\n" +
+            "  evince\n" +
+            "  eog\n" +
+            "];";
+
+        var testContent = "localeSet = { expr = Locale != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.GnomeTemplate,
+            "GnomeWorkstation",
+            ModuleType.System,
+            content,
+            definitions,
+            "gnome-workstation-test",
+            testContent,
+            [
+                SeedPlaceholders.Locale, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.GnomeCoreApps,
+                SeedPlaceholders.GnomeGames, SeedPlaceholders.GnomeDeveloperTools
+            ]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateSystemHardeningTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.AdminUser, SeedPlaceholders.AdminUser,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
+            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.SshPermitRootLogin,
+                SeedPlaceholders.SshPermitRootLogin, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
+                "prohibit-password",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "prohibit-password", "no" }))
+        };
+
+        var content =
+            "users.mutableUsers = false;\n" +
+            $"nix.settings.trusted-users = [ \"root\" {SeedPlaceholders.AdminUser} ];\n" +
+            $"nix.settings.allowed-users = [ \"root\" {SeedPlaceholders.AdminUser} ];\n" +
+            "security.sudo.wheelNeedsPassword = true;\n" +
+            "security.auditd.enable = true;\n " +
+            "security.audit.enable = true;\n  " +
+            "security.audit.rules = [\n" +
+            "    \"-a exit,always -F arch=b64 -S execve\"\n  ];\n" +
+            "environment.defaultPackages = lib.mkForce [];\n" +
+            "fileSystems.\"/\".options = [ \"noexec\" ];\n" +
+            "fileSystems.\"/etc/nixos\".options = [ \"noexec\" ];\n" +
+            "fileSystems.\"/srv\".options = [ \"noexec\" ];\n" +
+            "fileSystems.\"/var/log\".options = [ \"noexec\" ];\n " +
+            "services.openssh.settings = {\n" +
+            "  PasswordAuthentication = false;\n" +
+            "  KbdInteractiveAuthentication = false;\n" +
+            $"  PermitRootLogin = \"{SeedPlaceholders.SshPermitRootLogin}\";\n" +
+            "};";
+
+        var testContent =
+            "adminUserSet = { expr = AdminUser != \"\"; expected = true; };\n" +
+            "sshPermitRootLoginSet = { expr = SshPermitRootLogin != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.SystemHardeningTemplate,
+            "SystemHardening",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "system-hardening-test",
+            testContent,
+            [SeedPlaceholders.AdminUser, SeedPlaceholders.SshPermitRootLogin]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateDiskoEfiBtrfsTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.DiskoEfiBtrfsTemplate, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
+        };
+
+        var content =
+            "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
+            "disko.devices.disk.main = {\n" +
+            "  type = \"disk\";\n" +
+            $"  device = {SeedPlaceholders.InstallDisk};\n" +
+            "  content = {\n" +
+            "    type = \"gpt\";\n" +
+            "    partitions = {\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "      root = {\n" +
+            "        size = \"100%\";\n" +
+            "        content = {\n" +
+            "          type = \"btrfs\";\n" +
+            "          extraArgs = [ \"-L\" \"nixos\" \"-f\" ];\n" +
+            "          subvolumes = {\n" +
+            "            \"/root\" = { mountpoint = \"/\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n" +
+            "            \"/home\" = { mountpoint = \"/home\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n" +
+            "            \"/nix\"  = { mountpoint = \"/nix\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n" +
+            "          };\n" +
+            "        };\n" +
+            "      };\n" +
+            "    };\n" +
             "  };\n" +
             "};";
 
-        return ModuleTemplate.Create(
-                SeedIds.NixBuildOptimisationTemplate,
-                "NixBuildOptimisation",
-                true,
-                ModuleType.Generic,
-                [Architecture.X86Linux, Architecture.Aarch64Linux])
-            .Tap(t => t.ChangeContent(content, definitions))
-            .Tap(t => t.AddModuleTest("nix-build-optimisation-test"))
-            .Tap(t =>
-            {
-                var test = t.Tests.Single(x => x.Name == "nix-build-optimisation-test");
-                var testContent =
-                    "maxJobsPositive = { expr = NixMaxJobs > 0; expected = true; };\n" +
-                    "coresPositive = { expr = NixCores > 0; expected = true; };";
-                t.ChangeModuleTest(
-                    test.Id,
-                    testContent,
-                    [SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixCores]);
-            });
+        var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.DiskoEfiBtrfsTemplate,
+            "DiskoEfiBtrfs",
+            ModuleType.System,
+            content,
+            definitions,
+            "disko-btrfs-disk-test",
+            testContent,
+            [SeedPlaceholders.InstallDisk]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateDiskoEfiLuksExt4Template()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.DiskoEfiLuksExt4Template, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
+        };
+
+        var content =
+            "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
+            "disko.devices.disk.main = {\n" +
+            "  type = \"disk\";\n" +
+            $"  device = {SeedPlaceholders.InstallDisk};\n" +
+            "  content = {\n" +
+            "    type = \"gpt\";\n" +
+            "    partitions = {\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "      luks = {\n" +
+            "        size = \"100%\";\n" +
+            "        content = {\n" +
+            "          type = \"luks\";\n" +
+            "          name = \"cryptroot\";\n" +
+            "          extraOpenArgs = [ \"--allow-discards\" ];\n" +
+            "          content = {\n" +
+            "            type = \"filesystem\";\n" +
+            "            format = \"ext4\";\n" +
+            "            mountpoint = \"/\";\n" +
+            "          };\n" +
+            "        };\n" +
+            "      };\n" +
+            "    };\n" +
+            "  };\n" +
+            "};";
+
+        var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.DiskoEfiLuksExt4Template,
+            "DiskoEfiLuksExt4",
+            ModuleType.System,
+            content,
+            definitions,
+            "disko-luks-disk-test",
+            testContent,
+            [SeedPlaceholders.InstallDisk]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateDiskoEfiZfsTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.DiskoEfiZfsTemplate, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0),
+            new(SeedIds.DiskoEfiZfsTemplate, SeedPlaceholders.ZfsHostId, SeedPlaceholders.ZfsHostId,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"deadbeef\"")
+        };
+
+        var content =
+            "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
+            $"networking.hostId = {SeedPlaceholders.ZfsHostId};\n\n" +
+            "disko.devices = {\n" +
+            "  disk.main = {\n" +
+            "    type = \"disk\";\n" +
+            $"    device = {SeedPlaceholders.InstallDisk};\n" +
+            "    content = {\n" +
+            "      type = \"gpt\";\n" +
+            "      partitions = {\n" +
+            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "        zfs = { size = \"100%\"; content = { type = \"zfs\"; pool = \"zroot\"; }; };\n" +
+            "      };\n" +
+            "    };\n" +
+            "  };\n" +
+            "  zpool.zroot = {\n" +
+            "    type = \"zpool\";\n" +
+            "    rootFsOptions = { compression = \"lz4\"; \"com.sun:auto-snapshot\" = \"false\"; };\n" +
+            "    datasets = {\n" +
+            "      \"root\" = { type = \"zfs_fs\"; mountpoint = \"/\"; options.mountpoint = \"legacy\"; };\n" +
+            "      \"home\" = { type = \"zfs_fs\"; mountpoint = \"/home\"; options.mountpoint = \"legacy\"; };\n" +
+            "      \"nix\"  = { type = \"zfs_fs\"; mountpoint = \"/nix\"; options.mountpoint = \"legacy\"; options.\"com.sun:auto-snapshot\" = \"false\"; };\n" +
+            "    };\n" +
+            "  };\n" +
+            "};";
+
+        var testContent =
+            "diskSet = { expr = InstallDisk != \"\"; expected = true; };\n" +
+            "hostIdSet = { expr = ZfsHostId != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.DiskoEfiZfsTemplate,
+            "DiskoEfiZfs",
+            ModuleType.System,
+            content,
+            definitions,
+            "disko-zfs-disk-test",
+            testContent,
+            [SeedPlaceholders.InstallDisk, SeedPlaceholders.ZfsHostId]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateDiskoSsdHddTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.DiskoSsdHddTemplate, SeedPlaceholders.SsdDisk, SeedPlaceholders.SsdDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0),
+            new(SeedIds.DiskoSsdHddTemplate, SeedPlaceholders.HddDisk, SeedPlaceholders.HddDisk,
+                EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sdb\"", BindingIndex: 1)
+        };
+
+        var content =
+            "imports = [ inputs.disko.nixosModules.disko ];\n\n" +
+            "disko.devices.disk = {\n" +
+            "  ssd = {\n" +
+            "    type = \"disk\";\n" +
+            $"    device = {SeedPlaceholders.SsdDisk};\n" +
+            "    content = {\n" +
+            "      type = \"gpt\";\n" +
+            "      partitions = {\n" +
+            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "        root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; }; };\n" +
+            "      };\n" +
+            "    };\n" +
+            "  };\n" +
+            "  hdd = {\n" +
+            "    type = \"disk\";\n" +
+            $"    device = {SeedPlaceholders.HddDisk};\n" +
+            "    content = {\n" +
+            "      type = \"gpt\";\n" +
+            "      partitions = {\n" +
+            "        data = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/home\"; }; };\n" +
+            "      };\n" +
+            "    };\n" +
+            "  };\n" +
+            "};";
+
+        var testContent =
+            "ssdSet = { expr = SsdDisk != \"\"; expected = true; };\n" +
+            "hddSet = { expr = HddDisk != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.DiskoSsdHddTemplate,
+            "DiskoSsdHdd",
+            ModuleType.System,
+            content,
+            definitions,
+            "disko-ssd-hdd-test",
+            testContent,
+            [SeedPlaceholders.SsdDisk, SeedPlaceholders.HddDisk]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateAmdGpuTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.AmdGpuTemplate, SeedPlaceholders.GpuEnable32Bit, SeedPlaceholders.GpuEnable32Bit,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" }))
+        };
+
+        var content =
+            "boot.initrd.kernelModules = [ \"amdgpu\" ];\n" +
+            "hardware.graphics = {\n" +
+            "  enable = true;\n" +
+            $"  enable32Bit = {SeedPlaceholders.GpuEnable32Bit};\n" +
+            "  extraPackages = with pkgs; [ amdvlk rocmPackages.clr.icd ];\n" +
+            "  extraPackages32 = with pkgs; [ driversi686Linux.amdvlk ];\n" +
+            "};";
+
+        var testContent =
+            "enable32BitValid = { expr = Enable32Bit == true || Enable32Bit == false; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.AmdGpuTemplate,
+            "AmdGpu",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "amd-gpu-test",
+            testContent,
+            [SeedPlaceholders.GpuEnable32Bit]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateNvidiaGpuTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaOpenKernel, SeedPlaceholders.NvidiaOpenKernel,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
+            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaPowerManagement,
+                SeedPlaceholders.NvidiaPowerManagement, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
+                "false", OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
+            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaDriverChannel,
+                SeedPlaceholders.NvidiaDriverChannel, EntryBindingKind.UserProvided, EntryValueKind.Text, "stable")
+        };
+
+        var content =
+            "services.xserver.videoDrivers = [ \"nvidia\" ];\n" +
+            "hardware.graphics = {\n" +
+            "  enable = true;\n" +
+            "  enable32Bit = true;\n" +
+            "};\n" +
+            "hardware.nvidia = {\n" +
+            "  modesetting.enable = true;\n" +
+            $"  powerManagement.enable = {SeedPlaceholders.NvidiaPowerManagement};\n" +
+            "  powerManagement.finegrained = false;\n" +
+            $"  open = {SeedPlaceholders.NvidiaOpenKernel};\n" +
+            "  nvidiaSettings = true;\n" +
+            $"  package = config.boot.kernelPackages.nvidiaPackages.{SeedPlaceholders.NvidiaDriverChannel};\n" +
+            "};";
+
+        var testContent =
+            "openValid = { expr = NvidiaOpenKernel == true || NvidiaOpenKernel == false; expected = true; };\n" +
+            "powerValid = { expr = NvidiaPowerManagement == true || NvidiaPowerManagement == false; expected = true; };\n" +
+            "channelSet = { expr = NvidiaDriverChannel != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.NvidiaGpuTemplate,
+            "NvidiaGpu",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "nvidia-gpu-test",
+            testContent,
+            [
+                SeedPlaceholders.NvidiaOpenKernel, SeedPlaceholders.NvidiaPowerManagement,
+                SeedPlaceholders.NvidiaDriverChannel
+            ]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateItSupportTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.ItSupportTemplate, SeedPlaceholders.LogRetentionDays, SeedPlaceholders.LogRetentionDays,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "30day")
+        };
+
+        var content =
+            "services.xrdp = {\n" +
+            "  enable = true;\n" +
+            "  openFirewall = true;\n" +
+            "};\n\n" +
+            "environment.systemPackages = with pkgs; [ rustdesk ];\n" +
+            "systemd.services.rustdesk = {\n" +
+            "  description = \"RustDesk Remote Desktop\";\n" +
+            "  wantedBy = [ \"multi-user.target\" ];\n" +
+            "  serviceConfig = {\n" +
+            "    ExecStart = \"${pkgs.rustdesk}/bin/rustdesk --service\";\n" +
+            "    Restart = \"on-failure\";\n" +
+            "    RestartSec = \"5s\";\n" +
+            "  };\n" +
+            "};\n\n" +
+            "services.journald.extraConfig = ''\n" +
+            $"  Storage=persistent\n  MaxRetentionSec={SeedPlaceholders.LogRetentionDays}\n" +
+            "'';";
+
+        var testContent = "retentionSet = { expr = LogRetentionDays != \"\"; expected = true; };";
+
+        return BuildTemplate(
+            SeedIds.ItSupportTemplate,
+            "ItSupport",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "it-support-test",
+            testContent,
+            [SeedPlaceholders.LogRetentionDays]
+        );
     }
 }
