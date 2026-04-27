@@ -24,6 +24,45 @@ internal static class SeedIds
     public static readonly ModuleTemplateId NixBuildOptimisationTemplate =
         new(new Guid("a1b2c3d4-0001-0002-0003-000000000006"));
 
+    public static readonly ModuleTemplateId GnomeTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000007"));
+
+    public static readonly ModuleTemplateId KdeTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000008"));
+
+    public static readonly ModuleTemplateId PhoeNixServiceTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000009"));
+
+    public static readonly ModuleTemplateId NcpsCacheServerTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000010"));
+
+    public static readonly ModuleTemplateId NcpsCacheClientTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000011"));
+
+    public static readonly ModuleTemplateId SystemHardeningTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000012"));
+
+    public static readonly ModuleTemplateId ItSupportTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000013"));
+
+    public static readonly ModuleTemplateId AmdGpuTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000014"));
+
+    public static readonly ModuleTemplateId NvidiaGpuTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000015"));
+
+    public static readonly ModuleTemplateId DiskoEfiBtrfsTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000016"));
+
+    public static readonly ModuleTemplateId DiskoEfiLuksExt4Template =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000017"));
+
+    public static readonly ModuleTemplateId DiskoEfiZfsTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000018"));
+
+    public static readonly ModuleTemplateId DiskoSsdHddTemplate =
+        new(new Guid("a1b2c3d4-0001-0002-0003-000000000019"));
+
     public static readonly ConfigurationId ExampleConfiguration = new(new Guid("20000000-0000-0000-0000-000000000001"));
 
     public static readonly SystemId ExampleSystem = new(new Guid("30000000-0000-0000-0000-000000000001"));
