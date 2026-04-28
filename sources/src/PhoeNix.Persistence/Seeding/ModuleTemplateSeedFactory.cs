@@ -30,7 +30,9 @@ internal static class ModuleTemplateSeedFactory
             CreateDiskoEfiBtrfsTemplate(),
             CreateDiskoEfiLuksExt4Template(),
             CreateDiskoEfiZfsTemplate(),
-            CreateDiskoSsdHddTemplate()
+            CreateDiskoSsdHddTemplate(),
+            CreateAdminUserTemplate(),
+            CreateRegularUserTemplate()
         };
 
         var failure = results.FirstOrDefault(r => r.IsFailure);
@@ -435,8 +437,8 @@ internal static class ModuleTemplateSeedFactory
             "environment.systemPackages = with pkgs; [\n" +
             "  firefox\n" +
             "  libreoffice-qt\n" +
-            "  okular\n" +
-            "  gwenview\n" +
+            "  kdePackages.okular\n" +
+            "  kdePackages.gwenview\n" +
             "];\n" +
             $"services.printing.enable = {SeedPlaceholders.KdePrinting};\n" +
             $"programs.kdeconnect.enable = {SeedPlaceholders.KdeConnect};";
@@ -518,8 +520,8 @@ internal static class ModuleTemplateSeedFactory
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
             new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.SshPermitRootLogin,
                 SeedPlaceholders.SshPermitRootLogin, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
-                "prohibit-password",
-                OptionsJson: JsonSerializer.Serialize(new List<string> { "prohibit-password", "no" }))
+                "\"prohibit-password\"",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "\"prohibit-password\"", "\"no\"" }))
         };
 
         var content =
@@ -532,14 +534,10 @@ internal static class ModuleTemplateSeedFactory
             "security.audit.rules = [\n" +
             "    \"-a exit,always -F arch=b64 -S execve\"\n  ];\n" +
             "environment.defaultPackages = lib.mkForce [];\n" +
-            "fileSystems.\"/\".options = [ \"noexec\" ];\n" +
-            "fileSystems.\"/etc/nixos\".options = [ \"noexec\" ];\n" +
-            "fileSystems.\"/srv\".options = [ \"noexec\" ];\n" +
-            "fileSystems.\"/var/log\".options = [ \"noexec\" ];\n " +
             "services.openssh.settings = {\n" +
             "  PasswordAuthentication = false;\n" +
             "  KbdInteractiveAuthentication = false;\n" +
-            $"  PermitRootLogin = \"{SeedPlaceholders.SshPermitRootLogin}\";\n" +
+            $"  PermitRootLogin = {SeedPlaceholders.SshPermitRootLogin};\n" +
             "};";
 
         var testContent =
@@ -801,7 +799,7 @@ internal static class ModuleTemplateSeedFactory
                 SeedPlaceholders.NvidiaPowerManagement, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
                 "false", OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
             new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaDriverChannel,
-                SeedPlaceholders.NvidiaDriverChannel, EntryBindingKind.UserProvided, EntryValueKind.Text, "stable")
+                SeedPlaceholders.NvidiaDriverChannel, EntryBindingKind.UserProvided, EntryValueKind.Text, "\"stable\"")
         };
 
         var content =
@@ -844,7 +842,7 @@ internal static class ModuleTemplateSeedFactory
         var definitions = new List<EntryValueDefinition>
         {
             new(SeedIds.ItSupportTemplate, SeedPlaceholders.LogRetentionDays, SeedPlaceholders.LogRetentionDays,
-                EntryBindingKind.UserProvided, EntryValueKind.Text, "30day")
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"30day\"")
         };
 
         var content =
@@ -877,6 +875,100 @@ internal static class ModuleTemplateSeedFactory
             "it-support-test",
             testContent,
             [SeedPlaceholders.LogRetentionDays]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateAdminUserTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
+            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"System Administrator\""),
+            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
+                EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string> { "\"wheel\"" })),
+            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
+                EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>())),
+            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"changeme\"")
+        };
+
+        var content =
+            $"  users.users.\"${{{SeedPlaceholders.UserName}}}\" = {{\n" +
+            "    isNormalUser = true;\n" +
+            $"    description = {SeedPlaceholders.UserDescription};\n" +
+            $"    home = \"/home/${{{SeedPlaceholders.UserName}}}\";\n" +
+            "    createHome = true;\n" +
+            $"    extraGroups = {SeedPlaceholders.UserGroups};\n" +
+            $"    openssh.authorizedKeys.keys = {SeedPlaceholders.UserAuthorizedKeys};\n" +
+            $"    initialPassword = {SeedPlaceholders.UserInitialPassword};" +
+            $"}};";
+
+        var testContent =
+            $"userNameSet = {{ expr = \"{SeedPlaceholders.UserName}\" != \"\"; expected = true; }};";
+
+        return BuildTemplate(
+            SeedIds.AdminUserTemplate,
+            "Admin User",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "admin-user-test",
+            testContent,
+            [
+                SeedPlaceholders.UserName, SeedPlaceholders.UserDescription, SeedPlaceholders.UserGroups,
+                SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserInitialPassword
+            ]
+        );
+    }
+
+    private static Result<ModuleTemplate> CreateRegularUserTemplate()
+    {
+        var definitions = new List<EntryValueDefinition>
+        {
+            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "user"),
+            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "Desktop User"),
+            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
+                EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string> { "\"video\"", "\"audio\"", "\"networkmanager\"" })),
+            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
+                EntryBindingKind.UserProvided, EntryValueKind.List,
+                JsonSerializer.Serialize(new List<string>())),
+            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
+                EntryBindingKind.UserProvided, EntryValueKind.Text, "changeme")
+        };
+
+        var content =
+            $"  users.users.\"${{{SeedPlaceholders.UserName}}}\" = {{\n" +
+            "    isNormalUser = true;\n" +
+            $"    description = \"{SeedPlaceholders.UserDescription}\";\n" +
+            $"    home = \"/home/${{{SeedPlaceholders.UserName}}}\";\n" +
+            "    createHome = true;\n" +
+            $"    extraGroups = {SeedPlaceholders.UserGroups};\n" +
+            $"    openssh.authorizedKeys.keys = {SeedPlaceholders.UserAuthorizedKeys};\n" +
+            $"    initialPassword = {SeedPlaceholders.UserInitialPassword};" +
+            $"}};";
+
+        var testContent =
+            $"userNameSet = {{ expr = \"{SeedPlaceholders.UserName}\" != \"\"; expected = true; }};";
+
+        return BuildTemplate(
+            SeedIds.RegularUserTemplate,
+            "Regular User",
+            ModuleType.Generic,
+            content,
+            definitions,
+            "regular-user-test",
+            testContent,
+            [
+                SeedPlaceholders.UserName, SeedPlaceholders.UserDescription, SeedPlaceholders.UserGroups,
+                SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserInitialPassword
+            ]
         );
     }
 }

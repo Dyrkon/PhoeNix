@@ -28,6 +28,7 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
     {
         string hostExecutablePath;
         int port;
+        string baseUrl;
 
         using (var scope = _scopeFactory.CreateScope())
         {

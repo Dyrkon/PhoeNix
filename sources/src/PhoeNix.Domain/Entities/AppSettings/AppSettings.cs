@@ -37,7 +37,7 @@ public class AppSettings : AggregateRoot<AppSettingsId>
 
     public string UpdaterBuildHost { get; private set; } = default!;
     public bool UpdaterUseRemoteSudo { get; private set; }
-    public bool UpdaterFast { get; private set; }
+    public bool UpdaterFast { get; private set; } = false;
 
     public string MonitoringPrometheusEndpoint { get; private set; } = default!;
     public double MonitoringTokenTtlDays { get; private set; }
@@ -144,7 +144,7 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             UpdaterFast = false,
             MonitoringPrometheusEndpoint = "http://localhost:9090/prometheus",
             MonitoringTokenTtlDays = 7,
-            NetbootApiBasePublicUrl = "http://192.168.88.46:8888/api",
+            NetbootApiBasePublicUrl = "http://192.168.88.208:8888/api",
             NetbootHostExecutablePath = "/run/wrappers/bin/pixiecore",
             NetbootListenAddress = "0.0.0.0",
             NetbootPort = 64172

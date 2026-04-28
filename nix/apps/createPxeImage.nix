@@ -61,6 +61,7 @@ EOF
       --silent \
       --show-error \
       --retry 10 \
+      --retry-all-errors \
       --retry-delay 3 \
       --connect-timeout 5 \
       --max-time 20 \
@@ -106,8 +107,8 @@ EOF
             description = "Notify PhoeNix that bootstrap environment is ready";
 
             wantedBy = [ "multi-user.target" ];
-            after = [ "network-online.target" ];
-            wants = [ "network-online.target" ];
+            after = [ "network-online.target" "nss-lookup.target" ];
+            wants = [ "network-online.target" "nss-lookup.target" ];
 
             unitConfig = {
               ConditionKernelCommandLine = [

@@ -239,6 +239,28 @@ public class NixBuildMaterializer : INixBuildMaterializer
             inputsLocationPlaceholder);
     }
 
+    private string ReplaceValue(string content, string value)
+    {
+        var safeVal = Regex.Escape(value);
+
+        content = Regex.Replace(content,
+            $@"\$\{{\s*{safeVal}\s*\}}",
+            $"${{args.{value}}}",
+            RegexOptions.IgnoreCase);
+
+        content = Regex.Replace(content,
+            $@"\s*=(?!=)\s*{safeVal}\s*;",
+            $" = args.{value};",
+            RegexOptions.IgnoreCase);
+
+        content = Regex.Replace(content,
+            $@"(?<=\[|\s|^){safeVal}(?=\s|\]|$)(?!\s*=)",
+            $"args.{value}",
+            RegexOptions.IgnoreCase);
+
+        return content;
+    }
+
     private Result<ModuleBuildResult> BuildModule(
         ModuleTemplate moduleTemplate,
         ModuleValue moduleValue,
@@ -270,7 +292,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
                     $"Entry '{value.Placeholder}' has no value and no default value is configured."));
 
             inputs += $"{value.Placeholder} = {nixValue};";
-            outputContent = outputContent.Replace(value.Placeholder, $"args.{value.Placeholder}");
+            outputContent = ReplaceValue(outputContent, value.Placeholder);
         }
 
         inputs += " }";

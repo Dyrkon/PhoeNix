@@ -37,4 +37,9 @@ internal static class SeedPlaceholders
     public const string KdePrinting = "KdePrinting";
     public const string KdeConnect = "KdeConnect";
     public const string SshPermitRootLogin = "SshPermitRootLogin";
+    public const string UserName            = "UserName";
+    public const string UserDescription     = "UserDescription";
+    public const string UserGroups          = "UserGroups";
+    public const string UserAuthorizedKeys  = "UserAuthorizedKeys";
+    public const string UserInitialPassword = "UserInitialPassword";
 }

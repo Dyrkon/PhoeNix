@@ -59,9 +59,9 @@ public sealed class SetupTarget
         string source,
         DateTime nowUtc)
     {
-        LastErrorCode = error.Code.Truncate(500);
-        LastErrorDescription = error.Description?.Truncate(5000);
-        LastErrorSource = source.Truncate(3000);
+        LastErrorCode = error.Code;
+        LastErrorDescription = error.Description;
+        LastErrorSource = source;
         LastErrorAtUtc = nowUtc;
 
         return Result.Success();
@@ -90,18 +90,29 @@ public sealed class SetupTarget
                 "SetupTargetRankedDisksMissing",
                 "At least one ranked disk assignment must be provided."));
 
-        _rankedDiskAssignments.Clear();
-
         for (var i = 0; i < diskByIdPaths.Count; i++)
         {
-            var assignmentResult = RankedDiskAssignment.Create(i, diskByIdPaths[i]);
-            if (assignmentResult.IsFailure)
-            {
-                _rankedDiskAssignments.Clear();
-                return assignmentResult.Error;
-            }
+            var existingAssignment = _rankedDiskAssignments.FirstOrDefault(d => d.Index == i);
 
-            _rankedDiskAssignments.Add(assignmentResult.Value);
+            if (existingAssignment != null)
+            {
+                existingAssignment.UpdateDiskByIdPath(diskByIdPaths[i]);
+            }
+            else
+            {
+                var assignmentResult = RankedDiskAssignment.Create(i, diskByIdPaths[i]);
+                if (assignmentResult.IsFailure) return assignmentResult.Error;
+                _rankedDiskAssignments.Add(assignmentResult.Value);
+            }
+        }
+
+        if (_rankedDiskAssignments.Count > diskByIdPaths.Count)
+        {
+            var itemsToRemove = _rankedDiskAssignments
+                .Where(d => d.Index >= diskByIdPaths.Count)
+                .ToList();
+
+            foreach (var item in itemsToRemove) _rankedDiskAssignments.Remove(item);
         }
 
         return Result.Success();

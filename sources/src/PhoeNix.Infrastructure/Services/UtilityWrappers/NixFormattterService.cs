@@ -19,7 +19,7 @@ public class NixFormatterService(IProcessRunner processRunner) : INixFormatterSe
         ];
 
         return processRunner
-            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3), workingDirectory: path)
+            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3))
             .Map(_ => path);
     }
 }

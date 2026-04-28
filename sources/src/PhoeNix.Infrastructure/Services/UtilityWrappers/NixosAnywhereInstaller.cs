@@ -90,7 +90,7 @@ public sealed class NixosAnywhereInstaller(
             settings.InstallerExecutableName,
             arguments,
             cancellationToken,
-            workingDirectory: configurationDirectoryPath,
+            // workingDirectory: configurationDirectoryPath,
             timeOut: TimeSpan.FromMinutes(settings.InstallerTimeoutMinutes));
 
         if (processResult.IsFailure)
@@ -114,7 +114,7 @@ public sealed class NixosAnywhereInstaller(
         var arguments = new List<string>
         {
             "--flake",
-            $"{configurationDirectoryPath}#{configurationName}"
+            $"path:{configurationDirectoryPath}#{configurationName}"
         };
 
         if (buildOnTarget)

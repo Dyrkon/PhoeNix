@@ -62,7 +62,7 @@ internal sealed class GetMachineMetricsQueryHandler(
             cancellationToken);
 
         var diskSpaceUsed = prometheusQueryClient.QueryInstantAsync(
-            $"100 - ((node_filesystem_avail_bytes{{mountpoint=\"/\",fstype!=\"rootfs\"}} * 100)/node_filesystem_size_bytes{{mountpoint=\"/\",fstype!=\"rootfs\"}})",
+            $"100 - ((node_filesystem_avail_bytes{{mountpoint=\"/\",fstype!=\"rootfs\",machine=\"{title}\"}} * 100)/node_filesystem_size_bytes{{mountpoint=\"/\",fstype!=\"rootfs\",machine=\"{title}\"}})",
             cancellationToken);
 
         var cpuTask = prometheusQueryClient.QueryRangeAsync(
