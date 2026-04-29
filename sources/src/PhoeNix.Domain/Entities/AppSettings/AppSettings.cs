@@ -144,7 +144,7 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             UpdaterFast = false,
             MonitoringPrometheusEndpoint = "http://localhost:9090/prometheus",
             MonitoringTokenTtlDays = 7,
-            NetbootApiBasePublicUrl = "http://192.168.88.208:8888/api",
+            NetbootApiBasePublicUrl = "http://YOUR-API-OR-HOSTNAME:8888/api",
             NetbootHostExecutablePath = "/run/wrappers/bin/pixiecore",
             NetbootListenAddress = "0.0.0.0",
             NetbootPort = 64172

@@ -14,11 +14,21 @@ public class SetupSessionRepository : RepositoryBase<SetupSession, SetupSessionI
     {
     }
 
+    public override Task<SetupSession?> GetByIdAsync(SetupSessionId id, CancellationToken token)
+    {
+        return DbContext.Set<SetupSession>()
+            .Include(s => s.Targets)
+            .ThenInclude(t => t.RankedDiskAssignments)
+            .SingleOrDefaultAsync(s => s.Id == id, token);
+    }
+
     public Task<SetupSession?> GetWithEnrolledMachineAsync(MachineId machineId,
         CancellationToken cancellationToken)
     {
         return DbContext
             .Set<SetupSession>()
+            .Include(s => s.Targets)
+            .ThenInclude(t => t.RankedDiskAssignments)
             .OrderByDescending(s => s.StartTime)
             .FirstOrDefaultAsync(
                 p => p.Targets.Any(t => t.MachineId == machineId),

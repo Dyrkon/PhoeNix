@@ -103,12 +103,9 @@ internal sealed class StartMachineSetupHandler(
                 return clearTokenResult.Error;
         }
 
-        if (target.RankedDiskAssignments.Any())
-        {
-            var clearRankedDisksResult = session.ClearRankedDisks(machine.Id);
-            if (clearRankedDisksResult.IsFailure)
-                return clearRankedDisksResult.Error;
-        }
+        var clearRankedDisksResult = session.ClearRankedDisks(machine.Id);
+        if (clearRankedDisksResult.IsFailure)
+            return clearRankedDisksResult.Error;
 
         var assignTokenResult = callbackTokenService
             .Create(session.Id, machine.Id, nowUtc, TimeSpan.FromHours(2))

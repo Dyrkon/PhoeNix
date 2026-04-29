@@ -120,11 +120,16 @@
           inherit pkgs lib project csprojSrc;
         };
 
+        createPxeImageDev = pkgs.writeShellScriptBin "phoenix-create-pxe-image" ''
+          exec nix run ".#bootstrap" --impure "$@"
+        '';
+
         devShell = import ./nix/shells/default/default.nix {
           inherit pkgs lib project;
           qmd = packages.qmd;
           runtimeDeps = [];
           playwright = playwright.packages.${system};
+          createPxeImage = createPxeImageDev;
         };
 
         pc = import ./nix/process-compose/default.nix {

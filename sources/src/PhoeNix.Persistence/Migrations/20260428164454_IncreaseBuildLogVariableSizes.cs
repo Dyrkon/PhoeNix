@@ -11,6 +11,16 @@ namespace PhoeNix.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
+                name: "LastErrorDescription",
+                table: "SetupSessionTargets",
+                type: "text",
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "character varying(2000)",
+                oldMaxLength: 2000,
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<string>(
                 name: "LastErrorSource",
                 table: "SetupSessionTargets",
                 type: "text",
@@ -34,6 +44,16 @@ namespace PhoeNix.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<string>(
+                name: "LastErrorDescription",
+                table: "SetupSessionTargets",
+                type: "character varying(2000)",
+                maxLength: 2000,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "text",
+                oldNullable: true);
+
             migrationBuilder.AlterColumn<string>(
                 name: "LastErrorSource",
                 table: "SetupSessionTargets",

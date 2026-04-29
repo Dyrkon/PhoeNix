@@ -194,7 +194,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AppSettings");
+                    b.ToTable("AppSettings", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Configurations.Configuration", b =>
@@ -240,7 +240,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("InputId");
 
-                    b.ToTable("FollowInput");
+                    b.ToTable("FollowInput", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Inputs.Input", b =>
@@ -265,7 +265,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("ConfigurationId");
 
-                    b.ToTable("Inputs");
+                    b.ToTable("Inputs", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Machines.Machine", b =>
@@ -304,7 +304,7 @@ namespace PhoeNix.Persistence.Migrations
                     b.HasIndex("Title")
                         .IsUnique();
 
-                    b.ToTable("Machines");
+                    b.ToTable("Machines", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.EntryValue", b =>
@@ -403,7 +403,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("SystemId");
 
-                    b.ToTable("ModuleValue");
+                    b.ToTable("ModuleValue", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.Test", b =>
@@ -447,7 +447,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SetupSessions");
+                    b.ToTable("SetupSessions", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.SystemUsers.SystemUser", b =>
@@ -482,7 +482,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SystemUsers");
+                    b.ToTable("SystemUsers", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Systems.System", b =>
@@ -505,7 +505,7 @@ namespace PhoeNix.Persistence.Migrations
 
                     b.HasIndex("ConfigurationId");
 
-                    b.ToTable("Systems");
+                    b.ToTable("Systems", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Users.User", b =>
@@ -533,7 +533,7 @@ namespace PhoeNix.Persistence.Migrations
                     b.HasIndex("NormalizedName")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("PhoeNix.Domain.Entities.Modules.DecimalRangeValue", b =>
@@ -571,7 +571,7 @@ namespace PhoeNix.Persistence.Migrations
                     b.Property<int>("UpperValue")
                         .HasColumnType("integer");
 
-                    b.ToTable("EntryValues", t =>
+                    b.ToTable("EntryValues", null, t =>
                         {
                             t.Property("LowerValue")
                                 .HasColumnName("IntegerRangeValue_LowerValue");
@@ -670,7 +670,7 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasKey("MachineId");
 
-                            b1.ToTable("Machines");
+                            b1.ToTable("Machines", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("MachineId");
@@ -714,7 +714,7 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasKey("MachineId");
 
-                            b1.ToTable("Machines");
+                            b1.ToTable("Machines", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("MachineId");
@@ -744,7 +744,7 @@ namespace PhoeNix.Persistence.Migrations
 
                                     b2.HasKey("HardwareProfileMachineId");
 
-                                    b2.ToTable("Machines");
+                                    b2.ToTable("Machines", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("HardwareProfileMachineId");
@@ -769,7 +769,7 @@ namespace PhoeNix.Persistence.Migrations
 
                                     b2.HasKey("HardwareProfileMachineId");
 
-                                    b2.ToTable("Machines");
+                                    b2.ToTable("Machines", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("HardwareProfileMachineId");
@@ -822,7 +822,7 @@ namespace PhoeNix.Persistence.Migrations
 
                                     b2.HasKey("HardwareProfileMachineId");
 
-                                    b2.ToTable("Machines");
+                                    b2.ToTable("Machines", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("HardwareProfileMachineId");
@@ -984,7 +984,7 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasIndex("MachineState");
 
-                            b1.ToTable("Machines");
+                            b1.ToTable("Machines", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("MachineId");
@@ -1000,7 +1000,7 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasKey("MachineId");
 
-                            b1.ToTable("Machines");
+                            b1.ToTable("Machines", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("MachineId");
@@ -1176,7 +1176,38 @@ namespace PhoeNix.Persistence.Migrations
 
                             b1.HasKey("SetupSessionId");
 
-                            b1.ToTable("SetupSessions");
+                            b1.ToTable("SetupSessions", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("SetupSessionId");
+                        });
+
+                    b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.SshCredential", "SshCredential", b1 =>
+                        {
+                            b1.Property<Guid>("SetupSessionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("CertificatePublicKey")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("SshCertificatePublicKey");
+
+                            b1.Property<DateTime>("ExpiresAtUtc")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("SshKeyExpiresAtUtc");
+
+                            b1.Property<string>("PublicKey")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("SshPublicKey");
+
+                            b1.Property<DateTime?>("RevokedAtUtc")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("SshKeyRevokedAtUtc");
+
+                            b1.HasKey("SetupSessionId");
+
+                            b1.ToTable("SetupSessions", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("SetupSessionId");
@@ -1291,7 +1322,7 @@ namespace PhoeNix.Persistence.Migrations
 
                                     b2.HasKey("SetupTargetSetupSessionId", "SetupTargetMachineId");
 
-                                    b2.ToTable("SetupSessionTargets");
+                                    b2.ToTable("SetupSessionTargets", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("SetupTargetSetupSessionId", "SetupTargetMachineId");
@@ -1300,37 +1331,6 @@ namespace PhoeNix.Persistence.Migrations
                             b1.Navigation("CallbackToken");
 
                             b1.Navigation("RankedDiskAssignments");
-                        });
-
-                    b.OwnsOne("PhoeNix.Domain.Entities.SetupSessions.SshCredential", "SshCredential", b1 =>
-                        {
-                            b1.Property<Guid>("SetupSessionId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("CertificatePublicKey")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("SshCertificatePublicKey");
-
-                            b1.Property<DateTime>("ExpiresAtUtc")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("SshKeyExpiresAtUtc");
-
-                            b1.Property<string>("PublicKey")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("SshPublicKey");
-
-                            b1.Property<DateTime?>("RevokedAtUtc")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("SshKeyRevokedAtUtc");
-
-                            b1.HasKey("SetupSessionId");
-
-                            b1.ToTable("SetupSessions");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SetupSessionId");
                         });
 
                     b.Navigation("BootArtefactDescriptor");

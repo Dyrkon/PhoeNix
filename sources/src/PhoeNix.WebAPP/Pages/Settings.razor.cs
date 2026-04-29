@@ -112,7 +112,7 @@ public partial class Settings : ComponentBase
         public string MonitoringPrometheusEndpoint { get; set; } = "http://localhost:9090/prometheus";
         public double MonitoringTokenTtlDays { get; set; } = 7;
 
-        public string NetbootApiBasePublicUrl { get; set; } = "http://192.168.88.208:8888/api";
+        public string NetbootApiBasePublicUrl { get; set; } = "http://YOUR-API-OR-HOSTNAME:8888/api";
         public string NetbootHostExecutablePath { get; set; } = "pixiecore";
         public string NetbootListenAddress { get; set; } = "0.0.0.0";
         public int NetbootPort { get; set; } = 64172;

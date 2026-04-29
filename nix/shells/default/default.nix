@@ -1,4 +1,4 @@
-{ pkgs, lib, project, qmd, runtimeDeps ? [], playwright }:
+{ pkgs, lib, project, qmd, runtimeDeps ? [], playwright, createPxeImage }:
 let
   isLinux = pkgs.stdenv.isLinux;
   isDarwin = pkgs.stdenv.isDarwin;
@@ -11,7 +11,8 @@ pkgs.mkShell {
     [
       project.dotnetSdk
       project.dotnetRuntime
-    ] 
+      createPxeImage
+    ]
     ++ lib.optionals (!isCI) [
       pkgs.alejandra
       pkgs.nodejs

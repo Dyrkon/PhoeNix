@@ -3,6 +3,9 @@
 let
   cfg = config.services.phoenix;
   envFile = "${cfg.stateDir}/environment";
+  createPxeImageScript = pkgs.writeShellScriptBin "phoenix-create-pxe-image" ''
+    exec ${pkgs.nix}/bin/nix run "${self}#bootstrap" --impure "$@"
+  '';
 in
 {
   imports = [
@@ -52,7 +55,16 @@ in
       path = [
         pkgs.nixos-anywhere
         pkgs.openssh
+        pkgs.nix
+        createPxeImageScript
         config.security.wrapperDir
+      ];
+    };
+
+    systemd.services.phoenix-mcp = {
+      path = [
+        pkgs.nix
+        createPxeImageScript
       ];
     };
 
