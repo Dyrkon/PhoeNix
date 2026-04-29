@@ -90,7 +90,6 @@ public sealed class NixosAnywhereInstaller(
             settings.InstallerExecutableName,
             arguments,
             cancellationToken,
-            // workingDirectory: configurationDirectoryPath,
             timeOut: TimeSpan.FromMinutes(settings.InstallerTimeoutMinutes));
 
         if (processResult.IsFailure)

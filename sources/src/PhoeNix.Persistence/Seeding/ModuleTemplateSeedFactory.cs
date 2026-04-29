@@ -282,10 +282,7 @@ internal static class ModuleTemplateSeedFactory
         {
             new(SeedIds.PhoeNixServiceTemplate, SeedPlaceholders.PhoenixPublicBaseUrl,
                 SeedPlaceholders.PhoenixPublicBaseUrl, EntryBindingKind.UserProvided, EntryValueKind.Text,
-                "\"http://192.168.88.1\""),
-            new(SeedIds.PhoeNixServiceTemplate, SeedPlaceholders.NcpsServerAddress,
-                SeedPlaceholders.NcpsServerAddress, EntryBindingKind.UserProvided, EntryValueKind.Text,
-                "\":8501\"")
+                "\"http://REPLACE-HOSTNAME\"")
         };
 
         var content =
@@ -312,20 +309,10 @@ internal static class ModuleTemplateSeedFactory
             "    nodeExporter.enable = true;\n" +
             "  };\n" +
             "  nginx.enable = true;\n" +
-            "};\n\n" +
-            "services.ncps = {\n" +
-            "  enable = true;\n" +
-            "  cache.hostName = \"machineone.lan\";\n" +
-            $"  server.addr = {SeedPlaceholders.NcpsServerAddress};\n" +
-            "  upstream = {\n" +
-            "    caches = [ \"https://cache.nixos.org\" ];\n" +
-            "    publicKeys = [ \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\" ];\n" +
-            "  };\n" +
-            "};\n" +
-            "networking.firewall.allowedTCPPorts = [ 8501 ];";
+            "  mcpServer.enable = true;\n" +
+            "};";
 
-        var testContent = "publicUrlSet = { expr = PhoenixPublicBaseUrl != \"\"; expected = true; };\n" +
-                          "serverAddrSet = { expr = NcpsServerAddress != \"\"; expected = true; };";
+        var testContent = "publicUrlSet = { expr = PhoenixPublicBaseUrl != \"\"; expected = true; };";
 
         return BuildTemplate(
             SeedIds.PhoeNixServiceTemplate,
@@ -335,7 +322,7 @@ internal static class ModuleTemplateSeedFactory
             definitions,
             "phoenix-service-test",
             testContent,
-            [SeedPlaceholders.PhoenixPublicBaseUrl, SeedPlaceholders.NcpsServerAddress]
+            [SeedPlaceholders.PhoenixPublicBaseUrl]
         ).Tap(t => t.SetRequiredInputs([("phoenix", "git+ssh://git@github.com/Dyrkon/PhoeNix")]));
     }
 
@@ -516,6 +503,9 @@ internal static class ModuleTemplateSeedFactory
     {
         var definitions = new List<EntryValueDefinition>
         {
+            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.Sandbox, SeedPlaceholders.Sandbox,
+                EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
+                OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" })),
             new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.AdminUser, SeedPlaceholders.AdminUser,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
             new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.SshPermitRootLogin,
@@ -533,6 +523,7 @@ internal static class ModuleTemplateSeedFactory
             "security.audit.enable = true;\n  " +
             "security.audit.rules = [\n" +
             "    \"-a exit,always -F arch=b64 -S execve\"\n  ];\n" +
+            $"nix.useSandbox = {SeedPlaceholders.Sandbox};" +
             "environment.defaultPackages = lib.mkForce [];\n" +
             "services.openssh.settings = {\n" +
             "  PasswordAuthentication = false;\n" +

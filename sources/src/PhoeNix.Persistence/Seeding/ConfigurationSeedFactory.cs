@@ -9,15 +9,18 @@ namespace PhoeNix.Persistence.Seeding;
 
 internal static class ConfigurationSeedFactory
 {
+    private const string NixpkgsSource = "github:NixOS/nixpkgs/nixos-25.11";
+
+    private const string PhoenixSource =
+        "git+ssh://git@github.com/Dyrkon/PhoeNix";
+
     public static Result<Configuration> CreateMinimalInstallableExample(SeedExampleOptions options)
     {
-        const string nixpkgsSource = "github:NixOS/nixpkgs/nixos-unstable";
-
         return Configuration.Create(
                 SeedIds.ExampleConfiguration,
                 "Minimal NixOS Anywhere Example",
                 "Minimal bootable NixOS target for nixos-anywhere with Disko, callback, and Prometheus node exporter.")
-            .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
@@ -123,13 +126,12 @@ internal static class ConfigurationSeedFactory
 
     public static Result<Configuration> CreatePhoeNixDeploymentExample(SeedExampleOptions options)
     {
-        const string nixpkgsSource = "github:NixOS/nixpkgs/nixos-unstable";
-
         return Configuration.Create(
                 SeedIds.PhoeNixDeploymentConfiguration,
                 "PhoeNix Deployment Server",
                 "PhoeNix application server with integrated NCPS binary cache. Prometheus is provided by the PhoeNix service module.")
-            .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(PhoenixSource, "phoenix"))
             .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
@@ -147,13 +149,11 @@ internal static class ConfigurationSeedFactory
 
     public static Result<Configuration> CreateCacheMachineExample(SeedExampleOptions options)
     {
-        const string nixpkgsSource = "github:NixOS/nixpkgs/nixos-unstable";
-
         return Configuration.Create(
                 SeedIds.CacheMachineConfiguration,
                 "Nix Binary Cache Server",
                 "Dedicated NCPS binary cache server with Prometheus node exporter for monitoring.")
-            .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
@@ -173,13 +173,11 @@ internal static class ConfigurationSeedFactory
 
     public static Result<Configuration> CreateGnomeWorkstationExample(SeedExampleOptions options)
     {
-        const string nixpkgsSource = "github:NixOS/nixpkgs/nixos-unstable";
-
         return Configuration.Create(
                 SeedIds.GnomeWorkstationConfiguration,
                 "GNOME Office Workstation",
                 "Locked-down GNOME desktop workstation using the local NCPS binary cache and SSH key hardening.")
-            .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
@@ -203,13 +201,11 @@ internal static class ConfigurationSeedFactory
 
     public static Result<Configuration> CreateKdeWorkstationExample(SeedExampleOptions options)
     {
-        const string nixpkgsSource = "github:NixOS/nixpkgs/nixos-unstable";
-
         return Configuration.Create(
                 SeedIds.KdeWorkstationConfiguration,
                 "KDE Office Workstation",
                 "Locked-down KDE Plasma workstation using the local NCPS binary cache and SSH key hardening.")
-            .Tap(cfg => cfg.AddInput(nixpkgsSource, "nixpkgs"))
+            .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
             .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
