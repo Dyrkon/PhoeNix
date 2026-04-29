@@ -56,9 +56,18 @@ in
         pkgs.nixos-anywhere
         pkgs.openssh
         pkgs.nix
+        pkgs.nixos-rebuild
+        pkgs.coreutils
         createPxeImageScript
         config.security.wrapperDir
       ];
+      environment = {
+        PHOENIX_SSH_KEYGEN_PATH = "${pkgs.openssh}/bin/ssh-keygen";
+        PHOENIX_SSH_PATH = "${pkgs.openssh}/bin/ssh";
+        PHOENIX_NIX_PATH = "${pkgs.nix}/bin/nix";
+        PHOENIX_NIXOS_REBUILD_PATH = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
+        PHOENIX_NIXOS_ANYWHERE_PATH = "${pkgs.nixos-anywhere}/bin/nixos-anywhere";
+      };
     };
 
     systemd.services.phoenix-mcp = {
@@ -66,6 +75,11 @@ in
         pkgs.nix
         createPxeImageScript
       ];
+    };
+
+    networking.firewall = {
+      allowedUDPPorts = [ 67 69 4011 ];
+      allowedTCPPorts = [ 64172 64173 ];
     };
 
     systemd.services.phoenix-api-env = {

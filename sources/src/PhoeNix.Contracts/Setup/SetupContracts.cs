@@ -30,6 +30,8 @@ public sealed record SetupSessionDetailResponse(
     DateTime StartTime,
     DateTime? LastTransitionTime,
     DateTime? CredentialsExpireAt,
+    bool IsBootstrapReady,
+    string? BootstrapBuildError,
     IReadOnlyList<SetupTargetResponse> Targets);
 
 public sealed record SetupTargetResponse(

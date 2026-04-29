@@ -121,7 +121,11 @@
         };
 
         createPxeImageDev = pkgs.writeShellScriptBin "phoenix-create-pxe-image" ''
-          exec nix run ".#bootstrap" --impure "$@"
+          if [ -z "''${PHOENIX_FLAKE_ROOT}" ]; then
+            echo "phoenix-create-pxe-image: PHOENIX_FLAKE_ROOT is not set. Enter the nix dev shell first." >&2
+            exit 1
+          fi
+          exec nix run "''${PHOENIX_FLAKE_ROOT}#bootstrap" --impure "$@"
         '';
 
         devShell = import ./nix/shells/default/default.nix {

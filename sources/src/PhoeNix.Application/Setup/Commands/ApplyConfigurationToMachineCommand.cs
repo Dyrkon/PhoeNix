@@ -28,6 +28,7 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
     INixosInstaller nixosInstaller,
     IRuntimeBindingResolver runtimeBindingResolver,
     IMachineRepository machineRepository,
+    IAppSettingsRepository appSettingsRepository,
     IOptions<NetbootHostOptions> setupCallbackOptions,
     IDeploySshKeyProvider deploySshKeyProvider)
     : ICommandHandler<ApplyConfigurationToMachineCommand>
@@ -163,7 +164,9 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 nameof(ApplyConfigurationToMachineCommandHandler),
                 nowUtc);
 
-        var finalizeUrl = $"{setupCallbackOptions.Value.ApiBasePublicUrl.TrimEnd('/')}/setup/finalize";
+        var settings = await appSettingsRepository.GetAsync(cancellationToken);
+        var finalizeUrl =
+            $"{settings?.NetbootApiBasePublicUrl.TrimEnd('/') ?? setupCallbackOptions.Value.ApiBasePublicUrl.TrimEnd('/')}/setup/finalize";
 
         var builtInModules = new BuiltInModuleParameters(
             new CallbackModuleParameters(

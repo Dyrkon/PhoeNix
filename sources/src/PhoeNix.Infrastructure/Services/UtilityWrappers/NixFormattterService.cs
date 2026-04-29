@@ -18,8 +18,9 @@ public class NixFormatterService(IProcessRunner processRunner) : INixFormatterSe
             $"{path}"
         ];
 
+        var nixPath = Environment.GetEnvironmentVariable("PHOENIX_NIX_PATH") ?? "nix";
         return processRunner
-            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3))
+            .RunProcess(nixPath, arguments, cancellationToken, workingDirectory: path, timeOut: TimeSpan.FromMinutes(3))
             .Map(_ => path);
     }
 }

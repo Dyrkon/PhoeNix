@@ -68,16 +68,18 @@ public sealed class SshHardwareProbeService(
             settings.HardwareProbeBootstrapUser,
             settings.HardwareProbeProbeCommand);
 
+        var sshExecutable = settings.HardwareProbeSshExecutable;
+        if (!Path.IsPathRooted(sshExecutable))
+            sshExecutable = Environment.GetEnvironmentVariable("PHOENIX_SSH_PATH") ?? sshExecutable;
+
         var processResult = processRunner.RunProcess(
-            settings.HardwareProbeSshExecutable,
+            sshExecutable,
             arguments,
             cancellationToken,
             timeOut: TimeSpan.FromSeconds(settings.HardwareProbeProbeTimeoutSeconds));
 
         if (processResult.IsFailure)
-            return Result.Failure<HardwareProbeResult>(new Error(
-                "HardwareProbeExecutionFailed",
-                processResult.Error.Description));
+            return Result.Failure<HardwareProbeResult>(processResult.Error with { Code = "HardwareProbeExecutionFailed" });
 
         var stdout = processResult.Value.StandardOutput?.Trim();
         if (string.IsNullOrWhiteSpace(stdout))

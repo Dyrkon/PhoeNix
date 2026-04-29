@@ -103,6 +103,10 @@ EOF
 
           environment.systemPackages = [ pkgs.curl pkgs.nixos-facter ];
 
+          nix.settings = {
+            experimental-features = [ "nix-command" ];
+          };
+
           systemd.services.phoenix-bootstrap-callback = {
             description = "Notify PhoeNix that bootstrap environment is ready";
 

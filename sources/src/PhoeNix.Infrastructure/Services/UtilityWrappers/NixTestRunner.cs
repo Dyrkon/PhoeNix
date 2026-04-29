@@ -24,8 +24,9 @@ public class NixTestRunner(INixErrorParserService nixErrorParserService, IProces
             "--quiet"
         ];
 
+        var nixPath = Environment.GetEnvironmentVariable("PHOENIX_NIX_PATH") ?? "nix";
         return processRunner
-            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3))
+            .RunProcess(nixPath, arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3))
             .Bind(r => nixErrorParserService.ParseModelTestResult(id, testName, r.StandardOutput.Trim(),
                 r.ErrorOutput.Trim(), r.ReturnCode));
     }
@@ -45,8 +46,9 @@ public class NixTestRunner(INixErrorParserService nixErrorParserService, IProces
         var duration = "unspecified";
         var regex = new Regex("test script finished in ([0-9.]+s)", RegexOptions.Compiled);
 
+        var nixosAnywherePath = Environment.GetEnvironmentVariable("PHOENIX_NIXOS_ANYWHERE_PATH") ?? "nixos-anywhere";
         return processRunner
-            .RunProcess("nixos-anywhere", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(15),
+            .RunProcess(nixosAnywherePath, arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(15),
                 perLineAction: s =>
                 {
                     if (s == null) return;

@@ -21,11 +21,19 @@ public class SetupSession : AggregateRoot<SetupSessionId>
 
     public BootstrapImageDescriptor? BootArtefactDescriptor { get; private set; }
 
+    public string? BootstrapBuildError { get; private set; }
+
     public SshCredential? SshCredential { get; private set; }
 
     public IReadOnlyCollection<SetupTarget> Targets => _targets;
 
     public DateTime StartTime { get; private set; }
+
+    public Result MarkBootstrapFailed(string errorDescription)
+    {
+        BootstrapBuildError = errorDescription;
+        return Result.Success();
+    }
 
     public Result AssignSshCredential(SshCredential credential, DateTime nowUtc)
     {
@@ -223,6 +231,8 @@ public class SetupSession : AggregateRoot<SetupSessionId>
 
     public static Result<SetupSession> Create(SetupSessionId id, DateTime now)
     {
-        return Result.Success(new SetupSession(id) { StartTime = now });
+        var session = new SetupSession(id) { StartTime = now };
+        session.RaiseDomainEvent(new SetupSessionBootstrapRequestedDomainEvent(id));
+        return Result.Success(session);
     }
 }

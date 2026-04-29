@@ -39,6 +39,7 @@ pkgs.mkShell {
     ];
 
   shellHook = ''
+    export PHOENIX_FLAKE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
     export DOTNET_ROOT=${project.dotnetSdk}
     export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs}/bin/node

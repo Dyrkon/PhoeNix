@@ -40,9 +40,7 @@ public sealed class BootstrapImageBuilder(
             environmentVariables);
 
         if (result.IsFailure)
-            return Result.Failure<BootstrapImageDescriptor>(new Error(
-                "BootstrapImageBuildFailed",
-                result.Error.Description));
+            return Result.Failure<BootstrapImageDescriptor>(result.Error with { Code = "BootstrapImageBuildFailed" });
 
         var json = result.Value.StandardOutput.Trim();
         if (string.IsNullOrWhiteSpace(json))
