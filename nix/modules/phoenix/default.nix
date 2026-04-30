@@ -6,6 +6,14 @@ let
   createPxeImageScript = pkgs.writeShellScriptBin "phoenix-create-pxe-image" ''
     exec ${pkgs.nix}/bin/nix run "${self}#bootstrap" --impure "$@"
   '';
+  toolsEnv = {
+        PHOENIX_SSH_KEYGEN_PATH = "${pkgs.openssh}/bin/ssh-keygen";
+        PHOENIX_SSH_PATH = "${pkgs.openssh}/bin/ssh";
+        PHOENIX_NIX_PATH = "${pkgs.nix}/bin/nix";
+        PHOENIX_NIXOS_REBUILD_PATH = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
+        PHOENIX_NIXOS_ANYWHERE_PATH = "${pkgs.nixos-anywhere}/bin/nixos-anywhere";
+        PHOENIX_ALEJANDRA_PATH = "${pkgs.alejandra}/bin/alejandra";
+      };
 in
 {
   imports = [
@@ -61,13 +69,7 @@ in
         createPxeImageScript
         config.security.wrapperDir
       ];
-      environment = {
-        PHOENIX_SSH_KEYGEN_PATH = "${pkgs.openssh}/bin/ssh-keygen";
-        PHOENIX_SSH_PATH = "${pkgs.openssh}/bin/ssh";
-        PHOENIX_NIX_PATH = "${pkgs.nix}/bin/nix";
-        PHOENIX_NIXOS_REBUILD_PATH = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
-        PHOENIX_NIXOS_ANYWHERE_PATH = "${pkgs.nixos-anywhere}/bin/nixos-anywhere";
-      };
+      environment = toolsEnv;
     };
 
     systemd.services.phoenix-mcp = {
@@ -75,6 +77,7 @@ in
         pkgs.nix
         createPxeImageScript
       ];
+      environment = toolsEnv;
     };
 
     networking.firewall = {

@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, config, lib, ... }:
 {
   imports = [
     inputs.self.nixosModules.default
@@ -25,8 +25,10 @@
     };
   };
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  boot.loader.systemd-boot.enable = lib.mkIf (!config.boot.isContainer) true;
+  boot.loader.efi.canTouchEfiVariables = lib.mkIf (!config.boot.isContainer) true;
   services.qemuGuest.enable = true;
   
   boot.initrd.availableKernelModules = [ 

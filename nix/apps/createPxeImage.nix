@@ -104,7 +104,7 @@ EOF
           environment.systemPackages = [ pkgs.curl pkgs.nixos-facter ];
 
           nix.settings = {
-            experimental-features = [ "nix-command" ];
+            experimental-features = [ "nix-command" "flakes" ];
           };
 
           systemd.services.phoenix-bootstrap-callback = {

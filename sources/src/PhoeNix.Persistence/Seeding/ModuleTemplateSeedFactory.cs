@@ -77,7 +77,7 @@ internal static class ModuleTemplateSeedFactory
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                 {
-                    "\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\""
+                    "\"YOUR SSH KEY\""
                 }))
         };
 
@@ -295,7 +295,7 @@ internal static class ModuleTemplateSeedFactory
             "    \"NetbootHost__HostExecutablePath\" = \"/run/wrappers/bin/pixiecore\";\n" +
             "    \"SeedExample__HostName\" = \"phoenix-demo\";\n" +
             "    \"SeedExample__StateVersion\" = \"25.11\";\n" +
-            "    \"SeedExample__RootAuthorizedKeys__0\" = \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com\";\n" +
+            "    \"SeedExample__RootAuthorizedKeys__0\" = \"YOUR SSH KEY\";\n" +
             $"    \"SeedExample__PublicBaseUrl\" = {SeedPlaceholders.PhoenixPublicBaseUrl};\n" +
             "    \"SeedExample__MetricsPort\" = \"9100\";\n" +
             "    \"SeedExample__OpenFirewall\" = \"true\";\n" +

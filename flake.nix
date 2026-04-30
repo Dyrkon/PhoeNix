@@ -10,11 +10,6 @@
 
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
 
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     qmd-src = {
       url = "github:tobi/qmd/c2f3a4037204066455662492518384c9f3a4d247";
       flake = false;
@@ -26,7 +21,7 @@
   };
 
   outputs = inputs @ {
-    self, nixpkgs, flake-utils, disko, nixos-generators, playwright, ...
+    self, nixpkgs, flake-utils, disko, playwright, ...
   }:
   let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
@@ -50,15 +45,6 @@
         phoenix-x86 = mkSystem "x86_64-linux";
         phoenix-arm = mkSystem "aarch64-linux";
       };
-
-      packages = nixpkgs.lib.genAttrs supportedSystems (system: {
-        lxc = nixos-generators.outputs.packages.${system}.lxc {
-          inherit (self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}") config;
-        };
-        vm = nixos-generators.outputs.packages.${system}.qcow {
-          inherit (self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}") config;
-        };
-      });
     } //
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -110,6 +96,10 @@
           };
 
           default = webapp;
+
+          lxc = self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}".config.system.build.images.lxc;
+          
+          vm = self.nixosConfigurations."phoenix-${if system == "x86_64-linux" then "x86" else "arm"}".config.system.build.images.qemu;
         };
 
         webapiTest = import ./nix/packages/tests/webapi-test/default.nix {
@@ -120,13 +110,9 @@
           inherit pkgs lib project csprojSrc;
         };
 
-        createPxeImageDev = pkgs.writeShellScriptBin "phoenix-create-pxe-image" ''
-          if [ -z "''${PHOENIX_FLAKE_ROOT}" ]; then
-            echo "phoenix-create-pxe-image: PHOENIX_FLAKE_ROOT is not set. Enter the nix dev shell first." >&2
-            exit 1
-          fi
-          exec nix run "''${PHOENIX_FLAKE_ROOT}#bootstrap" --impure "$@"
-        '';
+        createPxeImageDev = import ./nix/packages/imageBuilder/default.nix  {
+          inherit pkgs;
+        };
 
         devShell = import ./nix/shells/default/default.nix {
           inherit pkgs lib project;
