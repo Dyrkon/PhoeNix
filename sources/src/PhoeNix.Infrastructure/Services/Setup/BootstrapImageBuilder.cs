@@ -27,13 +27,6 @@ public sealed class BootstrapImageBuilder(
                 "BootstrapArchitectureUnsupported",
                 $"Architecture '{architecture}' is not supported by the bootstrap image builder."));
 
-        var args = new List<string>
-        {
-            "run",
-            ".#bootstrap",
-            "--impure"
-        };
-
         var environmentVariables = new Dictionary<string, string>
         {
             ["PHOENIX_USER_CA_PUBLIC_KEY"] = caKeyResult.Value,
@@ -41,15 +34,13 @@ public sealed class BootstrapImageBuilder(
         };
 
         var result = processRunner.RunProcess(
-            "nix",
-            args,
+            "phoenix-create-pxe-image",
+            [],
             cancellationToken,
             environmentVariables);
 
         if (result.IsFailure)
-            return Result.Failure<BootstrapImageDescriptor>(new Error(
-                "BootstrapImageBuildFailed",
-                result.Error.Description));
+            return Result.Failure<BootstrapImageDescriptor>(result.Error with { Code = "BootstrapImageBuildFailed" });
 
         var json = result.Value.StandardOutput.Trim();
         if (string.IsNullOrWhiteSpace(json))

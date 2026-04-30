@@ -10,7 +10,7 @@ using PhoeNix.WebAPP.States;
 
 namespace PhoeNix.WebAPP.Pages.SetupSessions;
 
-public partial class SetupWizardPage : ComponentBase
+public partial class SetupWizardPage : ComponentBase, IDisposable
 {
     [Inject] private ISetupApiClient SetupApiClient { get; set; } = null!;
     [Inject] private IMachinesApiClient MachinesApiClient { get; set; } = null!;
@@ -25,6 +25,7 @@ public partial class SetupWizardPage : ComponentBase
     private string? _sessionStartError;
     private Guid? _sessionId;
     private Task? _sessionStartTask;
+    private readonly CancellationTokenSource _cts = new();
 
     private bool _machinesLoading;
     private bool _configurationsLoading;
@@ -63,7 +64,7 @@ public partial class SetupWizardPage : ComponentBase
     {
         _sessionStarting = true;
 
-        var result = await SetupApiClient.StartSessionAsync();
+        var result = await SetupApiClient.StartSessionAsync(_cts.Token);
 
         if (result.IsFailure || string.IsNullOrWhiteSpace(result.Value))
         {
@@ -74,10 +75,41 @@ public partial class SetupWizardPage : ComponentBase
         }
 
         _sessionId = Guid.Parse(result.Value);
-        _sessionStarting = false;
         SetupSessionsState.StartPolling();
         await InvokeAsync(StateHasChanged);
+
+        await PollUntilImageReadyAsync();
     }
+
+    private async Task PollUntilImageReadyAsync()
+    {
+        while (!_cts.Token.IsCancellationRequested)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3), _cts.Token);
+
+            var detail = await SetupApiClient.GetSessionDetailAsync(_sessionId!.Value, _cts.Token);
+
+            if (detail.IsFailure || detail.Value is null)
+                continue;
+
+            if (detail.Value.IsBootstrapReady)
+            {
+                _sessionStarting = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            if (detail.Value.BootstrapBuildError is not null)
+            {
+                _sessionStartError = detail.Value.BootstrapBuildError;
+                _sessionStarting = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
 
     private async Task LoadMachinesAsync()
     {

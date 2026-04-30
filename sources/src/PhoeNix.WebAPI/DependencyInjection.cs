@@ -44,7 +44,7 @@ public static class DependencyInjection
 
         services.AddCarter(configurator: c =>
         {
-            c.WithValidatorsFromAssembly(typeof(PhoeNix.Application.DependencyInjection).Assembly);
+            c.WithValidatorsFromAssembly(typeof(Contracts.AssemblyReference).Assembly);
         });
 
         services.AddWebApiOptions(configuration);

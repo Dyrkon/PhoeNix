@@ -47,6 +47,8 @@ public static class SetupSessionMappings
                 .Cast<DateTime?>()
                 .FirstOrDefault(),
             session.SshCredential?.ExpiresAtUtc,
+            session.BootArtefactDescriptor is not null,
+            session.BootstrapBuildError,
             session.Targets
                 .Select(t => MapSetupTargetToDto(t, configurationsById))
                 .ToList());

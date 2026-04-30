@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
-using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Bootstrap;
+using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Deployment;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Abstractions.FileSystem;
@@ -45,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<ISshKeyFileStore, SshKeyFileStore>();
         services.AddScoped<ISetupSshKeyProvider, SetupSshKeyProvider>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
+        services.AddSingleton<IBootstrapSessionQueue, BootstrapSessionQueue>();
+        services.AddHostedService<BootstrapBackgroundService>();
         services.AddScoped<IInstallDiskSelectionPolicy, InstallDiskSelectionPolicy>();
         services.AddScoped<IHardwareProbeService, SshHardwareProbeService>();
         services.AddScoped<IHardwareInventoryProjector, HardwareInventoryProjector>();

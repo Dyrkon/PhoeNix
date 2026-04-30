@@ -26,6 +26,7 @@ internal static class SeedPlaceholders
     public const string Locale = "Locale";
     public const string KeyboardLayout = "KeyboardLayout";
     public const string AdminUser = "AdminUser";
+    public const string Sandbox = "SANDBOX";
     public const string LogRetentionDays = "LogRetentionDays";
     public const string GpuEnable32Bit = "Enable32Bit";
     public const string NvidiaOpenKernel = "NvidiaOpenKernel";
@@ -37,4 +38,9 @@ internal static class SeedPlaceholders
     public const string KdePrinting = "KdePrinting";
     public const string KdeConnect = "KdeConnect";
     public const string SshPermitRootLogin = "SshPermitRootLogin";
+    public const string UserName = "UserName";
+    public const string UserDescription = "UserDescription";
+    public const string UserGroups = "UserGroups";
+    public const string UserAuthorizedKeys = "UserAuthorizedKeys";
+    public const string UserInitialPassword = "UserInitialPassword";
 }

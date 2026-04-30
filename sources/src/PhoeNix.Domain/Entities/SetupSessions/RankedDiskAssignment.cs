@@ -12,6 +12,16 @@ public sealed class RankedDiskAssignment
 
     public string DiskByIdPath { get; private set; }
 
+    public Result UpdateDiskByIdPath(string newPath)
+    {
+        if (newPath == DiskByIdPath)
+            return Result.Failure(new Error("DiskByIdPathAlreadyAssigned",
+                $"Disk path {newPath} is already assigned."));
+
+        DiskByIdPath = newPath;
+        return Result.Success();
+    }
+
     public static Result<RankedDiskAssignment> Create(int index, string diskByIdPath)
     {
         if (index < 0)

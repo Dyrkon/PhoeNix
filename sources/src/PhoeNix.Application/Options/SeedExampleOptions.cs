@@ -20,5 +20,5 @@ public sealed class SeedExampleOptions
     ];
 
     public int NixMaxJobs { get; init; } = 4;
-    public int NixCores { get; init; } = 0;
+    public int NixCores { get; init; } = 1;
 }

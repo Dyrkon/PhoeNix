@@ -1,4 +1,6 @@
+using FluentValidation;
 using PhoeNix.Common.Models;
+using PhoeNix.Contracts.Deployment;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Contracts.Machines;
@@ -110,3 +112,19 @@ public record MachineMetricsResponse(
     MetricSeriesResponse NetTx,
     MetricSeriesResponse DiskRead,
     MetricSeriesResponse DiskWrite);
+
+public sealed class CreateMachineRequestValidator : AbstractValidator<CreateMachineRequest>
+{
+    public CreateMachineRequestValidator()
+    {
+        // TODO
+    }
+}
+
+public sealed class UpdateMachineRequestValidator : AbstractValidator<UpdateMachineRequest>
+{
+    public UpdateMachineRequestValidator()
+    {
+        // TODO
+    }
+}

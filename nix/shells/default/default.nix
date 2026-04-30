@@ -1,4 +1,4 @@
-{ pkgs, lib, project, qmd, runtimeDeps ? [], playwright }:
+{ pkgs, lib, project, qmd, runtimeDeps ? [], playwright, createPxeImage }:
 let
   isLinux = pkgs.stdenv.isLinux;
   isDarwin = pkgs.stdenv.isDarwin;
@@ -11,7 +11,8 @@ pkgs.mkShell {
     [
       project.dotnetSdk
       project.dotnetRuntime
-    ] 
+      createPxeImage
+    ]
     ++ lib.optionals (!isCI) [
       pkgs.alejandra
       pkgs.nodejs
@@ -38,6 +39,7 @@ pkgs.mkShell {
     ];
 
   shellHook = ''
+    export PHOENIX_FLAKE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
     export DOTNET_ROOT=${project.dotnetSdk}
     export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     export PLAYWRIGHT_NODEJS_PATH=${pkgs.nodejs}/bin/node

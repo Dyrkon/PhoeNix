@@ -53,6 +53,54 @@ internal sealed class ApplicationDbSeeder(
             dbContext.Set<Configuration>().Add(configurationResult.Value);
         }
 
+        var phoenixDeploymentExists = await dbContext.Set<Configuration>()
+            .AnyAsync(c => c.Id == SeedIds.PhoeNixDeploymentConfiguration, cancellationToken);
+
+        if (!phoenixDeploymentExists)
+        {
+            var result = ConfigurationSeedFactory.CreatePhoeNixDeploymentExample(seedExampleOptions.Value);
+            if (result.IsFailure)
+                throw new InvalidOperationException(result.Error.Description);
+
+            dbContext.Set<Configuration>().Add(result.Value);
+        }
+
+        var cacheMachineExists = await dbContext.Set<Configuration>()
+            .AnyAsync(c => c.Id == SeedIds.CacheMachineConfiguration, cancellationToken);
+
+        if (!cacheMachineExists)
+        {
+            var result = ConfigurationSeedFactory.CreateCacheMachineExample(seedExampleOptions.Value);
+            if (result.IsFailure)
+                throw new InvalidOperationException(result.Error.Description);
+
+            dbContext.Set<Configuration>().Add(result.Value);
+        }
+
+        var gnomeWorkstationExists = await dbContext.Set<Configuration>()
+            .AnyAsync(c => c.Id == SeedIds.GnomeWorkstationConfiguration, cancellationToken);
+
+        if (!gnomeWorkstationExists)
+        {
+            var result = ConfigurationSeedFactory.CreateGnomeWorkstationExample(seedExampleOptions.Value);
+            if (result.IsFailure)
+                throw new InvalidOperationException(result.Error.Description);
+
+            dbContext.Set<Configuration>().Add(result.Value);
+        }
+
+        var kdeWorkstationExists = await dbContext.Set<Configuration>()
+            .AnyAsync(c => c.Id == SeedIds.KdeWorkstationConfiguration, cancellationToken);
+
+        if (!kdeWorkstationExists)
+        {
+            var result = ConfigurationSeedFactory.CreateKdeWorkstationExample(seedExampleOptions.Value);
+            if (result.IsFailure)
+                throw new InvalidOperationException(result.Error.Description);
+
+            dbContext.Set<Configuration>().Add(result.Value);
+        }
+
         var appSettingsExist = await dbContext.AppSettings
             .AnyAsync(cancellationToken);
 

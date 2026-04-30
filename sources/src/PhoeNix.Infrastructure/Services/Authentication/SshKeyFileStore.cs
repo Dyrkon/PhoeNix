@@ -133,20 +133,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
                 return Result.Failure(dirResult.Error with { Code = "SshKeyFileStoreCreateDirFailed" });
         }
 
-        var result = _processRunner.RunProcess(
-            "chmod",
-            ["600", privateKeyPath],
-            CancellationToken.None);
-
-        if (result.IsFailure)
-            return Result.Failure(result.Error with { Code = "SshKeyFileStoreChmodFailed" });
-
-        if (result.Value.ReturnCode != 0)
-            return Result.Failure(new Error(
-                "SshKeyFileStoreChmodFailed",
-                $"chmod returned {result.Value.ReturnCode}: {result.Value.ErrorOutput}"
-            ));
-
+        File.SetUnixFileMode(privateKeyPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         return Result.Success();
     }
 

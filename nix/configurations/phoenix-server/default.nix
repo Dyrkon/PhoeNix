@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, config, lib, ... }:
 {
   imports = [
     inputs.self.nixosModules.default
@@ -25,8 +25,10 @@
     };
   };
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  boot.loader.systemd-boot.enable = lib.mkIf (!config.boot.isContainer) true;
+  boot.loader.efi.canTouchEfiVariables = lib.mkIf (!config.boot.isContainer) true;
   services.qemuGuest.enable = true;
   
   boot.initrd.availableKernelModules = [ 
@@ -48,11 +50,11 @@
 
       "SeedExample__HostName" = "phoenix-orchestrator";
       "SeedExample__StateVersion" = "25.11";
-      "SeedExample__RootAuthorizedKeys__0" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBogRs9tt7sCKyEM+Vj16pM8tTesXTPWh5nA5lvOc6kM dyrkon603@gmail.com";
-      "SeedExample__PublicBaseUrl" = "http://192.168.88.144";
+      "SeedExample__RootAuthorizedKeys__0" = "ssh-ed25519 YOUR KEY";
+      "SeedExample__PublicBaseUrl" = "http://YOUR-API-OR-HOSTNAME";
       "SeedExample__MetricsPort" = "9100";
       "SeedExample__OpenFirewall" = "true";
-      "Cors__AllowedOrigins__0" = "https://192.168.88.144";
+      "Cors__AllowedOrigins__0" = "https://YOUR-API-OR-HOSTNAME";
     };
     monitoring = {
       enable = true;

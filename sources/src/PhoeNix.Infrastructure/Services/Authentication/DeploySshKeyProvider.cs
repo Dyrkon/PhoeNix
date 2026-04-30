@@ -117,7 +117,8 @@ public sealed class DeploySshKeyProvider(
             "-C", "phoenix-deploy-user-ca"
         };
 
-        var run = processRunner.RunProcess("ssh-keygen", args, ct);
+        var sshKeygenPath = Environment.GetEnvironmentVariable("PHOENIX_SSH_KEYGEN_PATH") ?? "ssh-keygen";
+        var run = processRunner.RunProcess(sshKeygenPath, args, ct);
         if (run.IsFailure)
             return Result.Failure(run.Error with { Code = "DeploySshCaKeygenFailed" });
 
@@ -145,7 +146,9 @@ public sealed class DeploySshKeyProvider(
             "-C", "phoenix-machine-deploy"
         };
 
-        var run = processRunner.RunProcess("ssh-keygen", args, ct);
+        var sshKeygenPath = Environment.GetEnvironmentVariable("PHOENIX_SSH_KEYGEN_PATH") ?? "ssh-keygen";
+
+        var run = processRunner.RunProcess(sshKeygenPath, args, ct);
         if (run.IsFailure)
             return Result.Failure(run.Error with { Code = "DeploySshKeygenFailed" });
 
@@ -178,7 +181,8 @@ public sealed class DeploySshKeyProvider(
             machinePublicKeyPath
         };
 
-        var run = processRunner.RunProcess("ssh-keygen", args, ct);
+        var sshKeygenPath = Environment.GetEnvironmentVariable("PHOENIX_SSH_KEYGEN_PATH") ?? "ssh-keygen";
+        var run = processRunner.RunProcess(sshKeygenPath, args, ct);
         if (run.IsFailure)
             return Result.Failure(run.Error with { Code = "DeploySshCertSignFailed" });
 

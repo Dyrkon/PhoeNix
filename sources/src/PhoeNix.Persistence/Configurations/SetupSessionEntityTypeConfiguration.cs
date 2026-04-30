@@ -74,16 +74,13 @@ internal sealed class SetupSessionEntityTypeConfiguration
                 .HasColumnName("LastTransitionAtUtc");
 
             owned.Property(t => t.LastErrorCode)
-                .HasColumnName("LastErrorCode")
-                .HasMaxLength(100);
+                .HasColumnName("LastErrorCode");
 
             owned.Property(t => t.LastErrorDescription)
-                .HasColumnName("LastErrorDescription")
-                .HasMaxLength(2000);
+                .HasColumnName("LastErrorDescription");
 
             owned.Property(t => t.LastErrorSource)
-                .HasColumnName("LastErrorSource")
-                .HasMaxLength(200);
+                .HasColumnName("LastErrorSource");
 
             owned.Property(t => t.LastErrorAtUtc)
                 .HasColumnName("LastErrorAtUtc");

@@ -67,8 +67,9 @@ internal sealed class NixOsMachineUpdater(
             settings.UpdaterBuildHost,
             systemAttribute);
 
+        var nixosRebuildPath = Environment.GetEnvironmentVariable("PHOENIX_NIXOS_REBUILD_PATH") ?? "nixos-rebuild";
         var result = processRunner.RunProcess(
-            "nixos-rebuild",
+            nixosRebuildPath,
             arguments,
             cancellationToken,
             environmentVariables,

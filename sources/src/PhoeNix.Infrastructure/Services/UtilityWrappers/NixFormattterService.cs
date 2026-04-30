@@ -9,17 +9,16 @@ public class NixFormatterService(IProcessRunner processRunner) : INixFormatterSe
 {
     public Result<string> FormatNixFilesInPlace(string path, CancellationToken cancellationToken)
     {
-        if (!Directory.Exists(path))
-            return Result.Failure<string>(new Error("InvalidPath", $"Directory '{path}' does not exist."));
+        if (!Directory.Exists(path) && !File.Exists(path))
+            return Result.Failure<string>(new Error("InvalidPath", $"Path '{path}' does not exist."));
 
-        List<string> arguments =
-        [
-            "fmt",
-            $"{path}"
-        ];
+        List<string> arguments = [path];
+
+        var formatterPath = Environment.GetEnvironmentVariable("PHOENIX_ALEJANDRA_PATH") ?? "alejandra";
 
         return processRunner
-            .RunProcess("nix", arguments, cancellationToken, timeOut: TimeSpan.FromMinutes(3), workingDirectory: path)
+            .RunProcess(formatterPath, arguments, cancellationToken, workingDirectory: path,
+                timeOut: TimeSpan.FromMinutes(3))
             .Map(_ => path);
     }
 }

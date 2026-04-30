@@ -19,6 +19,7 @@ public record GetBootDecisionCommand(string MacAddress) : ICommand<PxeBootDetail
 internal sealed class GetBootDecisionQueryHandler(
     IMachineRepository machineRepository,
     ISetupSessionRepository setupSessionRepository,
+    IAppSettingsRepository appSettingsRepository,
     IOptions<NetbootHostOptions> netbootOptions)
     : ICommandHandler<GetBootDecisionCommand, PxeBootDetails>
 {
@@ -126,11 +127,13 @@ internal sealed class GetBootDecisionQueryHandler(
                 return Result.Failure<PxeBootDetails>(stageResult.Error);
         }
 
+        var settings = await appSettingsRepository.GetAsync(cancellationToken);
+
         var cmdline = BuildCommandLine(
             session.BootArtefactDescriptor,
             session.Id,
             machine.Id,
-            netbootOptions.Value.ApiBasePublicUrl,
+            settings?.NetbootApiBasePublicUrl ?? netbootOptions.Value.ApiBasePublicUrl,
             target.CallbackToken.Token);
 
         return Result.Success(new PxeBootDetails(

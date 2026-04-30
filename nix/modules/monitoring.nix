@@ -62,6 +62,7 @@ in
         enable = true;
         port = mon.nodeExporter.port;
         enabledCollectors = [ "systemd" ];
+        openFirewall = true;
       };
     })
   ]);

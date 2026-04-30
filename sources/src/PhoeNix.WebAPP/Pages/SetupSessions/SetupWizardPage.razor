@@ -12,14 +12,6 @@
         </MudButton>
     </MudStack>
 
-    @if (_sessionStartError is not null)
-    {
-        <MudAlert Severity="Severity.Error">
-            Session failed to start: @_sessionStartError
-            <MudText Typo="Typo.body2">You will not be able to register machines until this is resolved.</MudText>
-        </MudAlert>
-    }
-
     <MudCard>
         <MudCardContent>
             <MudStepper @bind-ActiveIndex="_activeStep"
@@ -180,7 +172,16 @@
                     </MudStep>
 
                     <MudStep Title="Start" Icon="@Icons.Material.Filled.RocketLaunch">
-                        @if (_sessionStarting)
+                        @if (_sessionStartError is not null)
+                        {
+                            <MudStack Spacing="2" Class="py-4">
+                                <MudAlert Severity="Severity.Error" Dense="true">@_sessionStartError</MudAlert>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    The bootstrap image failed to build. You cannot register machines for this session.
+                                </MudText>
+                            </MudStack>
+                        }
+                        else if (_sessionStarting)
                         {
                             <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
                                 <MudProgressCircular Indeterminate="true" Size="Size.Large"
