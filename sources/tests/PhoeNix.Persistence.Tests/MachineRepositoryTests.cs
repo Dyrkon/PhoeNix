@@ -6,6 +6,7 @@ using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using Xunit.Abstractions;
 
@@ -13,6 +14,7 @@ namespace PhoeNix.Persistence.Tests;
 
 public class MachineRepositoryTests : PersistenceTestsBase
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private IMachineRepository MachineRepository => ServiceProvider.GetRequiredService<IMachineRepository>();
 
     public MachineRepositoryTests(ITestOutputHelper output) : base(output)
@@ -23,6 +25,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
     {
         return Machine.Create(
             new MachineId(Guid.NewGuid()),
+            OwnerId,
             macAddress,
             title,
             true,
@@ -102,7 +105,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
         var systemId = new SystemId(Guid.NewGuid());
         var machineId = new MachineId(Guid.NewGuid());
         var machine = Machine.Create(
-            machineId, "AA:BB:CC:DD:EE:01", "DeployedMachine", true,
+            machineId, OwnerId, "AA:BB:CC:DD:EE:01", "DeployedMachine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
         machine.RecordDeploymentSnapshot(
@@ -140,7 +143,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
         var otherConfigId = new ConfigurationId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
         var machine = Machine.Create(
-            new MachineId(Guid.NewGuid()), "AA:BB:CC:DD:EE:03", "OtherConfig", true,
+            new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:03", "OtherConfig", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
         machine.RecordDeploymentSnapshot(

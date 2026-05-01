@@ -33,7 +33,7 @@ public sealed class NetbootHostService : INetbootHostService, IDisposable
         using (var scope = _scopeFactory.CreateScope())
         {
             var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
-            var settings = await repo.GetAsync(cancellationToken);
+            var settings = await repo.GetFirstAsync(cancellationToken);
             if (settings is null)
                 return Result.Failure(new Error(
                     "AppSettings.NotFound",

@@ -4,17 +4,20 @@ using PhoeNix.Application.Mappings;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
 
 public class ConfigurationMappingsTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
+
     [Fact]
     public void MapConfigurationToListDto_Should_Map_Correctly()
     {
         var id = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(id, "Config A", "Description").Value;
+        var config = Configuration.Create(id, OwnerId, "Config A", "Description").Value;
 
         var dto = ConfigurationMappings.MapConfigurationToListDto(config);
 
@@ -27,7 +30,7 @@ public class ConfigurationMappingsTests
     public void MapConfigurationToDto_Should_Map_Full_Configuration()
     {
         var id = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(id, "Full Config", "Detailed description").Value;
+        var config = Configuration.Create(id, OwnerId, "Full Config", "Detailed description").Value;
 
         config.AddInput("github:nixos", "nixpkgs").IsSuccess.Should().BeTrue();
 
@@ -37,7 +40,7 @@ public class ConfigurationMappingsTests
         var systemId = new SystemId(Guid.NewGuid());
         config.AddSystem(systemId, Architecture.X86Linux, "Name").IsSuccess.Should().BeTrue();
 
-        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, "MyModule", true, ModuleType.Generic,
+        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, OwnerId, "MyModule", true, ModuleType.Generic,
             new List<Architecture> { Architecture.X86Linux }).Value;
         var templatesById = new Dictionary<ModuleTemplateId, ModuleTemplate> { { moduleTemplateId, moduleTemplate } };
 
@@ -143,7 +146,7 @@ public class ConfigurationMappingsTests
     public void MapConfigurationToDto_Should_Map_System_Module_Entries()
     {
         var configId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configId, "C", "D").Value;
+        var config = Configuration.Create(configId, OwnerId, "C", "D").Value;
         var moduleTemplateId = new ModuleTemplateId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
 
@@ -157,7 +160,7 @@ public class ConfigurationMappingsTests
             TextValue.Create(new EntryValueId(Guid.NewGuid()), "v", "SYS", "SYS").Value
         });
 
-        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, "M", true, ModuleType.Generic,
+        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, OwnerId, "M", true, ModuleType.Generic,
             new List<Architecture> { Architecture.X86Linux }).Value;
         var templatesById = new Dictionary<ModuleTemplateId, ModuleTemplate> { { moduleTemplateId, moduleTemplate } };
 
@@ -169,7 +172,7 @@ public class ConfigurationMappingsTests
         CreateConfigWithModule()
     {
         var configId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configId, "C", "D").Value;
+        var config = Configuration.Create(configId, OwnerId, "C", "D").Value;
         var moduleTemplateId = new ModuleTemplateId(Guid.NewGuid());
         config.AddModule(moduleTemplateId, true).IsSuccess.Should().BeTrue();
         var module = config.Modules.Single();
@@ -179,7 +182,7 @@ public class ConfigurationMappingsTests
     private static Contracts.Configurations.ConfigurationResponse MapConfig(
         Configuration config, ModuleTemplateId moduleTemplateId)
     {
-        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, "M", true, ModuleType.Generic,
+        var moduleTemplate = ModuleTemplate.Create(moduleTemplateId, OwnerId, "M", true, ModuleType.Generic,
             new List<Architecture> { Architecture.X86Linux }).Value;
         var templatesById = new Dictionary<ModuleTemplateId, ModuleTemplate> { { moduleTemplateId, moduleTemplate } };
         return ConfigurationMappings.MapConfigurationToDto(config, templatesById);

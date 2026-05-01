@@ -2,12 +2,14 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.AppSettings;
+using PhoeNix.Domain.Entities.Users;
 using Xunit.Abstractions;
 
 namespace PhoeNix.Persistence.Tests;
 
 public class AppSettingsRepositoryTests : PersistenceTestsBase
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private IAppSettingsRepository AppSettingsRepository =>
         ServiceProvider.GetRequiredService<IAppSettingsRepository>();
 
@@ -18,7 +20,7 @@ public class AppSettingsRepositoryTests : PersistenceTestsBase
     [Fact]
     public async Task GetAsync_Should_Return_Null_When_No_Settings_Exist()
     {
-        var result = await AppSettingsRepository.GetAsync(CancellationToken.None);
+        var result = await AppSettingsRepository.GetAsync(OwnerId, CancellationToken.None);
 
         result.Should().BeNull();
     }
@@ -26,11 +28,11 @@ public class AppSettingsRepositoryTests : PersistenceTestsBase
     [Fact]
     public async Task GetAsync_Should_Return_Settings_When_Seeded()
     {
-        var settings = AppSettings.CreateDefault(new AppSettingsId(Guid.NewGuid()));
+        var settings = AppSettings.CreateDefault(new AppSettingsId(Guid.NewGuid()), OwnerId);
         await PhoeNixDbContextSUT.AppSettings.AddAsync(settings);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        var result = await AppSettingsRepository.GetAsync(CancellationToken.None);
+        var result = await AppSettingsRepository.GetAsync(OwnerId, CancellationToken.None);
 
         result.Should().NotBeNull();
         result!.FileStorageRootPath.Should().Be(settings.FileStorageRootPath);

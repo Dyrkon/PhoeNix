@@ -1,16 +1,18 @@
 using FluentAssertions;
 using PhoeNix.Domain.Entities.AppSettings;
+using PhoeNix.Domain.Entities.Users;
 
 namespace PhoeNix.Domain.UnitTests;
 
 public class AppSettingsTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly AppSettingsId _id = new(Guid.NewGuid());
 
     [Fact]
     public void AppSettings_Should_CreateDefault_With_Known_Values()
     {
-        var settings = AppSettings.CreateDefault(_id);
+        var settings = AppSettings.CreateDefault(_id, OwnerId);
 
         settings.Id.Should().Be(_id);
         settings.FileStorageRootPath.Should().Be("/var/lib/phoenix");
@@ -46,7 +48,7 @@ public class AppSettingsTests
     [Fact]
     public void AppSettings_Should_Update_All_Properties()
     {
-        var settings = AppSettings.CreateDefault(_id);
+        var settings = AppSettings.CreateDefault(_id, OwnerId);
 
         settings.Update(
             "/data/storage",

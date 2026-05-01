@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentAssertions;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using Xunit.Abstractions;
 
@@ -8,6 +9,8 @@ namespace PhoeNix.Persistence.Tests;
 
 public class ModuleTemplateRepositoryTests : PersistenceTestsBase
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
+
     public ModuleTemplateRepositoryTests(ITestOutputHelper output) : base(output)
     {
     }
@@ -19,6 +22,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var module = ModuleTemplate.Create(
             moduleId,
+            OwnerId,
             "MyTestModule",
             true,
             ModuleType.Generic,
@@ -45,7 +49,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         ModuleTemplateRepository.Add(module);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        var loaded = await ModuleTemplateRepository.GetByNameAsync("MyTestModule", CancellationToken.None);
+        var loaded = await ModuleTemplateRepository.GetByNameAsync("MyTestModule", OwnerId, CancellationToken.None);
 
         // Assert
         loaded.Should().NotBeNull();
@@ -67,6 +71,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
     {
         var module = ModuleTemplate.Create(
             new ModuleTemplateId(Guid.NewGuid()),
+            OwnerId,
             "InvalidModule",
             true,
             ModuleType.Generic,
@@ -92,6 +97,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         var moduleId = new ModuleTemplateId(Guid.NewGuid());
         var module = ModuleTemplate.Create(
             moduleId,
+            OwnerId,
             "WithIncludes",
             true,
             ModuleType.Generic,
@@ -131,6 +137,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         // Arrange
         var module1 = ModuleTemplate.Create(
             new ModuleTemplateId(Guid.NewGuid()),
+            OwnerId,
             "M1",
             true,
             ModuleType.Generic,
@@ -146,6 +153,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
 
         var module2 = ModuleTemplate.Create(
             new ModuleTemplateId(Guid.NewGuid()),
+            OwnerId,
             "M2",
             true,
             ModuleType.Generic,
@@ -164,7 +172,7 @@ public class ModuleTemplateRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         // Act
-        var all = (await ModuleTemplateRepository.GetAllAsync(CancellationToken.None)).ToList();
+        var all = (await ModuleTemplateRepository.GetAllAsync(OwnerId, CancellationToken.None)).ToList();
 
         // Assert
         all.Should().HaveCountGreaterThanOrEqualTo(2);

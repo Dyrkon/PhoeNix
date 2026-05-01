@@ -1,6 +1,5 @@
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
-using PhoeNix.Application.Models.Users;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Extensions;

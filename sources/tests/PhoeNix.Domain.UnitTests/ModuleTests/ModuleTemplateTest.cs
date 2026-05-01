@@ -1,11 +1,13 @@
 using FluentAssertions;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.UnitTests.ModuleTests;
 
 public class ModuleTemplateTests
 {
+    private static readonly UserId _ownerId = new(Guid.NewGuid());
     private readonly ModuleTemplateId _moduleTemplateId = new(Guid.NewGuid());
 
     private readonly Architecture _arch1 = Architecture.X86Linux;
@@ -18,6 +20,7 @@ public class ModuleTemplateTests
     {
         var result = ModuleTemplate.Create(
             _moduleTemplateId,
+            _ownerId,
             "TestModule",
             true,
             moduleType,
@@ -40,6 +43,7 @@ public class ModuleTemplateTests
     {
         var result = ModuleTemplate.Create(
             _moduleTemplateId,
+            _ownerId,
             string.Empty,
             true,
             moduleType,
@@ -56,6 +60,7 @@ public class ModuleTemplateTests
     {
         var result = ModuleTemplate.Create(
             _moduleTemplateId,
+            _ownerId,
             "ValidName",
             true,
             moduleType,
@@ -411,7 +416,7 @@ public class ModuleTemplateTests
     private ModuleTemplate CreateValidModule()
     {
         return ModuleTemplate
-            .Create(_moduleTemplateId, "ValidModule", true, ModuleType.Generic, new List<Architecture> { _arch1 })
+            .Create(_moduleTemplateId, _ownerId, "ValidModule", true, ModuleType.Generic, new List<Architecture> { _arch1 })
             .Value;
     }
 

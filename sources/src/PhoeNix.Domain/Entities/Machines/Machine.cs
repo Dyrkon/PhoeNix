@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
@@ -14,6 +15,8 @@ public class Machine : AggregateRoot<MachineId>
     private Machine(MachineId id) : base(id)
     {
     }
+
+    public UserId OwnerId { get; private set; } = default!;
 
     public string Title { get; private set; }
 
@@ -122,6 +125,7 @@ public class Machine : AggregateRoot<MachineId>
 
     public static Result<Machine> Create(
         MachineId machineId,
+        UserId ownerId,
         string macAddress,
         string title,
         bool enabled,
@@ -130,6 +134,7 @@ public class Machine : AggregateRoot<MachineId>
     {
         return Result.Success(new Machine(machineId)
                 {
+                    OwnerId = ownerId,
                     Title = title,
                     Enabled = enabled,
                     Architecture = architecture,

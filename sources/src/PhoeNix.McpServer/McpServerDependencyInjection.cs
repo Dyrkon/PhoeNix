@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Options;
+using PhoeNix.Persistence;
 
 namespace PhoeNix.McpServer;
 
@@ -37,6 +38,12 @@ public static class McpServerDependencyInjection
         services.AddOptions<MonitoringOptions>()
             .BindConfiguration("Monitoring");
 
+        return services;
+    }
+
+    public static IServiceCollection AddMcpHost(this IServiceCollection services)
+    {
+        services.AddSeeding();
         return services;
     }
 }

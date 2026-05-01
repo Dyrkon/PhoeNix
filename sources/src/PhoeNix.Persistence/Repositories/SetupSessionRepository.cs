@@ -4,6 +4,7 @@ using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
+using PhoeNix.Domain.Entities.Users;
 
 namespace PhoeNix.Persistence.Repositories;
 
@@ -35,18 +36,22 @@ public class SetupSessionRepository : RepositoryBase<SetupSession, SetupSessionI
                 cancellationToken);
     }
 
-    public async Task<PagedResponse<SetupSession>> GetSetupSessions(SetupSessionsRequest sessionsRequest,
+    public async Task<PagedResponse<SetupSession>> GetSetupSessions(
+        SetupSessionsRequest sessionsRequest,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
-        return await GetPageAsync(sessionsRequest, cancellationToken);
+        return await GetPageAsync(sessionsRequest, ownerId, cancellationToken);
     }
 
     public async Task<PagedResponse<SetupSession>> GetPageAsync(
         SetupSessionsRequest request,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
         var query = DbContext.SetupSessions
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(s => s.OwnerId == ownerId);
 
         query = ApplySorting(query, request);
 

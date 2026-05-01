@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.AppSettings;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -15,6 +16,18 @@ internal sealed class AppSettingsEntityTypeConfiguration : IApplicationEntityTyp
             .Property(s => s.Id)
             .ValueGeneratedNever()
             .HasConversion(id => id.Value, value => new AppSettingsId(value));
+
+        builder.Property(s => s.OwnerId)
+            .IsRequired()
+            .HasConversion(id => id.Value, value => new UserId(value));
+
+        builder.HasIndex(s => s.OwnerId)
+            .IsUnique();
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(s => s.FileStorageRootPath).IsRequired().HasMaxLength(500);
 

@@ -110,20 +110,6 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 nowUtc);
         }
 
-        var moduleTemplates = await moduleTemplateRepository.GetAllAsync(cancellationToken);
-        if (moduleTemplates is null || !moduleTemplates.Any())
-        {
-            var error = new Error(
-                "ModuleTemplatesNotFound",
-                "Cannot get module templates.");
-
-            return session.PersistFailure(
-                request.MachineId,
-                error,
-                nameof(ApplyConfigurationToMachineCommandHandler),
-                nowUtc);
-        }
-
         var configurationResult = await configurationRepository
             .GetByIdAsync(target.SelectedConfigurationId, cancellationToken)
             .EnsureNotNull(new Error(
@@ -138,6 +124,20 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 nowUtc);
 
         var configuration = configurationResult.Value;
+
+        var moduleTemplates = await moduleTemplateRepository.GetAllAsync(configuration.OwnerId, cancellationToken);
+        if (moduleTemplates is null || !moduleTemplates.Any())
+        {
+            var error = new Error(
+                "ModuleTemplatesNotFound",
+                "Cannot get module templates.");
+
+            return session.PersistFailure(
+                request.MachineId,
+                error,
+                nameof(ApplyConfigurationToMachineCommandHandler),
+                nowUtc);
+        }
 
         var systemExists = configuration.SystemSpecifications.Any(s => s.Id == target.SelectedSystemId);
         if (!systemExists)
@@ -164,7 +164,7 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 nameof(ApplyConfigurationToMachineCommandHandler),
                 nowUtc);
 
-        var settings = await appSettingsRepository.GetAsync(cancellationToken);
+        var settings = await appSettingsRepository.GetAsync(machine.OwnerId, cancellationToken);
         var finalizeUrl =
             $"{settings?.NetbootApiBasePublicUrl.TrimEnd('/') ?? setupCallbackOptions.Value.ApiBasePublicUrl.TrimEnd('/')}/setup/finalize";
 

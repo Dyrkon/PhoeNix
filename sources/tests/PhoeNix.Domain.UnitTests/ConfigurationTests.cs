@@ -3,12 +3,14 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.UnitTests;
 
 public class ConfigurationTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly ConfigurationId _configId = new(Guid.NewGuid());
     private const string Title = "MyConfig";
     private const string Description = "Config description";
@@ -22,7 +24,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Create_Successfully()
     {
-        var result = Configuration.Create(_configId, Title, Description);
+        var result = Configuration.Create(_configId, OwnerId, Title, Description);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Title.Should().Be(Title);
@@ -35,7 +37,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Create_When_Title_Empty()
     {
-        var result = Configuration.Create(_configId, "", Description);
+        var result = Configuration.Create(_configId, OwnerId, "", Description);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Configuration title can't be blank.");
@@ -44,7 +46,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Create_When_Description_Empty()
     {
-        var result = Configuration.Create(_configId, Title, "");
+        var result = Configuration.Create(_configId, OwnerId, Title, "");
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Configuration description can't be blank.");
@@ -53,7 +55,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Edit_Title_And_Description()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.EditConfiguration("NewTitle", "NewDescription");
 
@@ -67,7 +69,7 @@ public class ConfigurationTests
     [InlineData("", "")]
     public void Configuration_Should_Fail_Edit_When_Title_Empty(string? newTitle, string? newDescription)
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.EditConfiguration(newTitle, newDescription);
 
@@ -78,7 +80,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Edit_When_Description_Empty()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.EditConfiguration(null, "");
 
@@ -89,7 +91,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Add_Module()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.AddModule(_moduleTemplateId1, true);
 
@@ -101,7 +103,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Not_Add_Duplicate_Module()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddModule(_moduleTemplateId1, true);
 
         var result = config.AddModule(_moduleTemplateId1, false);
@@ -114,7 +116,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Remove_Module()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddModule(_moduleTemplateId1, true);
 
         var moduleValueId = new ModuleValueId((Guid)config.Modules.Single().Id);
@@ -128,7 +130,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Remove_Nonexistent_Module()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.RemoveModule(new ModuleValueId(Guid.NewGuid()));
 
@@ -139,7 +141,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Update_Module()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddModule(_moduleTemplateId1, true);
         var moduleValueId = config.Modules.Single().Id;
 
@@ -152,7 +154,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Update_Module_When_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.UpdateModule(new ModuleValueId(Guid.NewGuid()), false, new List<Entities.Modules.EntryValue>());
 
@@ -163,7 +165,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Add_System()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.AddSystem(_systemId1, Architecture.X86Linux, "system-one");
 
@@ -176,7 +178,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Not_Add_Duplicate_System()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "system-one");
 
         var result = config.AddSystem(_systemId1, Architecture.X86Linux, "system-one-again");
@@ -189,7 +191,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Remove_System()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "system-one");
 
         var result = config.RemoveSystem(_systemId1);
@@ -201,7 +203,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Remove_Nonexistent_System()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.RemoveSystem(_systemId1);
 
@@ -212,7 +214,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Change_System_Name()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "old-name");
 
         var result = config.UpdateSystem(_systemId1, "new-name");
@@ -224,7 +226,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Change_System_Name_When_System_Missing()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.UpdateSystem(_systemId1, "new-name");
 
@@ -235,7 +237,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Change_System_Name_When_Name_Duplicate()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "same");
         config.AddSystem(_systemId2, Architecture.X86Linux, "other");
 
@@ -249,7 +251,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Add_Input()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.AddInput("github:nixos/nixpkgs", "nixpkgs");
 
@@ -261,7 +263,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Not_Add_Duplicate_Input_By_Name()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddInput("github:nixos/nixpkgs", "nixpkgs");
 
         var result = config.AddInput("github:nixos/nixpkgs", "nixpkgs");
@@ -274,7 +276,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Remove_Input()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         var input = config.AddInput("github:nixos/nixpkgs", "nixpkgs").Value;
 
         var result = config.RemoveInput(input.Id);
@@ -286,7 +288,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_Remove_Nonexistent_Input()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.RemoveInput(new InputId(Guid.NewGuid()));
 
@@ -297,7 +299,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Add_And_Remove_Input_Follow()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         var input = config.AddInput("github:nixos/nixpkgs", "nixpkgs").Value;
 
         var addFollow = config.AddInputFollow(input.Id, "flake-utils", "github:numtide/flake-utils");
@@ -313,7 +315,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_AddInputFollow_When_Input_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.AddInputFollow(new InputId(Guid.NewGuid()), "flake-utils", "github:numtide/flake-utils");
 
@@ -324,7 +326,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_RemoveInputFollow_When_Follow_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.RemoveInputFollow(Guid.NewGuid());
 
@@ -335,7 +337,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Return_Empty_SupportedArchitectures_If_No_Systems()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.SupportedSystemArchitectures();
 
@@ -345,7 +347,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Return_SupportedArchitecture_When_All_Systems_Share_It()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         config.AddSystem(_systemId1, Architecture.X86Linux, "s1");
         config.AddSystem(_systemId2, Architecture.X86Linux, "s2");
@@ -358,7 +360,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Return_Both_Architectures_When_Different()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         config.AddSystem(_systemId1, Architecture.X86Linux, "s1");
         config.AddSystem(_systemId2, Architecture.Aarch64Linux, "s2");
@@ -371,7 +373,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_AddSystemModule()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "sys1");
 
         var result = config.AddSystemModule(_systemId1, _moduleTemplateId1,
@@ -385,7 +387,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_AddSystemModule_When_System_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.AddSystemModule(_systemId1, _moduleTemplateId1,
             new List<Architecture> { Architecture.X86Linux }, true);
@@ -397,7 +399,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_UpdateSystemModule()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "sys1");
         config.AddSystemModule(_systemId1, _moduleTemplateId1,
             new List<Architecture> { Architecture.X86Linux }, true);
@@ -413,7 +415,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_UpdateSystemModule_When_System_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.UpdateSystemModule(_systemId1, new Domain.Entities.Modules.ModuleValueId(Guid.NewGuid()),
             false, new List<Domain.Entities.Modules.EntryValue>());
@@ -425,7 +427,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_RemoveSystemModule()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
         config.AddSystem(_systemId1, Architecture.X86Linux, "sys1");
         config.AddSystemModule(_systemId1, _moduleTemplateId1,
             new List<Architecture> { Architecture.X86Linux }, true);
@@ -440,7 +442,7 @@ public class ConfigurationTests
     [Fact]
     public void Configuration_Should_Fail_RemoveSystemModule_When_System_Not_Found()
     {
-        var config = Configuration.Create(_configId, Title, Description).Value;
+        var config = Configuration.Create(_configId, OwnerId, Title, Description).Value;
 
         var result = config.RemoveSystemModule(_systemId1,
             new Domain.Entities.Modules.ModuleValueId(Guid.NewGuid()));

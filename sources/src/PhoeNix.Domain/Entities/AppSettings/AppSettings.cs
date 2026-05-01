@@ -1,3 +1,4 @@
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Primitives;
 
 namespace PhoeNix.Domain.Entities.AppSettings;
@@ -7,6 +8,8 @@ public class AppSettings : AggregateRoot<AppSettingsId>
     private AppSettings(AppSettingsId id) : base(id)
     {
     }
+
+    public UserId OwnerId { get; private set; } = default!;
 
     public string FileStorageRootPath { get; private set; } = default!;
 
@@ -113,10 +116,11 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         NetbootPort = netbootPort;
     }
 
-    public static AppSettings CreateDefault(AppSettingsId id)
+    public static AppSettings CreateDefault(AppSettingsId id, UserId ownerId)
     {
         return new AppSettings(id)
         {
+            OwnerId = ownerId,
             FileStorageRootPath = "/var/lib/phoenix",
             SshCaKeyName = "phoenix_user_ca",
             SshCaPrincipal = "root",

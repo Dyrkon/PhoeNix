@@ -10,14 +10,19 @@ public record StartSetupSessionCommand() : ICommand<string>;
 
 internal sealed class StartSetupSessionCommandHandler(
     ISetupSessionRepository setupSessionRepository,
-    ISetupSshKeyProvider sshKeyProvider)
+    ISetupSshKeyProvider sshKeyProvider,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<StartSetupSessionCommand, string>
 {
     public async Task<Result<string>> Handle(
         StartSetupSessionCommand request,
         CancellationToken cancellationToken)
     {
-        var sessionResult = SetupSession.Create(new SetupSessionId(Guid.NewGuid()), DateTime.UtcNow);
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<string>(userIdResult.Error);
+
+        var sessionResult = SetupSession.Create(new SetupSessionId(Guid.NewGuid()), userIdResult.Value, DateTime.UtcNow);
         if (sessionResult.IsFailure)
             return Result.Failure<string>(sessionResult.Error);
 

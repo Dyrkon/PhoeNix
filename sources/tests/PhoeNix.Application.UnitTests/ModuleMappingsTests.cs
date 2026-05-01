@@ -2,17 +2,19 @@ using FluentAssertions;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Contracts.Modules;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
 
 public class ModuleMappingsTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     [Fact]
     public void MapModuleToListDto_Should_Map_Correctly()
     {
         var id = new ModuleTemplateId(Guid.NewGuid());
-        var module = ModuleTemplate.Create(id, "Test Module", true, ModuleType.Generic,
+        var module = ModuleTemplate.Create(id, OwnerId, "Test Module", true, ModuleType.Generic,
             new List<Architecture> { Architecture.Aarch64Linux }).Value;
 
         var dto = ModuleMappings.MapModuleToListDto(module);
@@ -26,7 +28,7 @@ public class ModuleMappingsTests
     public void MapModuleToDto_Should_Map_All_Fields_Correctly()
     {
         var id = new ModuleTemplateId(Guid.NewGuid());
-        var module = ModuleTemplate.Create(id, "Init", true, ModuleType.Generic,
+        var module = ModuleTemplate.Create(id, OwnerId, "Init", true, ModuleType.Generic,
             new List<Architecture> { Architecture.Aarch64Linux }).Value;
 
         var def = new EntryValueDefinition(

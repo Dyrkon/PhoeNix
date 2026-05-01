@@ -23,7 +23,7 @@ public class FileSystemService : IFileSystemService
         INixFormatterService nixFormatterService)
     {
         var options = storageOptions.Value;
-        var settings = settingsRepository.GetAsync().GetAwaiter().GetResult();
+        var settings = settingsRepository.GetFirstAsync().GetAwaiter().GetResult();
 
         _useTemp = options.UseTemp;
         _rootPath = settings is not null && !string.IsNullOrWhiteSpace(settings.FileStorageRootPath)

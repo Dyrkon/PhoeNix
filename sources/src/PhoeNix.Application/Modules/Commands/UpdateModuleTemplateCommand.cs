@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
@@ -21,19 +22,27 @@ public sealed record UpdateModuleTemplateCommand(
     IReadOnlyList<RequiredInputDefinitionModel> RequiredInputs) : ICommand<ModuleTemplateResponse>;
 
 internal sealed class UpdateModuleTemplateHandler(
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateModuleTemplateCommand, ModuleTemplateResponse>
 {
     public Task<Result<ModuleTemplateResponse>> Handle(
         UpdateModuleTemplateCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Task.FromResult(Result.Failure<ModuleTemplateResponse>(userIdResult.Error));
+
+        var userId = userIdResult.Value;
+
         return moduleTemplateRepository
             .GetByIdAsync(request.ModuleTemplateId, cancellationToken)
             .EnsureNotNull(ModuleErrors.NotFound(request.ModuleTemplateId))
+            .Ensure(t => t.OwnerId == userId, ModuleErrors.NotFound(request.ModuleTemplateId))
             .Bind(async template =>
             {
-                var templateWithSameName = await moduleTemplateRepository.GetByNameAsync(request.Name, cancellationToken);
+                var templateWithSameName = await moduleTemplateRepository.GetByNameAsync(request.Name, userId, cancellationToken);
                 if (templateWithSameName is not null && templateWithSameName.Id != template.Id)
                     return Result.Failure<ModuleTemplateResponse>(ModuleErrors.NameAlreadyExists(request.Name));
 

@@ -3,23 +3,25 @@ using FluentAssertions;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Domain.UnitTests;
 
 public class MachineTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly MachineId _machineId = new(Guid.NewGuid());
     private const string ValidMac = "AA:BB:CC:DD:EE:FF";
 
     private Machine CreateValid(bool enabled = true) =>
-        Machine.Create(_machineId, ValidMac, "TestMachine", enabled,
+        Machine.Create(_machineId, OwnerId, ValidMac, "TestMachine", enabled,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
     [Fact]
     public void Machine_Should_Create_Successfully()
     {
-        var result = Machine.Create(_machineId, ValidMac, "TestMachine", true,
+        var result = Machine.Create(_machineId, OwnerId, ValidMac, "TestMachine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest);
 
         result.IsSuccess.Should().BeTrue();
@@ -35,7 +37,7 @@ public class MachineTests
     [Fact]
     public void Machine_Should_Fail_Create_With_Invalid_Mac()
     {
-        var result = Machine.Create(_machineId, "not-a-mac", "TestMachine", true,
+        var result = Machine.Create(_machineId, OwnerId, "not-a-mac", "TestMachine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest);
 
         result.IsFailure.Should().BeTrue();

@@ -3,6 +3,7 @@ using FluentAssertions;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using Xunit.Abstractions;
 
@@ -10,6 +11,7 @@ namespace PhoeNix.Persistence.Tests;
 
 public class ConfigurationRepositoryTests : PersistenceTestsBase
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     public ConfigurationRepositoryTests(ITestOutputHelper output) : base(output)
     {
     }
@@ -19,11 +21,11 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
     {
         // Arrange
         var configurationId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configurationId, "Title", "Unique Description 123").Value;
+        var config = Configuration.Create(configurationId, OwnerId, "Title", "Unique Description 123").Value;
 
         var moduleTemplateId = new ModuleTemplateId(Guid.NewGuid());
         var moduleTemplate = ModuleTemplate.Create(
-            moduleTemplateId, "Foo", true, ModuleType.Generic, new List<Architecture> { Architecture.X86Linux }
+            moduleTemplateId, OwnerId, "Foo", true, ModuleType.Generic, new List<Architecture> { Architecture.X86Linux }
         ).Value;
         await PhoeNixDbContextSUT.ModuleTemplates.AddAsync(moduleTemplate);
 
@@ -82,7 +84,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
     {
         // Arrange
         var configId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configId, "Search Title", "Unique Description 123").Value;
+        var config = Configuration.Create(configId, OwnerId, "Search Title", "Unique Description 123").Value;
 
         await PhoeNixDbContextSUT.Configurations.AddAsync(config);
         await PhoeNixDbContextSUT.SaveChangesAsync();
@@ -100,7 +102,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
     {
         // Arrange
         var configId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configId, "Config Title ABC", "Irrelevant").Value;
+        var config = Configuration.Create(configId, OwnerId, "Config Title ABC", "Irrelevant").Value;
 
         await PhoeNixDbContextSUT.Configurations.AddAsync(config);
         await PhoeNixDbContextSUT.SaveChangesAsync();
@@ -118,7 +120,7 @@ public class ConfigurationRepositoryTests : PersistenceTestsBase
     {
         // Arrange
         var configId = new ConfigurationId(Guid.NewGuid());
-        var config = Configuration.Create(configId, "To Remove", "Desc").Value;
+        var config = Configuration.Create(configId, OwnerId, "To Remove", "Desc").Value;
 
         await PhoeNixDbContextSUT.Configurations.AddAsync(config);
         await PhoeNixDbContextSUT.SaveChangesAsync();

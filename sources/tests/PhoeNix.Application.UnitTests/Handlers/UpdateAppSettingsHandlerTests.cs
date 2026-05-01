@@ -1,14 +1,24 @@
 using FluentAssertions;
 using NSubstitute;
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Settings.Commands;
 using PhoeNix.Domain.Entities.AppSettings;
+using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.UnitTests.Handlers;
 
 public class UpdateAppSettingsHandlerTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly IAppSettingsRepository _settingsRepository = Substitute.For<IAppSettingsRepository>();
+    private readonly ICurrentUserAccessor _currentUserAccessor = Substitute.For<ICurrentUserAccessor>();
+
+    public UpdateAppSettingsHandlerTests()
+    {
+        _currentUserAccessor.GetUserId().Returns(Result.Success(OwnerId));
+    }
 
     private static UpdateAppSettingsCommand BuildCommand(string fileStorageRoot = "/storage") =>
         new(
@@ -23,10 +33,10 @@ public class UpdateAppSettingsHandlerTests
     [Fact]
     public async Task Handle_Should_Update_Settings()
     {
-        var settings = AppSettings.CreateDefault(new AppSettingsId(Guid.NewGuid()));
-        _settingsRepository.GetAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        var settings = AppSettings.CreateDefault(new AppSettingsId(Guid.NewGuid()), OwnerId);
+        _settingsRepository.GetAsync(OwnerId, Arg.Any<CancellationToken>()).Returns(settings);
 
-        var handler = new UpdateAppSettingsCommandHandler(_settingsRepository);
+        var handler = new UpdateAppSettingsCommandHandler(_settingsRepository, _currentUserAccessor);
         var command = BuildCommand("/new-storage");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -38,9 +48,9 @@ public class UpdateAppSettingsHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Settings_Not_Initialized()
     {
-        _settingsRepository.GetAsync(Arg.Any<CancellationToken>()).Returns((AppSettings?)null);
+        _settingsRepository.GetAsync(OwnerId, Arg.Any<CancellationToken>()).Returns((AppSettings?)null);
 
-        var handler = new UpdateAppSettingsCommandHandler(_settingsRepository);
+        var handler = new UpdateAppSettingsCommandHandler(_settingsRepository, _currentUserAccessor);
         var result = await handler.Handle(BuildCommand(), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

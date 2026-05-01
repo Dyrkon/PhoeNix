@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
@@ -20,14 +21,21 @@ public sealed record CreateModuleTemplateCommand(
     IReadOnlyList<RequiredInputDefinitionModel> RequiredInputs) : ICommand<ModuleTemplateResponse>;
 
 internal sealed class CreateModuleTemplateHandler(
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<CreateModuleTemplateCommand, ModuleTemplateResponse>
 {
     public async Task<Result<ModuleTemplateResponse>> Handle(
         CreateModuleTemplateCommand request,
         CancellationToken cancellationToken)
     {
-        var existingTemplate = await moduleTemplateRepository.GetByNameAsync(request.Name, cancellationToken);
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ModuleTemplateResponse>(userIdResult.Error);
+
+        var userId = userIdResult.Value;
+
+        var existingTemplate = await moduleTemplateRepository.GetByNameAsync(request.Name, userId, cancellationToken);
 
         if (existingTemplate is not null)
             return Result.Failure<ModuleTemplateResponse>(ModuleErrors.NameAlreadyExists(request.Name));
@@ -44,6 +52,7 @@ internal sealed class CreateModuleTemplateHandler(
 
         return ModuleTemplate.Create(
                 moduleTemplateId,
+                userId,
                 request.Name,
                 request.Enabled,
                 request.Type,

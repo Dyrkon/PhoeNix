@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Modules.Factories;
@@ -15,17 +16,23 @@ public sealed record ImportConfigurationCommand(ConfigurationResponse ImportData
 
 internal sealed class ImportConfigurationHandler(
     IConfigurationRepository configurationRepository,
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<ImportConfigurationCommand, ConfigurationResponse>
 {
     public async Task<Result<ConfigurationResponse>> Handle(
         ImportConfigurationCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ConfigurationResponse>(userIdResult.Error);
+
         var data = request.ImportData;
 
         var configResult = Configuration.Create(
             new ConfigurationId(Guid.NewGuid()),
+            userIdResult.Value,
             data.Title,
             data.Description);
 
@@ -47,7 +54,7 @@ internal sealed class ImportConfigurationHandler(
             }
         }
 
-        var allTemplates = (await moduleTemplateRepository.GetAllAsync(cancellationToken)).ToList();
+        var allTemplates = (await moduleTemplateRepository.GetAllAsync(userIdResult.Value, cancellationToken)).ToList();
         var templatesById = allTemplates.ToDictionary(t => t.Id);
         var templatesByName = allTemplates
             .GroupBy(t => t.Name, StringComparer.OrdinalIgnoreCase)

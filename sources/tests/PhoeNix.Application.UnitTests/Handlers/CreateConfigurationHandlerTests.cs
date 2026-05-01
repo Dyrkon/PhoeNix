@@ -1,19 +1,30 @@
 using FluentAssertions;
 using NSubstitute;
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Application.Repositories;
+using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.UnitTests.Handlers;
 
 public class CreateConfigurationHandlerTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly IConfigurationRepository _configurationRepository =
         Substitute.For<IConfigurationRepository>();
+    private readonly ICurrentUserAccessor _currentUserAccessor =
+        Substitute.For<ICurrentUserAccessor>();
+
+    public CreateConfigurationHandlerTests()
+    {
+        _currentUserAccessor.GetUserId().Returns(Result.Success(OwnerId));
+    }
 
     [Fact]
     public async Task Handle_Should_Create_Configuration_And_Return_Dto()
     {
-        var handler = new CreateConfigurationHandler(_configurationRepository);
+        var handler = new CreateConfigurationHandler(_configurationRepository, _currentUserAccessor);
         var command = new CreateConfigurationCommand("My Config", "A description");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -27,7 +38,7 @@ public class CreateConfigurationHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Title_Empty()
     {
-        var handler = new CreateConfigurationHandler(_configurationRepository);
+        var handler = new CreateConfigurationHandler(_configurationRepository, _currentUserAccessor);
         var command = new CreateConfigurationCommand("", "A description");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -40,7 +51,7 @@ public class CreateConfigurationHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Description_Empty()
     {
-        var handler = new CreateConfigurationHandler(_configurationRepository);
+        var handler = new CreateConfigurationHandler(_configurationRepository, _currentUserAccessor);
         var command = new CreateConfigurationCommand("My Config", "");
 
         var result = await handler.Handle(command, CancellationToken.None);

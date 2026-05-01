@@ -21,7 +21,7 @@ public sealed class SshKeyFileStore : ISshKeyFileStore
 
     public SshKeyFileStore(IAppSettingsRepository settingsRepository, IProcessRunner processRunner)
     {
-        var settings = settingsRepository.GetAsync().GetAwaiter().GetResult();
+        var settings = settingsRepository.GetFirstAsync().GetAwaiter().GetResult();
 
         _rootPath = settings is not null && !string.IsNullOrWhiteSpace(settings.FileStorageRootPath)
             ? settings.FileStorageRootPath

@@ -1,6 +1,7 @@
 using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Events;
 using PhoeNix.Domain.Extensions;
@@ -18,6 +19,8 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
     private Configuration(ConfigurationId id) : base(id)
     {
     }
+
+    public UserId OwnerId { get; private set; } = default!;
 
     public string Title { get; private set; } = string.Empty;
 
@@ -297,7 +300,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
             .ToList();
     }
 
-    public static Result<Configuration> Create(ConfigurationId id, string title, string description)
+    public static Result<Configuration> Create(ConfigurationId id, UserId ownerId, string title, string description)
     {
         if (string.IsNullOrWhiteSpace(title))
             return Result.Failure<Configuration>(
@@ -309,6 +312,7 @@ public sealed class Configuration : AggregateRoot<ConfigurationId>
 
         return new Configuration(id)
         {
+            OwnerId = ownerId,
             Title = title.Trim(),
             Description = description.Trim()
         };

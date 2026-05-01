@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Extensions;
@@ -38,15 +39,21 @@ public sealed record UpdateAppSettingsCommand(
     string NetbootListenAddress,
     int NetbootPort) : ICommand;
 
-internal sealed class UpdateAppSettingsCommandHandler(IAppSettingsRepository settingsRepository)
+internal sealed class UpdateAppSettingsCommandHandler(
+    IAppSettingsRepository settingsRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateAppSettingsCommand>
 {
     public Task<Result> Handle(
         UpdateAppSettingsCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Task.FromResult(Result.Failure(userIdResult.Error));
+
         return settingsRepository
-            .GetAsync(cancellationToken)
+            .GetAsync(userIdResult.Value, cancellationToken)
             .EnsureNotNull(new Error("AppSettings.NotFound", "Application settings have not been initialized."))
             .Bind(settings =>
             {

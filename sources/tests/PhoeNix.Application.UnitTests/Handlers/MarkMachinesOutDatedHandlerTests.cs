@@ -4,20 +4,22 @@ using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests.Handlers;
 
 public class MarkMachinesOutDatedHandlerTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly IMachineRepository _machineRepository = Substitute.For<IMachineRepository>();
 
     [Fact]
     public async Task Handle_Should_Mark_All_Machines_As_OutDated()
     {
         var configId = new ConfigurationId(Guid.NewGuid());
-        var machine1 = Machine.Create(new MachineId(Guid.NewGuid()), "AA:BB:CC:DD:EE:FF", "M1", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
-        var machine2 = Machine.Create(new MachineId(Guid.NewGuid()), "AA:BB:CC:DD:EE:FE", "M2", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var machine1 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "M1", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var machine2 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FE", "M2", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
         _machineRepository.GetAllByInstalledConfigurationIdAsync(configId, Arg.Any<CancellationToken>())
             .Returns(new List<Machine> { machine1, machine2 });
 

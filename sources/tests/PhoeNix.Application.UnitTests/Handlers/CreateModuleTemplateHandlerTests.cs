@@ -1,17 +1,30 @@
 using FluentAssertions;
 using NSubstitute;
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Contracts.Modules;
 using PhoeNix.Application.Modules.Commands;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.UnitTests.Handlers;
 
 public class CreateModuleTemplateHandlerTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
+
     private readonly IModuleTemplateRepository _moduleTemplateRepository =
         Substitute.For<IModuleTemplateRepository>();
+
+    private readonly ICurrentUserAccessor _currentUserAccessor =
+        Substitute.For<ICurrentUserAccessor>();
+
+    public CreateModuleTemplateHandlerTests()
+    {
+        _currentUserAccessor.GetUserId().Returns(Result.Success(OwnerId));
+    }
 
     private static CreateModuleTemplateCommand BuildCommand(string name = "TestModule") =>
         new(
@@ -27,10 +40,10 @@ public class CreateModuleTemplateHandlerTests
     [Fact]
     public async Task Handle_Should_Create_ModuleTemplate_Successfully()
     {
-        _moduleTemplateRepository.GetByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _moduleTemplateRepository.GetByNameAsync(Arg.Any<string>(), OwnerId, Arg.Any<CancellationToken>())
             .Returns((ModuleTemplate?)null);
 
-        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository);
+        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository, _currentUserAccessor);
         var result = await handler.Handle(BuildCommand(), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -43,14 +56,15 @@ public class CreateModuleTemplateHandlerTests
     {
         var existing = ModuleTemplate.Create(
             new ModuleTemplateId(Guid.NewGuid()),
+            OwnerId,
             "TestModule",
             true,
             ModuleType.Generic,
             new List<Architecture> { Architecture.X86Linux }).Value;
-        _moduleTemplateRepository.GetByNameAsync("TestModule", Arg.Any<CancellationToken>())
+        _moduleTemplateRepository.GetByNameAsync("TestModule", OwnerId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository);
+        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository, _currentUserAccessor);
         var result = await handler.Handle(BuildCommand(), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -61,10 +75,10 @@ public class CreateModuleTemplateHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Module_Name_Empty()
     {
-        _moduleTemplateRepository.GetByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _moduleTemplateRepository.GetByNameAsync(Arg.Any<string>(), OwnerId, Arg.Any<CancellationToken>())
             .Returns((ModuleTemplate?)null);
 
-        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository);
+        var handler = new CreateModuleTemplateHandler(_moduleTemplateRepository, _currentUserAccessor);
         var result = await handler.Handle(BuildCommand(""), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

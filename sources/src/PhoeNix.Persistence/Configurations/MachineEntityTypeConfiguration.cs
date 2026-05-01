@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
@@ -20,6 +21,18 @@ internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeCon
             .Property(i => i.Id)
             .ValueGeneratedNever()
             .HasConversion(id => id.Value, value => new MachineId(value));
+
+        builder
+            .Property(i => i.OwnerId)
+            .IsRequired()
+            .HasConversion(id => id.Value, value => new UserId(value));
+
+        builder.HasIndex(i => i.OwnerId);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(i => i.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
             .Property(i => i.Title)

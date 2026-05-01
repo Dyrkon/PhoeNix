@@ -20,7 +20,7 @@ public sealed class SshHardwareProbeService(
         MachineId machineId,
         CancellationToken cancellationToken)
     {
-        var settings = await settingsRepository.GetAsync(cancellationToken);
+        var settings = await settingsRepository.GetAsync(session.OwnerId, cancellationToken);
         if (settings is null)
             return Result.Failure<HardwareProbeResult>(new Error(
                 "AppSettings.NotFound",

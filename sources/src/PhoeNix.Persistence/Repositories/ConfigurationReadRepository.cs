@@ -4,6 +4,7 @@ using PhoeNix.Contracts.Configurations;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Extensions;
 
 namespace PhoeNix.Persistence.Repositories;
@@ -15,10 +16,12 @@ public sealed class ConfigurationReadRepository(
 {
     public async Task<PagedResponse<ConfigurationListResponse>> GetPageAsync(
         ListConfigurationsRequest request,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
         var query = dbContext.Configurations
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(c => c.OwnerId == ownerId);
 
         query = ApplyFilters(query, request);
         query = ApplySorting(query, request);
@@ -55,6 +58,7 @@ public sealed class ConfigurationReadRepository(
 
         var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(
             moduleTemplateIds,
+            configuration.OwnerId,
             cancellationToken);
 
         var templatesById = moduleTemplates.ToDictionary(template => template.Id);

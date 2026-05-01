@@ -15,7 +15,7 @@ public sealed class SetupSshKeyProvider(
 {
     public async Task<Result<SshIdentityMaterial>> GetOrCreateAsync(SetupSession session, CancellationToken ct)
     {
-        var settings = await settingsRepository.GetAsync(ct);
+        var settings = await settingsRepository.GetAsync(session.OwnerId, ct);
         if (settings is null)
             return Result.Failure<SshIdentityMaterial>(new Error(
                 "AppSettings.NotFound",

@@ -1,8 +1,8 @@
 using System.Net;
-using Humanizer;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Events;
 using PhoeNix.Domain.Extensions;
@@ -18,6 +18,8 @@ public class SetupSession : AggregateRoot<SetupSessionId>
     private SetupSession(SetupSessionId id) : base(id)
     {
     }
+
+    public UserId OwnerId { get; private set; } = default!;
 
     public BootstrapImageDescriptor? BootArtefactDescriptor { get; private set; }
 
@@ -229,9 +231,9 @@ public class SetupSession : AggregateRoot<SetupSessionId>
         return target.ClearRankedDisks();
     }
 
-    public static Result<SetupSession> Create(SetupSessionId id, DateTime now)
+    public static Result<SetupSession> Create(SetupSessionId id, UserId ownerId, DateTime now)
     {
-        var session = new SetupSession(id) { StartTime = now };
+        var session = new SetupSession(id) { OwnerId = ownerId, StartTime = now };
         session.RaiseDomainEvent(new SetupSessionBootstrapRequestedDomainEvent(id));
         return Result.Success(session);
     }

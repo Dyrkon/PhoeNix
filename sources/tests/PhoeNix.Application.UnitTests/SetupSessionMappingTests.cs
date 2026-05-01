@@ -5,6 +5,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
@@ -16,10 +17,11 @@ public class SetupSessionMappingTests
     private readonly ConfigurationId _configId = new(Guid.NewGuid());
     private readonly SystemId _systemId = new(Guid.NewGuid());
     private readonly DateTime _now = DateTime.UtcNow;
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
 
     private SetupSession CreateSession()
     {
-        return SetupSession.Create(_sessionId, _now).Value;
+        return SetupSession.Create(_sessionId, OwnerId, _now).Value;
     }
 
     [Fact]
@@ -103,7 +105,7 @@ public class SetupSessionMappingTests
         var session = CreateSession();
         session.EnrollMachine(_machineId, _systemId, _configId, _now);
 
-        var config = Configuration.Create(_configId, "My Config", "Desc").Value;
+        var config = Configuration.Create(_configId, OwnerId, "My Config", "Desc").Value;
         config.AddSystem(_systemId, Architecture.X86Linux, "web-server");
 
         var dto = SetupSessionMappings.MapSetupSessionToDto(session, new List<Configuration> { config });

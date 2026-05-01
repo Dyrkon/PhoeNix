@@ -1,15 +1,19 @@
 using FluentAssertions;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Application.UnitTests;
 
 public class MachineMappingTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
+
     private static Machine CreateMachine(string title = "TestMachine", string mac = "AA:BB:CC:DD:EE:FF") =>
         Machine.Create(
             new MachineId(Guid.NewGuid()),
+            OwnerId,
             mac,
             title,
             true,
