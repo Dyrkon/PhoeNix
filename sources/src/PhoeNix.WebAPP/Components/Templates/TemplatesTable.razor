@@ -33,13 +33,16 @@
             }
         </MudSelect>
 
-        <MudIconButton OnClick="OpenImportDialogAsync"
-                       Icon="@Icons.Material.Filled.FileUpload"
-                       Color="Color.Secondary"></MudIconButton>
+        @if (!SelectionMode)
+        {
+            <MudIconButton OnClick="OpenImportDialogAsync"
+                           Icon="@Icons.Material.Filled.FileUpload"
+                           Color="Color.Secondary"></MudIconButton>
 
-        <MudIconButton OnClick="NavigationManager.NavigateToTemplateCreator"
-                       Icon="@Icons.Material.Filled.Add"
-                       Color="Color.Primary"></MudIconButton>
+            <MudIconButton OnClick="NavigationManager.NavigateToTemplateCreator"
+                           Icon="@Icons.Material.Filled.Add"
+                           Color="Color.Primary"></MudIconButton>
+        }
     </MudStack>
 
     <MudDataGrid T="ModuleTemplateTableRow"

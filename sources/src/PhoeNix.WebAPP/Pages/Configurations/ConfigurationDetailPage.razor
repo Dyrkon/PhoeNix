@@ -155,6 +155,11 @@
                             </MudText>
                         </MudStack>
                         <span @onclick:stopPropagation="true">
+                            <MudTooltip Text="@(_sharedModulesExpanded ? "Collapse all" : "Expand all")">
+                                <MudIconButton Icon="@(_sharedModulesExpanded ? Icons.Material.Filled.UnfoldLess : Icons.Material.Filled.UnfoldMore)"
+                                               Size="Size.Small"
+                                               OnClick="ToggleSharedModulesAsync"/>
+                            </MudTooltip>
                             <MudButton Size="Size.Small"
                                        Variant="Variant.Outlined"
                                        StartIcon="@Icons.Material.Filled.Add"
@@ -167,19 +172,39 @@
                 <ChildContent>
                     @if (_configuration.Modules.Count == 0)
                     {
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No shared modules configured.
-                        </MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary pt-2">No shared modules configured.</MudText>
                     }
                     else
                     {
-                        <MudStack Spacing="2" Class="pt-2">
+                        <MudExpansionPanels @ref="_sharedModulePanels" MultiExpansion="true" Elevation="0" Class="pt-2">
                             @foreach (var module in _configuration.Modules)
                             {
-                                <ConfiguredModuleCard Module="@module"
-                                                      ConfigurationId="@ConfigurationId"
-                                                      OnModuleUpdated="ReloadAsync"/>
+                                <MudExpansionPanel>
+                                    <TitleContent>
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
+                                                     @onclick:stopPropagation="true">
+                                                @module.TemplateName
+                                            </MudLink>
+                                            <MudChip T="string"
+                                                     Color="@(module.Enabled ? Color.Success : Color.Default)"
+                                                     Variant="Variant.Text"
+                                                     Size="Size.Small">
+                                                @(module.Enabled ? "Enabled" : "Disabled")
+                                            </MudChip>
+                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
+                                            </MudText>
+                                        </MudStack>
+                                    </TitleContent>
+                                    <ChildContent>
+                                        <ConfiguredModuleCard Module="@module"
+                                                              ConfigurationId="@ConfigurationId"
+                                                              OnModuleUpdated="ReloadAsync"/>
+                                    </ChildContent>
+                                </MudExpansionPanel>
                             }
-                        </MudStack>
+                        </MudExpansionPanels>
                     }
                 </ChildContent>
             </MudExpansionPanel>
@@ -195,6 +220,11 @@
                             </MudText>
                         </MudStack>
                         <span @onclick:stopPropagation="true">
+                            <MudTooltip Text="@(_systemsExpanded ? "Collapse all" : "Expand all")">
+                                <MudIconButton Icon="@(_systemsExpanded ? Icons.Material.Filled.UnfoldLess : Icons.Material.Filled.UnfoldMore)"
+                                               Size="Size.Small"
+                                               OnClick="ToggleSystemsAsync"/>
+                            </MudTooltip>
                             <MudButton Size="Size.Small"
                                        Variant="Variant.Outlined"
                                        StartIcon="@Icons.Material.Filled.Add"
@@ -211,16 +241,42 @@
                     }
                     else
                     {
-                        <MudStack Spacing="2" Class="pt-2">
+                        <MudExpansionPanels @ref="_systemPanels" MultiExpansion="true" Elevation="0" Class="pt-2">
                             @foreach (var system in _configuration.Systems)
                             {
-                                <ConfiguredSystemCard System="@system"
-                                                      ConfigurationId="@ConfigurationId"
-                                                      OnModuleAdded="ReloadAsync"
-                                                      OnModuleUpdated="ReloadAsync"
-                                                      OnSystemUpdated="ReloadAsync"/>
+                                <MudExpansionPanel>
+                                    <TitleContent>
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Default"/>
+                                                <MudText Typo="Typo.h6">@system.Name</MudText>
+                                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
+                                                    @system.Architecture.ToArchitectureString()
+                                                </MudChip>
+                                            </MudStack>
+                                            <span @onclick:stopPropagation="true">
+                                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => OpenEditSystemDialogAsync(system.Id, system.Name))"/>
+                                                    <MudButton Size="Size.Small"
+                                                               Variant="Variant.Outlined"
+                                                               StartIcon="@Icons.Material.Filled.Add"
+                                                               OnClick="@(() => OpenAddSystemModuleDialogAsync(system.Id))">
+                                                        Add Module
+                                                    </MudButton>
+                                                </MudStack>
+                                            </span>
+                                        </MudStack>
+                                    </TitleContent>
+                                    <ChildContent>
+                                        <ConfiguredSystemCard System="@system"
+                                                              ConfigurationId="@ConfigurationId"
+                                                              OnModuleUpdated="ReloadAsync"/>
+                                    </ChildContent>
+                                </MudExpansionPanel>
                             }
-                        </MudStack>
+                        </MudExpansionPanels>
                     }
                 </ChildContent>
             </MudExpansionPanel>

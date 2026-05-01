@@ -1,67 +1,52 @@
 @using PhoeNix.Domain.Enums
 
-<MudCard Outlined="true">
-    <MudCardContent>
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-1">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Default"/>
-                <MudText Typo="Typo.h6">@System.Name</MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+@if (System.Modules.Count == 0)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">No modules configured for this system.</MudText>
+}
+else
+{
+    <MudStack Spacing="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Class="mb-1">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">
+                @System.Modules.Count @(System.Modules.Count == 1 ? "module" : "modules")
+            </MudText>
+            <MudTooltip Text="@(_modulesExpanded ? "Collapse all modules" : "Expand all modules")">
+                <MudIconButton Icon="@(_modulesExpanded ? Icons.Material.Filled.UnfoldLess : Icons.Material.Filled.UnfoldMore)"
                                Size="Size.Small"
-                               OnClick="@OpenEditSystemDialogAsync"/>
-            </MudStack>
-
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">
-                    @System.Architecture.ToArchitectureString()
-                </MudChip>
-                <MudButton Size="Size.Small"
-                           Variant="Variant.Outlined"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenAddModuleDialogAsync">
-                    Add Module
-                </MudButton>
-            </MudStack>
+                               OnClick="ToggleModulesAsync"/>
+            </MudTooltip>
         </MudStack>
 
-        <MudDivider Class="mb-3"/>
-
-        @if (System.Modules.Count == 0)
-        {
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">No modules configured for this system.</MudText>
-        }
-        else
-        {
-            <MudExpansionPanels MultiExpansion="true" Elevation="0">
-                @foreach (var module in System.Modules)
-                {
-                    <MudExpansionPanel>
-                        <TitleContent>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
-                                         @onclick:stopPropagation="true">
-                                    @module.TemplateName
-                                </MudLink>
-                                <MudChip T="string"
-                                         Color="@(module.Enabled ? Color.Success : Color.Default)"
-                                         Variant="Variant.Text"
-                                         Size="Size.Small">
-                                    @(module.Enabled ? "Enabled" : "Disabled")
-                                </MudChip>
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
-                                </MudText>
-                            </MudStack>
-                        </TitleContent>
-                        <ChildContent>
-                            <ConfiguredModuleCard Module="@module"
-                                                  ConfigurationId="@ConfigurationId"
-                                                  SystemId="@System.Id"
-                                                  OnModuleUpdated="OnModuleUpdated"/>
-                        </ChildContent>
-                    </MudExpansionPanel>
-                }
-            </MudExpansionPanels>
-        }
-    </MudCardContent>
-</MudCard>
+        <MudExpansionPanels @ref="_modulePanels" MultiExpansion="true" Elevation="0">
+            @foreach (var module in System.Modules)
+            {
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
+                                     @onclick:stopPropagation="true">
+                                @module.TemplateName
+                            </MudLink>
+                            <MudChip T="string"
+                                     Color="@(module.Enabled ? Color.Success : Color.Default)"
+                                     Variant="Variant.Text"
+                                     Size="Size.Small">
+                                @(module.Enabled ? "Enabled" : "Disabled")
+                            </MudChip>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
+                            </MudText>
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        <ConfiguredModuleCard Module="@module"
+                                              ConfigurationId="@ConfigurationId"
+                                              SystemId="@System.Id"
+                                              OnModuleUpdated="OnModuleUpdated"/>
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    </MudStack>
+}

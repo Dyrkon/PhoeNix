@@ -35,7 +35,8 @@ public sealed class ModuleTemplateReadRepository(
             template.Name,
             template.Enabled,
             template.Type,
-            template.SupportedArchitectures.ToList())).ToList();
+            template.SupportedArchitectures.ToList(),
+            template.EditableValueTypes.Count)).ToList();
 
         return new PagedResponse<ModuleTemplateListResponse>(items, totalItems);
     }

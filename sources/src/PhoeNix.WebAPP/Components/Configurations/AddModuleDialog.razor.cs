@@ -22,46 +22,47 @@ public partial class AddModuleDialog : ComponentBase
     [Parameter] public Guid? SystemId { get; set; }
 
     private MudForm? _form;
-    private bool _isLoading = true;
+    private int _step = 0;
     private bool _isSubmitting;
     private bool _loadingEntries;
     private Guid? _selectedTemplateId;
+    private string? _selectedTemplateName;
     private bool _enabled = true;
     private string _newListItem = string.Empty;
-    private List<ModuleTemplateListResponse> _templates = [];
     private List<EntryEditModel> _entryModels = [];
 
-    protected override async Task OnInitializedAsync()
-    {
-        var result = await ModulesApiClient.GetModuleTemplatesAsync(
-            new ListModuleTemplatesRequest(PageSize: 100));
-
-        if (result.IsSuccess && result.Value is not null)
-            _templates = result.Value.Items.ToList();
-        else
-            Snackbar.Add("Failed to load module templates.", Severity.Warning);
-
-        _isLoading = false;
-    }
-
-    private async Task OnTemplateSelectedAsync(Guid? templateId)
+    private async Task OnTemplateSelectedAsync(Guid templateId)
     {
         _selectedTemplateId = templateId;
         _entryModels.Clear();
 
-        if (templateId is null)
-            return;
-
         _loadingEntries = true;
         StateHasChanged();
 
-        var result = await ModulesApiClient.GetModuleTemplateByIdAsync(templateId.Value);
+        var result = await ModulesApiClient.GetModuleTemplateByIdAsync(templateId);
 
         if (result.IsSuccess && result.Value is not null)
+        {
+            _selectedTemplateName = result.Value.Name;
             foreach (var def in result.Value.EditableValueTypes)
                 _entryModels.Add(BuildEntryModel(def));
+        }
+        else
+        {
+            Snackbar.Add("Failed to load template details.", Severity.Error);
+        }
 
         _loadingEntries = false;
+        _step = 1;
+    }
+
+    private void GoBack()
+    {
+        _step = 0;
+        _selectedTemplateId = null;
+        _selectedTemplateName = null;
+        _entryModels.Clear();
+        _enabled = true;
     }
 
     private async Task SubmitAsync()
