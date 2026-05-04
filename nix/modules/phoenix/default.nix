@@ -103,6 +103,8 @@ in
           SIGNING_KEY=$(${pkgs.openssl}/bin/openssl rand -base64 32)
           cat > "$ENV_FILE" <<EOF
         CallbackToken__SigningKey=$SIGNING_KEY
+        CallbackToken__Issuer=phoenix
+        CallbackToken__Audience=phoenix
         EOF
         fi
 

@@ -40,7 +40,7 @@ internal sealed class OutboxProcessorBackgroundService(
 
         if (_inFlight.Count > 0)
         {
-            logger.LogInformation("Waiting for {Count} in-flight outbox messages.", _inFlight.Count);
+            logger.LogDebug("Waiting for {Count} in-flight outbox messages.", _inFlight.Count);
             await Task.WhenAll(_inFlight.Values);
         }
     }

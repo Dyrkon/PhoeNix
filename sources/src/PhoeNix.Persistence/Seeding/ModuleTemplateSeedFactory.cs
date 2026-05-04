@@ -39,11 +39,14 @@ internal static class ModuleTemplateSeedFactory
 
         var failure = results.FirstOrDefault(r => r.IsFailure);
         if (failure is not null && failure.IsFailure)
-            return Result.Failure<(IReadOnlyList<ModuleTemplate>, IReadOnlyDictionary<string, ModuleTemplateId>)>(failure.Error);
+            return Result.Failure<(IReadOnlyList<ModuleTemplate>, IReadOnlyDictionary<string, ModuleTemplateId>)>(
+                failure.Error);
 
         var templates = results.Select(r => r.Value).ToList();
         var byId = (IReadOnlyDictionary<string, ModuleTemplateId>)templates.ToDictionary(t => t.Name, t => t.Id);
-        return Result.Success<(IReadOnlyList<ModuleTemplate> Templates, IReadOnlyDictionary<string, ModuleTemplateId> ById)>((templates, byId));
+        return Result
+            .Success<(IReadOnlyList<ModuleTemplate> Templates, IReadOnlyDictionary<string, ModuleTemplateId> ById)>((
+                templates, byId));
     }
 
     private static Result<ModuleTemplate> BuildTemplate(
@@ -983,7 +986,7 @@ internal static class ModuleTemplateSeedFactory
         var content =
             $"  users.users.\"${{{SeedPlaceholders.UserName}}}\" = {{\n" +
             "    isNormalUser = true;\n" +
-            $"    description = \"{SeedPlaceholders.UserDescription}\";\n" +
+            $"    description = {SeedPlaceholders.UserDescription};\n" +
             $"    home = \"/home/${{{SeedPlaceholders.UserName}}}\";\n" +
             "    createHome = true;\n" +
             $"    extraGroups = {SeedPlaceholders.UserGroups};\n" +

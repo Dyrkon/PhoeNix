@@ -30,7 +30,7 @@ public static class MachineTools
         string? search = null,
         [Description("Filter by enabled status (true/false), omit for all")]
         bool? enabled = null,
-        [Description("Filter by architecture: X86_64, Aarch64, Armv7, RiscV64 (optional)")]
+        [Description("Filter by architecture: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin (optional)")]
         string? architecture = null,
         [Description("Filter by state: Unknown, Registered, Probed, Installed, OutOfDate, UpToDate (optional)")]
         string? machineState = null,
@@ -93,12 +93,13 @@ public static class MachineTools
         string title,
         [Description("MAC address (e.g. 'aa:bb:cc:dd:ee:ff')")]
         string macAddress,
-        [Description("Target architecture: X86_64, Aarch64, Armv7, RiscV64")]
+        [Description("Target architecture: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin")]
         string architecture,
         [Description("Whether this machine is enabled for provisioning")]
         bool enabled = true,
-        [Description("Disk selection strategy: Largest, Smallest, First (default: Largest)")]
-        string installDiskSelectionPreference = "Largest",
+        [Description(
+            "Disk selection strategy: Biggest, Fastest, FastestAndBiggest, BiggestAndFastest (default: Biggest)")]
+        string installDiskSelectionPreference = "Biggest",
         CancellationToken cancellationToken = default)
     {
         if (!Enum.TryParse<Architecture>(architecture, true, out var arch))
