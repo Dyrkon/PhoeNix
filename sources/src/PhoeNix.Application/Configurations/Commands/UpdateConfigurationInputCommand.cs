@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Repositories;
@@ -16,19 +17,25 @@ public sealed record UpdateConfigurationInputCommand(
     IReadOnlyList<InputFollowUpsertModel> Follows) : ICommand<InputResponse>;
 
 internal sealed class UpdateConfigurationInputHandler(
-    IConfigurationRepository configurationRepository)
+    IConfigurationRepository configurationRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateConfigurationInputCommand, InputResponse>
 {
     public async Task<Result<InputResponse>> Handle(
         UpdateConfigurationInputCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<InputResponse>(userIdResult.Error);
+
         var configuration = await configurationRepository.GetByIdAsync(
             request.ConfigurationId,
             cancellationToken);
 
         return configuration
             .EnsureNotNull(ConfigurationErrors.NotFound(request.ConfigurationId))
+            .Ensure(c => c.OwnerId == userIdResult.Value, ConfigurationErrors.NotFound(request.ConfigurationId))
             .Bind(cfg => cfg.UpdateInput(
                 request.InputId,
                 request.Source,

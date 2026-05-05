@@ -1,6 +1,6 @@
+using PhoeNix.Application.Abstractions;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
-using PhoeNix.Application.Models.Users;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Extensions;
@@ -15,6 +15,7 @@ internal sealed class RegisterUserCommandHandler(
     IUserRepository userRepository,
     IUserPasswordHasher userPasswordHasher,
     IUserSessionService userSessionService,
+    IUserDataInitializer userDataInitializer,
     IUnitOfWork unitOfWork)
     : ICommandHandler<RegisterUserCommand, AuthenticatedUserResponse>
 {
@@ -30,6 +31,7 @@ internal sealed class RegisterUserCommandHandler(
             {
                 await userRepository.AddAsync(user, cancellationToken);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
+                await userDataInitializer.InitializeForUserAsync(user.Id, cancellationToken);
                 await userSessionService.SignInAsync(user, cancellationToken);
                 return Result.Success(new AuthenticatedUserResponse(user.Id.Value, user.Name));
             });

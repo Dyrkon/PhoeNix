@@ -22,7 +22,7 @@ internal sealed class NixOsMachineUpdater(
         DeploySshAccessMaterial deployIdentity,
         CancellationToken cancellationToken)
     {
-        var settings = await settingsRepository.GetAsync(cancellationToken);
+        var settings = await settingsRepository.GetFirstAsync(cancellationToken);
         if (settings is null)
             return Result.Failure<ProcessResult>(new Error(
                 "AppSettings.NotFound",

@@ -4,6 +4,7 @@ using PhoeNix.Contracts.Machines;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Persistence.Repositories;
@@ -14,10 +15,12 @@ public sealed class MachineReadRepository(
 {
     public async Task<PagedResponse<MachineListResponse>> GetPageAsync(
         ListMachinesRequest request,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
         var query = dbContext.Machines
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(m => m.OwnerId == ownerId);
 
         query = ApplyFilters(query, request);
         query = ApplySorting(query, request);

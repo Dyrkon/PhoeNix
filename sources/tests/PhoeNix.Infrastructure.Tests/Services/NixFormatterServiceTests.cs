@@ -59,8 +59,8 @@ public class NixFormatterServiceTests
             processRunner.Calls.Should().ContainSingle();
             var call = processRunner.Calls.Single();
 
-            call.ExecutableName.Should().Be("nix");
-            call.Arguments.Should().Equal("fmt", tempDir.FullName);
+            call.ExecutableName.Should().Be("alejandra");
+            call.Arguments.Should().Equal(tempDir.FullName);
             call.WorkingDirectory.Should().Be(tempDir.FullName);
             call.TimeOut.Should().Be(TimeSpan.FromMinutes(3));
         }

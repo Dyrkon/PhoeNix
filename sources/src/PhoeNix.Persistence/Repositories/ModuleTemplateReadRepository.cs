@@ -3,6 +3,7 @@ using PhoeNix.Contracts.Modules;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Persistence.Repositories;
@@ -12,10 +13,12 @@ public sealed class ModuleTemplateReadRepository(
 {
     public async Task<PagedResponse<ModuleTemplateListResponse>> GetPageAsync(
         ListModuleTemplatesRequest request,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
         var query = dbContext.ModuleTemplates
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(m => m.OwnerId == ownerId);
 
         query = ApplyFilters(query, request);
         query = ApplySorting(query, request);

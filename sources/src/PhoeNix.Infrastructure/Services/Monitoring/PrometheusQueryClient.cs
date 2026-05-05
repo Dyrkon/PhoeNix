@@ -95,7 +95,7 @@ internal sealed class PrometheusQueryClient : IPrometheusQueryClient
     {
         using var scope = _scopeFactory.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
-        var settings = await repo.GetAsync(cancellationToken);
+        var settings = await repo.GetFirstAsync(cancellationToken);
         var endpoint = settings?.MonitoringPrometheusEndpoint ?? "http://localhost:9090/prometheus";
         return endpoint.TrimEnd('/') + "/";
     }

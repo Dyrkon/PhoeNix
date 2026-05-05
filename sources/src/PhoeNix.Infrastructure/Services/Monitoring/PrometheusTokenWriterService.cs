@@ -75,7 +75,7 @@ internal sealed class PrometheusTokenWriterService(
     {
         using var scope = scopeFactory.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
-        var settings = await repo.GetAsync(cancellationToken);
+        var settings = await repo.GetFirstAsync(cancellationToken);
         return settings is not null
             ? TimeSpan.FromDays(settings.MonitoringTokenTtlDays)
             : _options.TokenTtl;

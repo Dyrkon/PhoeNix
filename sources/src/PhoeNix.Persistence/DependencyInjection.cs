@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PhoeNix.Application.Abstractions;
 using PhoeNix.Application.Abstractions.Outbox;
 using PhoeNix.Application.Data;
 using PhoeNix.Application.Options;
@@ -81,6 +82,7 @@ public static class DependencyInjection
     public static IServiceCollection AddSeeding(this IServiceCollection services)
     {
         services.AddScoped<ApplicationDbSeeder>();
+        services.AddScoped<IUserDataInitializer, UserDataInitializer>();
 
         return services;
     }

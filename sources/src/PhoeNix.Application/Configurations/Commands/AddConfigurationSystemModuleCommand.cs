@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
@@ -20,13 +21,18 @@ public sealed record AddConfigurationSystemModuleCommand(
 
 internal sealed class AddConfigurationSystemModuleHandler(
     IConfigurationRepository configurationRepository,
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<AddConfigurationSystemModuleCommand, ModuleValueResponse>
 {
     public async Task<Result<ModuleValueResponse>> Handle(
         AddConfigurationSystemModuleCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ModuleValueResponse>(userIdResult.Error);
+
         var template = await moduleTemplateRepository.GetByIdAsync(
             request.ModuleTemplateId,
             cancellationToken);
@@ -39,6 +45,9 @@ internal sealed class AddConfigurationSystemModuleHandler(
             cancellationToken);
 
         if (configuration is null)
+            return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
+
+        if (configuration.OwnerId != userIdResult.Value)
             return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
 
         foreach (var required in template.RequiredInputs)

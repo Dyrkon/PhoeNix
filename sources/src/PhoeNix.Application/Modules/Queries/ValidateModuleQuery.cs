@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
@@ -22,13 +23,19 @@ internal sealed class ValidateModuleQueryHandler(
     INixTestRunner nixTestRunner,
     IConfigurationRepository configurationRepository,
     IModuleTemplateRepository moduleTemplateRepository,
-    IFileSystemService fileSystemService) : IQueryHandler<ValidateModuleQuery, List<ModuleTestResponse>>
+    IFileSystemService fileSystemService,
+    ICurrentUserAccessor currentUserAccessor) : IQueryHandler<ValidateModuleQuery, List<ModuleTestResponse>>
 {
     public async Task<Result<List<ModuleTestResponse>>> Handle(ValidateModuleQuery query, CancellationToken ct)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<List<ModuleTestResponse>>(userIdResult.Error);
+
         var configResult = await configurationRepository
             .GetByIdAsync(query.ConfigurationId, ct)
-            .EnsureNotNull(new Error("ConfigurationNotFound", $"Configuration {query.ConfigurationId} not found!"));
+            .EnsureNotNull(new Error("ConfigurationNotFound", $"Configuration {query.ConfigurationId} not found!"))
+            .Ensure(c => c.OwnerId == userIdResult.Value, new Error("ConfigurationNotFound", $"Configuration {query.ConfigurationId} not found!"));
 
         if (configResult.IsFailure)
             return Result.Failure<List<ModuleTestResponse>>(configResult.Error);

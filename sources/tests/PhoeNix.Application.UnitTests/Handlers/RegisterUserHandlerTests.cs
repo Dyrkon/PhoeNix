@@ -1,5 +1,6 @@
 using FluentAssertions;
 using NSubstitute;
+using PhoeNix.Application.Abstractions;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Application.Users.Commands;
@@ -12,6 +13,7 @@ public class RegisterUserHandlerTests
     private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
     private readonly IUserPasswordHasher _passwordHasher = Substitute.For<IUserPasswordHasher>();
     private readonly IUserSessionService _sessionService = Substitute.For<IUserSessionService>();
+    private readonly IUserDataInitializer _userDataInitializer = Substitute.For<IUserDataInitializer>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
 
     public RegisterUserHandlerTests()
@@ -26,7 +28,7 @@ public class RegisterUserHandlerTests
     public async Task Handle_Should_Register_User_Successfully()
     {
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("Alice", "SecurePassword123");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -41,7 +43,7 @@ public class RegisterUserHandlerTests
     public async Task Handle_Should_Fail_When_Name_Empty()
     {
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("", "SecurePassword123");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -54,7 +56,7 @@ public class RegisterUserHandlerTests
     public async Task Handle_Should_Fail_When_Name_Too_Short()
     {
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("ab", "SecurePassword123");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -67,7 +69,7 @@ public class RegisterUserHandlerTests
     public async Task Handle_Should_Fail_When_Password_Empty()
     {
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("Alice", "");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -80,7 +82,7 @@ public class RegisterUserHandlerTests
     public async Task Handle_Should_Fail_When_Password_Too_Short()
     {
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("Alice", "short");
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -96,7 +98,7 @@ public class RegisterUserHandlerTests
             .Returns(true);
 
         var handler = new RegisterUserCommandHandler(
-            _userRepository, _passwordHasher, _sessionService, _unitOfWork);
+            _userRepository, _passwordHasher, _sessionService, _userDataInitializer, _unitOfWork);
         var command = new RegisterUserCommand("Alice", "SecurePassword123");
 
         var result = await handler.Handle(command, CancellationToken.None);

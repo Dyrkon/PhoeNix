@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Models.Modules;
@@ -19,18 +20,26 @@ public sealed record UpdateConfigurationModuleCommand(
 
 internal sealed class UpdateConfigurationModuleHandler(
     IConfigurationRepository configurationRepository,
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateConfigurationModuleCommand, ModuleValueResponse>
 {
     public async Task<Result<ModuleValueResponse>> Handle(
         UpdateConfigurationModuleCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ModuleValueResponse>(userIdResult.Error);
+
         var configuration = await configurationRepository.GetByIdAsync(
             new ConfigurationId(request.ConfigurationId),
             cancellationToken);
 
         if (configuration is null)
+            return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
+
+        if (configuration.OwnerId != userIdResult.Value)
             return Result.Failure<ModuleValueResponse>(ConfigurationErrors.NotFound(request.ConfigurationId));
 
         var moduleValue = configuration.Modules.FirstOrDefault(m => m.Id == new ModuleValueId(request.ModuleValueId));

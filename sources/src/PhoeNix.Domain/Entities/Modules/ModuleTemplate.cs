@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
@@ -16,6 +17,8 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
     private ModuleTemplate(ModuleTemplateId id) : base(id)
     {
     }
+
+    public UserId OwnerId { get; private set; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 
@@ -260,6 +263,7 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
 
     public static Result<ModuleTemplate> Create(
         ModuleTemplateId templateId,
+        UserId ownerId,
         string name,
         bool enabled,
         ModuleType type,
@@ -275,6 +279,7 @@ public sealed class ModuleTemplate : AggregateRoot<ModuleTemplateId>
 
         var newModule = new ModuleTemplate(templateId)
         {
+            OwnerId = ownerId,
             Name = name.Trim(),
             Enabled = enabled,
             Type = type,

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -23,8 +24,19 @@ internal sealed class ModuleTemplateEntityTypeConfiguration : IApplicationEntity
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.HasIndex(m => m.Name)
+        builder.Property(m => m.OwnerId)
+            .IsRequired()
+            .HasConversion(id => id.Value, value => new UserId(value));
+
+        builder.HasIndex(m => m.OwnerId);
+
+        builder.HasIndex(m => new { m.Name, m.OwnerId })
             .IsUnique();
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(m => m.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(m => m.Enabled)
             .IsRequired();

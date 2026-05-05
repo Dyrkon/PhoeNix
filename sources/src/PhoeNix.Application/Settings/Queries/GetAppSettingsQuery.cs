@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Extensions;
@@ -7,15 +8,21 @@ namespace PhoeNix.Application.Settings.Queries;
 
 public sealed record GetAppSettingsQuery : IQuery<AppSettingsResponse>;
 
-internal sealed class GetAppSettingsQueryHandler(IAppSettingsRepository settingsRepository)
+internal sealed class GetAppSettingsQueryHandler(
+    IAppSettingsRepository settingsRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : IQueryHandler<GetAppSettingsQuery, AppSettingsResponse>
 {
     public Task<Result<AppSettingsResponse>> Handle(
         GetAppSettingsQuery request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Task.FromResult(Result.Failure<AppSettingsResponse>(userIdResult.Error));
+
         return settingsRepository
-            .GetAsync(cancellationToken)
+            .GetAsync(userIdResult.Value, cancellationToken)
             .EnsureNotNull(new Error("AppSettings.NotFound", "Application settings have not been initialized."))
             .Map(settings => new AppSettingsResponse(
                 settings.FileStorageRootPath,

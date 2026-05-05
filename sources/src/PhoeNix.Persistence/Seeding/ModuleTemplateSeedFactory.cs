@@ -1,5 +1,6 @@
 using System.Text.Json;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
@@ -8,41 +9,45 @@ namespace PhoeNix.Persistence.Seeding;
 
 internal static class ModuleTemplateSeedFactory
 {
-    public static Result<IReadOnlyList<ModuleTemplate>> CreateAll()
+    public static Result<(IReadOnlyList<ModuleTemplate> Templates, IReadOnlyDictionary<string, ModuleTemplateId> ById)>
+        CreateAll(UserId ownerId)
     {
         var results = new[]
         {
-            CreateMinimalBaseTemplate(),
-            CreateDiskoTemplate(),
-            CreatePrometheusTemplate(),
-            CreateTimezoneSyncTemplate(),
-            CreateNixFlakeSettingsTemplate(),
-            CreateNixBuildOptimisationTemplate(),
-            CreatePhoeNixServiceTemplate(),
-            CreateNcpsCacheServerTemplate(),
-            CreateNcpsCacheClientTemplate(),
-            CreateKdeWorkstationTemplate(),
-            CreateGnomeWorkstationTemplate(),
-            CreateSystemHardeningTemplate(),
-            CreateItSupportTemplate(),
-            CreateAmdGpuTemplate(),
-            CreateNvidiaGpuTemplate(),
-            CreateDiskoEfiBtrfsTemplate(),
-            CreateDiskoEfiLuksExt4Template(),
-            CreateDiskoEfiZfsTemplate(),
-            CreateDiskoSsdHddTemplate(),
-            CreateAdminUserTemplate(),
-            CreateRegularUserTemplate()
+            CreateMinimalBaseTemplate(ownerId),
+            CreateDiskoTemplate(ownerId),
+            CreatePrometheusTemplate(ownerId),
+            CreateTimezoneSyncTemplate(ownerId),
+            CreateNixFlakeSettingsTemplate(ownerId),
+            CreateNixBuildOptimisationTemplate(ownerId),
+            CreatePhoeNixServiceTemplate(ownerId),
+            CreateNcpsCacheServerTemplate(ownerId),
+            CreateNcpsCacheClientTemplate(ownerId),
+            CreateKdeWorkstationTemplate(ownerId),
+            CreateGnomeWorkstationTemplate(ownerId),
+            CreateSystemHardeningTemplate(ownerId),
+            CreateItSupportTemplate(ownerId),
+            CreateAmdGpuTemplate(ownerId),
+            CreateNvidiaGpuTemplate(ownerId),
+            CreateDiskoEfiBtrfsTemplate(ownerId),
+            CreateDiskoEfiLuksExt4Template(ownerId),
+            CreateDiskoEfiZfsTemplate(ownerId),
+            CreateDiskoSsdHddTemplate(ownerId),
+            CreateAdminUserTemplate(ownerId),
+            CreateRegularUserTemplate(ownerId)
         };
 
         var failure = results.FirstOrDefault(r => r.IsFailure);
         if (failure is not null && failure.IsFailure)
-            return Result.Failure<IReadOnlyList<ModuleTemplate>>(failure.Error);
+            return Result.Failure<(IReadOnlyList<ModuleTemplate>, IReadOnlyDictionary<string, ModuleTemplateId>)>(failure.Error);
 
-        return results.Select(r => r.Value).ToList();
+        var templates = results.Select(r => r.Value).ToList();
+        var byId = (IReadOnlyDictionary<string, ModuleTemplateId>)templates.ToDictionary(t => t.Name, t => t.Id);
+        return Result.Success<(IReadOnlyList<ModuleTemplate> Templates, IReadOnlyDictionary<string, ModuleTemplateId> ById)>((templates, byId));
     }
 
     private static Result<ModuleTemplate> BuildTemplate(
+        UserId ownerId,
         ModuleTemplateId templateId,
         string name,
         ModuleType moduleType,
@@ -55,7 +60,7 @@ internal static class ModuleTemplateSeedFactory
     {
         architectures ??= [Architecture.X86Linux, Architecture.Aarch64Linux];
 
-        return ModuleTemplate.Create(templateId, name, true, moduleType, architectures)
+        return ModuleTemplate.Create(templateId, ownerId, name, true, moduleType, architectures)
             .Tap(t => t.ChangeContent(content, definitions))
             .Tap(t => t.AddModuleTest(testName))
             .Tap(t =>
@@ -65,15 +70,16 @@ internal static class ModuleTemplateSeedFactory
             });
     }
 
-    private static Result<ModuleTemplate> CreateMinimalBaseTemplate()
+    private static Result<ModuleTemplate> CreateMinimalBaseTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.HostName, SeedPlaceholders.HostName,
+            new(templateId, SeedPlaceholders.HostName, SeedPlaceholders.HostName,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"machineone\""),
-            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.StateVersion, SeedPlaceholders.StateVersion,
+            new(templateId, SeedPlaceholders.StateVersion, SeedPlaceholders.StateVersion,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"25.11\""),
-            new(SeedIds.MinimalBaseTemplate, SeedPlaceholders.RootAuthorizedKeys, SeedPlaceholders.RootAuthorizedKeys,
+            new(templateId, SeedPlaceholders.RootAuthorizedKeys, SeedPlaceholders.RootAuthorizedKeys,
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                 {
@@ -96,7 +102,8 @@ internal static class ModuleTemplateSeedFactory
             "keysSet = { expr = RootAuthorizedKeys != []; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.MinimalBaseTemplate,
+            ownerId,
+            templateId,
             "MinimalBaseSystem",
             ModuleType.System,
             content,
@@ -107,11 +114,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateDiskoTemplate()
+    private static Result<ModuleTemplate> CreateDiskoTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.DiskoEfiExt4Template, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+            new(templateId, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
         };
 
@@ -132,7 +140,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.DiskoEfiExt4Template,
+            ownerId,
+            templateId,
             "DiskoEfiExt4System",
             ModuleType.System,
             content,
@@ -143,13 +152,14 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreatePrometheusTemplate()
+    private static Result<ModuleTemplate> CreatePrometheusTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.PrometheusTemplate, SeedPlaceholders.MetricsPort, SeedPlaceholders.MetricsPort,
+            new(templateId, SeedPlaceholders.MetricsPort, SeedPlaceholders.MetricsPort,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "9100"),
-            new(SeedIds.PrometheusTemplate, SeedPlaceholders.OpenFirewall, SeedPlaceholders.OpenFirewall,
+            new(templateId, SeedPlaceholders.OpenFirewall, SeedPlaceholders.OpenFirewall,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" }))
         };
@@ -169,7 +179,8 @@ internal static class ModuleTemplateSeedFactory
             "firewallValue = { expr = OpenFirewall == true || OpenFirewall == false; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.PrometheusTemplate,
+            ownerId,
+            templateId,
             "PrometheusNodeExporter",
             ModuleType.System,
             content,
@@ -180,11 +191,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateTimezoneSyncTemplate()
+    private static Result<ModuleTemplate> CreateTimezoneSyncTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.TimezoneSyncTemplate, SeedPlaceholders.Timezone, SeedPlaceholders.Timezone,
+            new(templateId, SeedPlaceholders.Timezone, SeedPlaceholders.Timezone,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"Europe/Prague\"")
         };
 
@@ -192,7 +204,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "timezoneSet = { expr = Timezone != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.TimezoneSyncTemplate,
+            ownerId,
+            templateId,
             "TimezoneSync",
             ModuleType.Generic,
             content,
@@ -203,15 +216,16 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateNixFlakeSettingsTemplate()
+    private static Result<ModuleTemplate> CreateNixFlakeSettingsTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.NixFlakeSettingsTemplate, SeedPlaceholders.NixTrustedSubstituters,
+            new(templateId, SeedPlaceholders.NixTrustedSubstituters,
                 SeedPlaceholders.NixTrustedSubstituters, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                     { "\"https://cache.nixos.org\"", "\"https://nix-community.cachix.org\"" })),
-            new(SeedIds.NixFlakeSettingsTemplate, SeedPlaceholders.NixTrustedPublicKeys,
+            new(templateId, SeedPlaceholders.NixTrustedPublicKeys,
                 SeedPlaceholders.NixTrustedPublicKeys, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                 {
@@ -232,7 +246,8 @@ internal static class ModuleTemplateSeedFactory
             "publicKeysSet = { expr = NixTrustedPublicKeys != []; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.NixFlakeSettingsTemplate,
+            ownerId,
+            templateId,
             "NixFlakeSettings",
             ModuleType.Generic,
             content,
@@ -243,13 +258,14 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateNixBuildOptimisationTemplate()
+    private static Result<ModuleTemplate> CreateNixBuildOptimisationTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.NixBuildOptimisationTemplate, SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixMaxJobs,
+            new(templateId, SeedPlaceholders.NixMaxJobs, SeedPlaceholders.NixMaxJobs,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"auto\""),
-            new(SeedIds.NixBuildOptimisationTemplate, SeedPlaceholders.NixCores, SeedPlaceholders.NixCores,
+            new(templateId, SeedPlaceholders.NixCores, SeedPlaceholders.NixCores,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "1")
         };
 
@@ -265,7 +281,8 @@ internal static class ModuleTemplateSeedFactory
             "coresPositive = { expr = NixCores > 0; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.NixBuildOptimisationTemplate,
+            ownerId,
+            templateId,
             "NixBuildOptimisation",
             ModuleType.Generic,
             content,
@@ -276,11 +293,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreatePhoeNixServiceTemplate()
+    private static Result<ModuleTemplate> CreatePhoeNixServiceTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.PhoeNixServiceTemplate, SeedPlaceholders.PhoenixPublicBaseUrl,
+            new(templateId, SeedPlaceholders.PhoenixPublicBaseUrl,
                 SeedPlaceholders.PhoenixPublicBaseUrl, EntryBindingKind.UserProvided, EntryValueKind.Text,
                 "\"http://REPLACE-HOSTNAME\"")
         };
@@ -315,7 +333,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "publicUrlSet = { expr = PhoenixPublicBaseUrl != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.PhoeNixServiceTemplate,
+            ownerId,
+            templateId,
             "PhoeNixService",
             ModuleType.System,
             content,
@@ -326,14 +345,15 @@ internal static class ModuleTemplateSeedFactory
         ).Tap(t => t.SetRequiredInputs([("phoenix", "git+ssh://git@github.com/Dyrkon/PhoeNix")]));
     }
 
-    private static Result<ModuleTemplate> CreateNcpsCacheServerTemplate()
+    private static Result<ModuleTemplate> CreateNcpsCacheServerTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.NcpsCacheServerTemplate, SeedPlaceholders.NcpsCacheHostName,
+            new(templateId, SeedPlaceholders.NcpsCacheHostName,
                 SeedPlaceholders.NcpsCacheHostName, EntryBindingKind.UserProvided, EntryValueKind.Text,
                 "\"machine-hostname.lan\""),
-            new(SeedIds.NcpsCacheServerTemplate, SeedPlaceholders.NcpsServerAddress,
+            new(templateId, SeedPlaceholders.NcpsServerAddress,
                 SeedPlaceholders.NcpsServerAddress, EntryBindingKind.UserProvided, EntryValueKind.Text,
                 "\":8501\"")
         };
@@ -354,7 +374,8 @@ internal static class ModuleTemplateSeedFactory
                           "serverAddrSet = { expr = NcpsServerAddress != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.NcpsCacheServerTemplate,
+            ownerId,
+            templateId,
             "NcpsCacheServer",
             ModuleType.Generic,
             content,
@@ -365,14 +386,15 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateNcpsCacheClientTemplate()
+    private static Result<ModuleTemplate> CreateNcpsCacheClientTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.NcpsCacheClientTemplate, SeedPlaceholders.LocalCacheSubstituters,
+            new(templateId, SeedPlaceholders.LocalCacheSubstituters,
                 SeedPlaceholders.LocalCacheSubstituters, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string> { "\"http://machine-hostname.lan:8501\"" })),
-            new(SeedIds.NcpsCacheClientTemplate, SeedPlaceholders.LocalCachePublicKeys,
+            new(templateId, SeedPlaceholders.LocalCachePublicKeys,
                 SeedPlaceholders.LocalCachePublicKeys, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
                     { "\"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\"" }))
@@ -388,7 +410,8 @@ internal static class ModuleTemplateSeedFactory
                           "publicKeysSet = { expr = LocalTrustedPublicKeys != []; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.NcpsCacheClientTemplate,
+            ownerId,
+            templateId,
             "NcpsCacheClient",
             ModuleType.Generic,
             content,
@@ -399,18 +422,19 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateKdeWorkstationTemplate()
+    private static Result<ModuleTemplate> CreateKdeWorkstationTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.KdeTemplate, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
+            new(templateId, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"en_US.UTF-8\""),
-            new(SeedIds.KdeTemplate, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
+            new(templateId, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"us\""),
-            new(SeedIds.KdeTemplate, SeedPlaceholders.KdePrinting, SeedPlaceholders.KdePrinting,
+            new(templateId, SeedPlaceholders.KdePrinting, SeedPlaceholders.KdePrinting,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
-            new(SeedIds.KdeTemplate, SeedPlaceholders.KdeConnect, SeedPlaceholders.KdeConnect,
+            new(templateId, SeedPlaceholders.KdeConnect, SeedPlaceholders.KdeConnect,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" }))
         };
@@ -433,7 +457,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "localeSet = { expr = Locale != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.KdeTemplate,
+            ownerId,
+            templateId,
             "KdeWorkstation",
             ModuleType.System,
             content,
@@ -447,21 +472,22 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateGnomeWorkstationTemplate()
+    private static Result<ModuleTemplate> CreateGnomeWorkstationTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.GnomeTemplate, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
+            new(templateId, SeedPlaceholders.Locale, SeedPlaceholders.Locale,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"en_US.UTF-8\""),
-            new(SeedIds.GnomeTemplate, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
+            new(templateId, SeedPlaceholders.KeyboardLayout, SeedPlaceholders.KeyboardLayout,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"us\""),
-            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeCoreApps, SeedPlaceholders.GnomeCoreApps,
+            new(templateId, SeedPlaceholders.GnomeCoreApps, SeedPlaceholders.GnomeCoreApps,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
-            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeGames, SeedPlaceholders.GnomeGames,
+            new(templateId, SeedPlaceholders.GnomeGames, SeedPlaceholders.GnomeGames,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
-            new(SeedIds.GnomeTemplate, SeedPlaceholders.GnomeDeveloperTools, SeedPlaceholders.GnomeDeveloperTools,
+            new(templateId, SeedPlaceholders.GnomeDeveloperTools, SeedPlaceholders.GnomeDeveloperTools,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" }))
         };
@@ -485,7 +511,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "localeSet = { expr = Locale != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.GnomeTemplate,
+            ownerId,
+            templateId,
             "GnomeWorkstation",
             ModuleType.System,
             content,
@@ -499,16 +526,17 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateSystemHardeningTemplate()
+    private static Result<ModuleTemplate> CreateSystemHardeningTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.Sandbox, SeedPlaceholders.Sandbox,
+            new(templateId, SeedPlaceholders.Sandbox, SeedPlaceholders.Sandbox,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" })),
-            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.AdminUser, SeedPlaceholders.AdminUser,
+            new(templateId, SeedPlaceholders.AdminUser, SeedPlaceholders.AdminUser,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
-            new(SeedIds.SystemHardeningTemplate, SeedPlaceholders.SshPermitRootLogin,
+            new(templateId, SeedPlaceholders.SshPermitRootLogin,
                 SeedPlaceholders.SshPermitRootLogin, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
                 "\"prohibit-password\"",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "\"prohibit-password\"", "\"no\"" }))
@@ -536,7 +564,8 @@ internal static class ModuleTemplateSeedFactory
             "sshPermitRootLoginSet = { expr = SshPermitRootLogin != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.SystemHardeningTemplate,
+            ownerId,
+            templateId,
             "SystemHardening",
             ModuleType.Generic,
             content,
@@ -547,11 +576,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateDiskoEfiBtrfsTemplate()
+    private static Result<ModuleTemplate> CreateDiskoEfiBtrfsTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.DiskoEfiBtrfsTemplate, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+            new(templateId, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
         };
 
@@ -583,7 +613,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.DiskoEfiBtrfsTemplate,
+            ownerId,
+            templateId,
             "DiskoEfiBtrfs",
             ModuleType.System,
             content,
@@ -594,11 +625,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateDiskoEfiLuksExt4Template()
+    private static Result<ModuleTemplate> CreateDiskoEfiLuksExt4Template(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.DiskoEfiLuksExt4Template, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+            new(templateId, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0)
         };
 
@@ -631,7 +663,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "diskSet = { expr = InstallDisk != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.DiskoEfiLuksExt4Template,
+            ownerId,
+            templateId,
             "DiskoEfiLuksExt4",
             ModuleType.System,
             content,
@@ -642,13 +675,14 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateDiskoEfiZfsTemplate()
+    private static Result<ModuleTemplate> CreateDiskoEfiZfsTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.DiskoEfiZfsTemplate, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
+            new(templateId, SeedPlaceholders.InstallDisk, SeedPlaceholders.InstallDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0),
-            new(SeedIds.DiskoEfiZfsTemplate, SeedPlaceholders.ZfsHostId, SeedPlaceholders.ZfsHostId,
+            new(templateId, SeedPlaceholders.ZfsHostId, SeedPlaceholders.ZfsHostId,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"deadbeef\"")
         };
 
@@ -683,7 +717,8 @@ internal static class ModuleTemplateSeedFactory
             "hostIdSet = { expr = ZfsHostId != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.DiskoEfiZfsTemplate,
+            ownerId,
+            templateId,
             "DiskoEfiZfs",
             ModuleType.System,
             content,
@@ -694,13 +729,14 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateDiskoSsdHddTemplate()
+    private static Result<ModuleTemplate> CreateDiskoSsdHddTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.DiskoSsdHddTemplate, SeedPlaceholders.SsdDisk, SeedPlaceholders.SsdDisk,
+            new(templateId, SeedPlaceholders.SsdDisk, SeedPlaceholders.SsdDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sda\"", BindingIndex: 0),
-            new(SeedIds.DiskoSsdHddTemplate, SeedPlaceholders.HddDisk, SeedPlaceholders.HddDisk,
+            new(templateId, SeedPlaceholders.HddDisk, SeedPlaceholders.HddDisk,
                 EntryBindingKind.RankedDiskCandidate, EntryValueKind.Text, "\"/dev/sdb\"", BindingIndex: 1)
         };
 
@@ -735,7 +771,8 @@ internal static class ModuleTemplateSeedFactory
             "hddSet = { expr = HddDisk != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.DiskoSsdHddTemplate,
+            ownerId,
+            templateId,
             "DiskoSsdHdd",
             ModuleType.System,
             content,
@@ -746,11 +783,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateAmdGpuTemplate()
+    private static Result<ModuleTemplate> CreateAmdGpuTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.AmdGpuTemplate, SeedPlaceholders.GpuEnable32Bit, SeedPlaceholders.GpuEnable32Bit,
+            new(templateId, SeedPlaceholders.GpuEnable32Bit, SeedPlaceholders.GpuEnable32Bit,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "true",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "true", "false" }))
         };
@@ -768,7 +806,8 @@ internal static class ModuleTemplateSeedFactory
             "enable32BitValid = { expr = Enable32Bit == true || Enable32Bit == false; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.AmdGpuTemplate,
+            ownerId,
+            templateId,
             "AmdGpu",
             ModuleType.Generic,
             content,
@@ -779,17 +818,18 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateNvidiaGpuTemplate()
+    private static Result<ModuleTemplate> CreateNvidiaGpuTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaOpenKernel, SeedPlaceholders.NvidiaOpenKernel,
+            new(templateId, SeedPlaceholders.NvidiaOpenKernel, SeedPlaceholders.NvidiaOpenKernel,
                 EntryBindingKind.UserProvided, EntryValueKind.SingleChoice, "false",
                 OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
-            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaPowerManagement,
+            new(templateId, SeedPlaceholders.NvidiaPowerManagement,
                 SeedPlaceholders.NvidiaPowerManagement, EntryBindingKind.UserProvided, EntryValueKind.SingleChoice,
                 "false", OptionsJson: JsonSerializer.Serialize(new List<string> { "false", "true" })),
-            new(SeedIds.NvidiaGpuTemplate, SeedPlaceholders.NvidiaDriverChannel,
+            new(templateId, SeedPlaceholders.NvidiaDriverChannel,
                 SeedPlaceholders.NvidiaDriverChannel, EntryBindingKind.UserProvided, EntryValueKind.Text, "\"stable\"")
         };
 
@@ -814,7 +854,8 @@ internal static class ModuleTemplateSeedFactory
             "channelSet = { expr = NvidiaDriverChannel != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.NvidiaGpuTemplate,
+            ownerId,
+            templateId,
             "NvidiaGpu",
             ModuleType.Generic,
             content,
@@ -828,11 +869,12 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateItSupportTemplate()
+    private static Result<ModuleTemplate> CreateItSupportTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.ItSupportTemplate, SeedPlaceholders.LogRetentionDays, SeedPlaceholders.LogRetentionDays,
+            new(templateId, SeedPlaceholders.LogRetentionDays, SeedPlaceholders.LogRetentionDays,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"30day\"")
         };
 
@@ -858,7 +900,8 @@ internal static class ModuleTemplateSeedFactory
         var testContent = "retentionSet = { expr = LogRetentionDays != \"\"; expected = true; };";
 
         return BuildTemplate(
-            SeedIds.ItSupportTemplate,
+            ownerId,
+            templateId,
             "ItSupport",
             ModuleType.Generic,
             content,
@@ -869,21 +912,22 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateAdminUserTemplate()
+    private static Result<ModuleTemplate> CreateAdminUserTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
+            new(templateId, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"admin\""),
-            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
+            new(templateId, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"System Administrator\""),
-            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
+            new(templateId, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string> { "\"wheel\"" })),
-            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
+            new(templateId, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>())),
-            new(SeedIds.AdminUserTemplate, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
+            new(templateId, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"changeme\"")
         };
 
@@ -902,7 +946,8 @@ internal static class ModuleTemplateSeedFactory
             $"userNameSet = {{ expr = \"{SeedPlaceholders.UserName}\" != \"\"; expected = true; }};";
 
         return BuildTemplate(
-            SeedIds.AdminUserTemplate,
+            ownerId,
+            templateId,
             "Admin User",
             ModuleType.Generic,
             content,
@@ -916,21 +961,22 @@ internal static class ModuleTemplateSeedFactory
         );
     }
 
-    private static Result<ModuleTemplate> CreateRegularUserTemplate()
+    private static Result<ModuleTemplate> CreateRegularUserTemplate(UserId ownerId)
     {
+        var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
+            new(templateId, SeedPlaceholders.UserName, SeedPlaceholders.UserName,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "user"),
-            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
+            new(templateId, SeedPlaceholders.UserDescription, SeedPlaceholders.UserDescription,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "Desktop User"),
-            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
+            new(templateId, SeedPlaceholders.UserGroups, SeedPlaceholders.UserGroups,
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string> { "\"video\"", "\"audio\"", "\"networkmanager\"" })),
-            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
+            new(templateId, SeedPlaceholders.UserAuthorizedKeys, SeedPlaceholders.UserAuthorizedKeys,
                 EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>())),
-            new(SeedIds.RegularUserTemplate, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
+            new(templateId, SeedPlaceholders.UserInitialPassword, SeedPlaceholders.UserInitialPassword,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "changeme")
         };
 
@@ -949,7 +995,8 @@ internal static class ModuleTemplateSeedFactory
             $"userNameSet = {{ expr = \"{SeedPlaceholders.UserName}\" != \"\"; expected = true; }};";
 
         return BuildTemplate(
-            SeedIds.RegularUserTemplate,
+            ownerId,
+            templateId,
             "Regular User",
             ModuleType.Generic,
             content,

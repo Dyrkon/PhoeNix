@@ -1,15 +1,25 @@
 using FluentAssertions;
 using NSubstitute;
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Machines.Commands;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Application.UnitTests.Handlers;
 
 public class CreateMachineHandlerTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly IMachineRepository _machineRepository = Substitute.For<IMachineRepository>();
+    private readonly ICurrentUserAccessor _currentUserAccessor = Substitute.For<ICurrentUserAccessor>();
+
+    public CreateMachineHandlerTests()
+    {
+        _currentUserAccessor.GetUserId().Returns(Result.Success(OwnerId));
+    }
 
     [Fact]
     public async Task Handle_Should_Create_Machine_And_Return_Id()
@@ -19,7 +29,7 @@ public class CreateMachineHandlerTests
         _machineRepository.GetByMacAddressAsync(Arg.Any<System.Net.NetworkInformation.PhysicalAddress>(), Arg.Any<CancellationToken>())
             .Returns((Machine?)null);
 
-        var handler = new CreateMachineHandler(_machineRepository);
+        var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
             "My Machine",
             true,
@@ -37,11 +47,11 @@ public class CreateMachineHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Title_Already_Exists()
     {
-        var existing = Machine.Create(new MachineId(Guid.NewGuid()), "AA:BB:CC:DD:EE:FF", "My Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "My Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
         _machineRepository.GetByTitleAsync("My Machine", Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        var handler = new CreateMachineHandler(_machineRepository);
+        var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
             "My Machine",
             true,
@@ -61,7 +71,7 @@ public class CreateMachineHandlerTests
         _machineRepository.GetByTitleAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Machine?)null);
 
-        var handler = new CreateMachineHandler(_machineRepository);
+        var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
             "My Machine",
             true,
@@ -80,11 +90,11 @@ public class CreateMachineHandlerTests
     {
         _machineRepository.GetByTitleAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Machine?)null);
-        var existing = Machine.Create(new MachineId(Guid.NewGuid()), "AA:BB:CC:DD:EE:FF", "Other Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "Other Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
         _machineRepository.GetByMacAddressAsync(Arg.Any<System.Net.NetworkInformation.PhysicalAddress>(), Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        var handler = new CreateMachineHandler(_machineRepository);
+        var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
             "My Machine",
             true,

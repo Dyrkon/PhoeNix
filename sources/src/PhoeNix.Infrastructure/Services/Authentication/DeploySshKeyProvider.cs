@@ -17,7 +17,7 @@ public sealed class DeploySshKeyProvider(
         MachineId machineId,
         CancellationToken ct)
     {
-        var settings = await settingsRepository.GetAsync(ct);
+        var settings = await settingsRepository.GetFirstAsync(ct);
         if (settings is null)
             return Result.Failure<DeploySshAccessMaterial>(new Error(
                 "AppSettings.NotFound",

@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Machines;
@@ -14,11 +15,17 @@ public record CreateMachineCommand(
     Architecture Architecture,
     InstallDiskSelectionPreference InstallDiskSelectionPreference) : ICommand<string>;
 
-internal sealed class CreateMachineHandler(IMachineRepository machineRepository)
+internal sealed class CreateMachineHandler(
+    IMachineRepository machineRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<CreateMachineCommand, string>
 {
     public async Task<Result<string>> Handle(CreateMachineCommand request, CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<string>(userIdResult.Error);
+
         var normalizedTitle = request.Title.Trim();
 
         var existingMachineByTitle = await machineRepository.GetByTitleAsync(normalizedTitle, cancellationToken);
@@ -41,6 +48,7 @@ internal sealed class CreateMachineHandler(IMachineRepository machineRepository)
         return Machine
             .Create(
                 new MachineId(Guid.NewGuid()),
+                userIdResult.Value,
                 request.MacAddress,
                 normalizedTitle,
                 request.Enabled,

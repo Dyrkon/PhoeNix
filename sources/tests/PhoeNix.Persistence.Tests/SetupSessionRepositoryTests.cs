@@ -7,12 +7,14 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using Xunit.Abstractions;
 
 namespace PhoeNix.Persistence.Tests;
 
 public class SetupSessionRepositoryTests : PersistenceTestsBase
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private ISetupSessionRepository SetupSessionRepository =>
         ServiceProvider.GetRequiredService<ISetupSessionRepository>();
 
@@ -22,7 +24,7 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
 
     private static SetupSession CreateSession(DateTime startTime)
     {
-        return SetupSession.Create(new SetupSessionId(Guid.NewGuid()), startTime).Value;
+        return SetupSession.Create(new SetupSessionId(Guid.NewGuid()), OwnerId, startTime).Value;
     }
 
     [Fact]
@@ -89,7 +91,7 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         var request = new SetupSessionsRequest(1, 3);
-        var result = await SetupSessionRepository.GetSetupSessions(request, CancellationToken.None);
+        var result = await SetupSessionRepository.GetSetupSessions(request, OwnerId, CancellationToken.None);
 
         result.TotalItems.Should().Be(5);
         result.Items.Should().HaveCount(3);
@@ -108,7 +110,7 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         var request = new SetupSessionsRequest(2, 3);
-        var result = await SetupSessionRepository.GetSetupSessions(request, CancellationToken.None);
+        var result = await SetupSessionRepository.GetSetupSessions(request, OwnerId, CancellationToken.None);
 
         result.TotalItems.Should().Be(5);
         result.Items.Should().HaveCount(2);
@@ -123,7 +125,7 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         var request = new SetupSessionsRequest(SortDirection: SortDirection.Ascending);
-        var result = await SetupSessionRepository.GetSetupSessions(request, CancellationToken.None);
+        var result = await SetupSessionRepository.GetSetupSessions(request, OwnerId, CancellationToken.None);
 
         result.Items.Should().BeInAscendingOrder(s => s.StartTime);
     }
@@ -137,7 +139,7 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
         var request = new SetupSessionsRequest(SortDirection: SortDirection.Descending);
-        var result = await SetupSessionRepository.GetSetupSessions(request, CancellationToken.None);
+        var result = await SetupSessionRepository.GetSetupSessions(request, OwnerId, CancellationToken.None);
 
         result.Items.Should().BeInDescendingOrder(s => s.StartTime);
     }

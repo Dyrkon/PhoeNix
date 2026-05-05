@@ -1,6 +1,8 @@
 using PhoeNix.Application.Options;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
@@ -14,29 +16,33 @@ internal static class ConfigurationSeedFactory
     private const string PhoenixSource =
         "git+ssh://git@github.com/Dyrkon/PhoeNix";
 
-    public static Result<Configuration> CreateMinimalInstallableExample(SeedExampleOptions options)
+    public static Result<Configuration> CreateMinimalInstallableExample(UserId ownerId,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
+        var systemId = new SystemId(Guid.NewGuid());
         return Configuration.Create(
-                SeedIds.ExampleConfiguration,
+                new ConfigurationId(Guid.NewGuid()),
+                ownerId,
                 "Minimal NixOS Anywhere Example",
                 "Minimal bootable NixOS target for nixos-anywhere with Disko, callback, and Prometheus node exporter.")
             .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
-            .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
-            .Tap(cfg => cfg.AddSystem(SeedIds.ExampleSystem, Architecture.X86Linux, "demo-install-target"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.MinimalBaseTemplate,
+            .Tap(cfg => cfg.AddModule(templateIds["TimezoneSync"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixFlakeSettings"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixBuildOptimisation"], true))
+            .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "demo-install-target"))
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["MinimalBaseSystem"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.DiskoEfiExt4Template,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["DiskoEfiExt4System"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.ExampleSystem, SeedIds.PrometheusTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["PrometheusNodeExporter"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => SetSeededValues(cfg, options));
+            .Tap(cfg => SetSeededValues(cfg, templateIds, options));
     }
 
-    private static void SetSeededValues(Configuration cfg, SeedExampleOptions options)
+    private static void SetSeededValues(Configuration cfg,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
-        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.TimezoneSyncTemplate);
+        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["TimezoneSync"]);
         timezoneModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -46,7 +52,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.Timezone).Value
         ]);
 
-        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
+        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixFlakeSettings"]);
         nixFlakeModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -61,7 +67,7 @@ internal static class ConfigurationSeedFactory
                 options.NixTrustedPublicKeys).Value
         ]);
 
-        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
+        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixBuildOptimisation"]);
         nixBuildModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -76,9 +82,9 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NixCores).Value
         ]);
 
-        var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.ExampleSystem);
+        var system = cfg.SystemSpecifications.Single(s => s.Name == "demo-install-target");
 
-        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
+        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -98,7 +104,7 @@ internal static class ConfigurationSeedFactory
                 options.RootAuthorizedKeys).Value
         ]);
 
-        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiExt4Template);
+        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["DiskoEfiExt4System"]);
         diskoModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -108,7 +114,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.InstallDisk).Value
         ]);
 
-        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);
+        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);
         prometheusModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -124,112 +130,125 @@ internal static class ConfigurationSeedFactory
         ]);
     }
 
-    public static Result<Configuration> CreatePhoeNixDeploymentExample(SeedExampleOptions options)
+    public static Result<Configuration> CreatePhoeNixDeploymentExample(UserId ownerId,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
+        var systemId = new SystemId(Guid.NewGuid());
         return Configuration.Create(
-                SeedIds.PhoeNixDeploymentConfiguration,
+                new ConfigurationId(Guid.NewGuid()),
+                ownerId,
                 "PhoeNix Deployment Server",
                 "PhoeNix application server with integrated NCPS binary cache. Prometheus is provided by the PhoeNix service module.")
             .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
             .Tap(cfg => cfg.AddInput(PhoenixSource, "phoenix"))
-            .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
-            .Tap(cfg => cfg.AddSystem(SeedIds.PhoeNixDeploymentSystem, Architecture.X86Linux, "phoenix-server"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.PhoeNixDeploymentSystem, SeedIds.MinimalBaseTemplate,
+            .Tap(cfg => cfg.AddModule(templateIds["TimezoneSync"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixFlakeSettings"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixBuildOptimisation"], true))
+            .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "phoenix-server"))
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["MinimalBaseSystem"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.PhoeNixDeploymentSystem, SeedIds.DiskoEfiBtrfsTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["DiskoEfiBtrfs"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.PhoeNixDeploymentSystem, SeedIds.PhoeNixServiceTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["PhoeNixService"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.PhoeNixDeploymentSystem, SeedIds.AdminUserTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["Admin User"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => SetSeededPhoeNixDeploymentValues(cfg, options));
+            .Tap(cfg => SetSeededPhoeNixDeploymentValues(cfg, templateIds, options));
     }
 
-    public static Result<Configuration> CreateCacheMachineExample(SeedExampleOptions options)
+    public static Result<Configuration> CreateCacheMachineExample(UserId ownerId,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
+        var systemId = new SystemId(Guid.NewGuid());
         return Configuration.Create(
-                SeedIds.CacheMachineConfiguration,
+                new ConfigurationId(Guid.NewGuid()),
+                ownerId,
                 "Nix Binary Cache Server",
                 "Dedicated NCPS binary cache server with Prometheus node exporter for monitoring.")
             .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
-            .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
-            .Tap(cfg => cfg.AddSystem(SeedIds.CacheMachineSystem, Architecture.X86Linux, "nix-cache"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.CacheMachineSystem, SeedIds.MinimalBaseTemplate,
+            .Tap(cfg => cfg.AddModule(templateIds["TimezoneSync"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixFlakeSettings"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixBuildOptimisation"], true))
+            .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "nix-cache"))
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["MinimalBaseSystem"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.CacheMachineSystem, SeedIds.DiskoEfiBtrfsTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["DiskoEfiBtrfs"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.CacheMachineSystem, SeedIds.NcpsCacheServerTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["NcpsCacheServer"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.CacheMachineSystem, SeedIds.PrometheusTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["PrometheusNodeExporter"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.CacheMachineSystem, SeedIds.AdminUserTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["Admin User"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => SetSeededCacheMachineValues(cfg, options));
+            .Tap(cfg => SetSeededCacheMachineValues(cfg, templateIds, options));
     }
 
-    public static Result<Configuration> CreateGnomeWorkstationExample(SeedExampleOptions options)
+    public static Result<Configuration> CreateGnomeWorkstationExample(UserId ownerId,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
+        var systemId = new SystemId(Guid.NewGuid());
         return Configuration.Create(
-                SeedIds.GnomeWorkstationConfiguration,
+                new ConfigurationId(Guid.NewGuid()),
+                ownerId,
                 "GNOME Office Workstation",
                 "Locked-down GNOME desktop workstation using the local NCPS binary cache and SSH key hardening.")
             .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
-            .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
-            .Tap(cfg => cfg.AddSystem(SeedIds.GnomeWorkstationSystem, Architecture.X86Linux, "gnome-workstation"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.MinimalBaseTemplate,
+            .Tap(cfg => cfg.AddModule(templateIds["TimezoneSync"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixFlakeSettings"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixBuildOptimisation"], true))
+            .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "gnome-workstation"))
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["MinimalBaseSystem"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.DiskoEfiBtrfsTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["DiskoEfiBtrfs"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.GnomeTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["GnomeWorkstation"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.NcpsCacheClientTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["NcpsCacheClient"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.SystemHardeningTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["SystemHardening"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.PrometheusTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["PrometheusNodeExporter"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.GnomeWorkstationSystem, SeedIds.RegularUserTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["Regular User"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => SetSeededGnomeWorkstationValues(cfg, options));
+            .Tap(cfg => SetSeededGnomeWorkstationValues(cfg, templateIds, options));
     }
 
-    public static Result<Configuration> CreateKdeWorkstationExample(SeedExampleOptions options)
+    public static Result<Configuration> CreateKdeWorkstationExample(UserId ownerId,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
+        var systemId = new SystemId(Guid.NewGuid());
         return Configuration.Create(
-                SeedIds.KdeWorkstationConfiguration,
+                new ConfigurationId(Guid.NewGuid()),
+                ownerId,
                 "KDE Office Workstation",
                 "Locked-down KDE Plasma workstation using the local NCPS binary cache and SSH key hardening.")
             .Tap(cfg => cfg.AddInput(NixpkgsSource, "nixpkgs"))
-            .Tap(cfg => cfg.AddModule(SeedIds.TimezoneSyncTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixFlakeSettingsTemplate, true))
-            .Tap(cfg => cfg.AddModule(SeedIds.NixBuildOptimisationTemplate, true))
-            .Tap(cfg => cfg.AddSystem(SeedIds.KdeWorkstationSystem, Architecture.X86Linux, "kde-workstation"))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.MinimalBaseTemplate,
+            .Tap(cfg => cfg.AddModule(templateIds["TimezoneSync"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixFlakeSettings"], true))
+            .Tap(cfg => cfg.AddModule(templateIds["NixBuildOptimisation"], true))
+            .Tap(cfg => cfg.AddSystem(systemId, Architecture.X86Linux, "kde-workstation"))
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["MinimalBaseSystem"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.DiskoEfiBtrfsTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["DiskoEfiBtrfs"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.KdeTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["KdeWorkstation"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.NcpsCacheClientTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["NcpsCacheClient"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.SystemHardeningTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["SystemHardening"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.PrometheusTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["PrometheusNodeExporter"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => cfg.AddSystemModule(SeedIds.KdeWorkstationSystem, SeedIds.RegularUserTemplate,
+            .Tap(cfg => cfg.AddSystemModule(systemId, templateIds["Regular User"],
                 [Architecture.X86Linux], true))
-            .Tap(cfg => SetSeededKdeWorkstationValues(cfg, options));
+            .Tap(cfg => SetSeededKdeWorkstationValues(cfg, templateIds, options));
     }
 
-    private static void SetSeededPhoeNixDeploymentValues(Configuration cfg, SeedExampleOptions options)
+    private static void SetSeededPhoeNixDeploymentValues(Configuration cfg,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
-        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.TimezoneSyncTemplate);
+        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["TimezoneSync"]);
         timezoneModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -239,7 +258,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.Timezone).Value
         ]);
 
-        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
+        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixFlakeSettings"]);
         nixFlakeModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -254,7 +273,7 @@ internal static class ConfigurationSeedFactory
                 options.NixTrustedPublicKeys).Value
         ]);
 
-        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
+        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixBuildOptimisation"]);
         nixBuildModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -269,9 +288,9 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NixCores).Value
         ]);
 
-        var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.PhoeNixDeploymentSystem);
+        var system = cfg.SystemSpecifications.Single(s => s.Name == "phoenix-server");
 
-        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
+        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -291,7 +310,7 @@ internal static class ConfigurationSeedFactory
                 options.RootAuthorizedKeys).Value
         ]);
 
-        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiBtrfsTemplate);
+        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["DiskoEfiBtrfs"]);
         diskoModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -301,7 +320,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.InstallDisk).Value
         ]);
 
-        var phoenixModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PhoeNixServiceTemplate);
+        var phoenixModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PhoeNixService"]);
         phoenixModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -316,7 +335,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NcpsServerAddress).Value
         ]);
 
-        var adminUserModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.AdminUserTemplate);
+        var adminUserModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["Admin User"]);
         adminUserModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -347,9 +366,10 @@ internal static class ConfigurationSeedFactory
         ]);
     }
 
-    private static void SetSeededCacheMachineValues(Configuration cfg, SeedExampleOptions options)
+    private static void SetSeededCacheMachineValues(Configuration cfg,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
-        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.TimezoneSyncTemplate);
+        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["TimezoneSync"]);
         timezoneModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -359,7 +379,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.Timezone).Value
         ]);
 
-        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
+        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixFlakeSettings"]);
         nixFlakeModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -374,7 +394,7 @@ internal static class ConfigurationSeedFactory
                 options.NixTrustedPublicKeys).Value
         ]);
 
-        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
+        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixBuildOptimisation"]);
         nixBuildModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -389,9 +409,9 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NixCores).Value
         ]);
 
-        var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.CacheMachineSystem);
+        var system = cfg.SystemSpecifications.Single(s => s.Name == "nix-cache");
 
-        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
+        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -411,7 +431,7 @@ internal static class ConfigurationSeedFactory
                 options.RootAuthorizedKeys).Value
         ]);
 
-        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiBtrfsTemplate);
+        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["DiskoEfiBtrfs"]);
         diskoModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -421,7 +441,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.InstallDisk).Value
         ]);
 
-        var cacheServerModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.NcpsCacheServerTemplate);
+        var cacheServerModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["NcpsCacheServer"]);
         cacheServerModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -436,7 +456,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NcpsServerAddress).Value
         ]);
 
-        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);
+        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);
         prometheusModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -452,7 +472,7 @@ internal static class ConfigurationSeedFactory
                 "true").Value
         ]);
 
-        var adminUserModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.AdminUserTemplate);
+        var adminUserModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["Admin User"]);
         adminUserModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -483,9 +503,10 @@ internal static class ConfigurationSeedFactory
         ]);
     }
 
-    private static void SetSeededGnomeWorkstationValues(Configuration cfg, SeedExampleOptions options)
+    private static void SetSeededGnomeWorkstationValues(Configuration cfg,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
-        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.TimezoneSyncTemplate);
+        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["TimezoneSync"]);
         timezoneModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -495,7 +516,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.Timezone).Value
         ]);
 
-        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
+        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixFlakeSettings"]);
         nixFlakeModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -510,7 +531,7 @@ internal static class ConfigurationSeedFactory
                 options.NixTrustedPublicKeys).Value
         ]);
 
-        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
+        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixBuildOptimisation"]);
         nixBuildModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -525,9 +546,9 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NixCores).Value
         ]);
 
-        var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.GnomeWorkstationSystem);
+        var system = cfg.SystemSpecifications.Single(s => s.Name == "gnome-workstation");
 
-        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
+        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -547,7 +568,7 @@ internal static class ConfigurationSeedFactory
                 options.RootAuthorizedKeys).Value
         ]);
 
-        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiBtrfsTemplate);
+        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["DiskoEfiBtrfs"]);
         diskoModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -557,7 +578,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.InstallDisk).Value
         ]);
 
-        var gnomeModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.GnomeTemplate);
+        var gnomeModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["GnomeWorkstation"]);
         gnomeModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -590,7 +611,7 @@ internal static class ConfigurationSeedFactory
                 "false").Value
         ]);
 
-        var cacheClientModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.NcpsCacheClientTemplate);
+        var cacheClientModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["NcpsCacheClient"]);
         cacheClientModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -605,7 +626,7 @@ internal static class ConfigurationSeedFactory
                 ["\"curl http://nix-cache:5000/pubkey\""]).Value
         ]);
 
-        var hardeningModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.SystemHardeningTemplate);
+        var hardeningModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["SystemHardening"]);
         hardeningModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -621,7 +642,7 @@ internal static class ConfigurationSeedFactory
                 "\"prohibit-password\"").Value
         ]);
 
-        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);
+        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);
         prometheusModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -637,7 +658,7 @@ internal static class ConfigurationSeedFactory
                 "true").Value
         ]);
 
-        var regularUserModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.RegularUserTemplate);
+        var regularUserModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["Regular User"]);
         regularUserModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -668,9 +689,10 @@ internal static class ConfigurationSeedFactory
         ]);
     }
 
-    private static void SetSeededKdeWorkstationValues(Configuration cfg, SeedExampleOptions options)
+    private static void SetSeededKdeWorkstationValues(Configuration cfg,
+        IReadOnlyDictionary<string, ModuleTemplateId> templateIds, SeedExampleOptions options)
     {
-        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.TimezoneSyncTemplate);
+        var timezoneModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["TimezoneSync"]);
         timezoneModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -680,7 +702,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.Timezone).Value
         ]);
 
-        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixFlakeSettingsTemplate);
+        var nixFlakeModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixFlakeSettings"]);
         nixFlakeModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -695,7 +717,7 @@ internal static class ConfigurationSeedFactory
                 options.NixTrustedPublicKeys).Value
         ]);
 
-        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == SeedIds.NixBuildOptimisationTemplate);
+        var nixBuildModule = cfg.Modules.Single(m => m.ModuleTemplateId == templateIds["NixBuildOptimisation"]);
         nixBuildModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -710,9 +732,9 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.NixCores).Value
         ]);
 
-        var system = cfg.SystemSpecifications.Single(s => s.Id == SeedIds.KdeWorkstationSystem);
+        var system = cfg.SystemSpecifications.Single(s => s.Name == "kde-workstation");
 
-        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.MinimalBaseTemplate);
+        var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -732,7 +754,7 @@ internal static class ConfigurationSeedFactory
                 options.RootAuthorizedKeys).Value
         ]);
 
-        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.DiskoEfiBtrfsTemplate);
+        var diskoModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["DiskoEfiBtrfs"]);
         diskoModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -742,7 +764,7 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.InstallDisk).Value
         ]);
 
-        var kdeModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.KdeTemplate);
+        var kdeModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["KdeWorkstation"]);
         kdeModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -769,7 +791,7 @@ internal static class ConfigurationSeedFactory
                 "false").Value
         ]);
 
-        var cacheClientModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.NcpsCacheClientTemplate);
+        var cacheClientModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["NcpsCacheClient"]);
         cacheClientModule.ReplaceEntries(
         [
             ListValue.Create(
@@ -784,7 +806,7 @@ internal static class ConfigurationSeedFactory
                 ["\"curl http://nix-cache:5000/pubkey\""]).Value
         ]);
 
-        var hardeningModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.SystemHardeningTemplate);
+        var hardeningModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["SystemHardening"]);
         hardeningModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -800,7 +822,7 @@ internal static class ConfigurationSeedFactory
                 "\"prohibit-password\"").Value
         ]);
 
-        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.PrometheusTemplate);
+        var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);
         prometheusModule.ReplaceEntries(
         [
             TextValue.Create(
@@ -816,7 +838,7 @@ internal static class ConfigurationSeedFactory
                 "true").Value
         ]);
 
-        var regularUserModule = system.Modules.Single(m => m.ModuleTemplateId == SeedIds.RegularUserTemplate);
+        var regularUserModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["Regular User"]);
         regularUserModule.ReplaceEntries(
         [
             TextValue.Create(

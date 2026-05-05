@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
@@ -12,7 +13,8 @@ public record CancelSetupSessionCommand(SetupSessionId SessionId) : ICommand;
 
 internal sealed class CancelSetupSessionCommandHandler(
     ISetupSessionRepository setupSessionRepository,
-    INetbootHostService netbootHostService)
+    INetbootHostService netbootHostService,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<CancelSetupSessionCommand>
 {
     public async Task<Result> Handle(
@@ -21,11 +23,14 @@ internal sealed class CancelSetupSessionCommandHandler(
     {
         var nowUtc = DateTime.UtcNow;
 
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return userIdResult.Error;
+
         var sessionResult = await setupSessionRepository
             .GetByIdAsync(request.SessionId, cancellationToken)
-            .EnsureNotNull(new Error(
-                "SetupSessionNotFound",
-                $"Setup session '{request.SessionId.Value}' was not found."));
+            .EnsureNotNull(SetupSessionErrors.NotFound(request.SessionId))
+            .Ensure(s => s.OwnerId == userIdResult.Value, SetupSessionErrors.NotFound(request.SessionId));
 
         if (sessionResult.IsFailure)
             return sessionResult;

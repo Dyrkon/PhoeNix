@@ -127,7 +127,7 @@ internal sealed class GetBootDecisionQueryHandler(
                 return Result.Failure<PxeBootDetails>(stageResult.Error);
         }
 
-        var settings = await appSettingsRepository.GetAsync(cancellationToken);
+        var settings = await appSettingsRepository.GetAsync(machine.OwnerId, cancellationToken);
 
         var cmdline = BuildCommandLine(
             session.BootArtefactDescriptor,

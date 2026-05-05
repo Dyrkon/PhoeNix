@@ -84,7 +84,7 @@ internal sealed class UpdateMachineConfigurationHandler(
                 "MachineArchitectureMismatch",
                 $"System '{selectedSystem.Name}' targets architecture '{selectedSystem.Architecture}', but machine '{machine.Title}' has architecture '{machine.Architecture}'."));
 
-        var moduleTemplates = await moduleTemplateRepository.GetAllAsync(cancellationToken);
+        var moduleTemplates = await moduleTemplateRepository.GetAllAsync(configuration.OwnerId, cancellationToken);
         if (moduleTemplates is null || !moduleTemplates.Any())
             return Result.Failure(new Error(
                 "ModuleTemplatesNotFound",

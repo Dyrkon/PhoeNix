@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Repositories;
@@ -11,16 +12,22 @@ namespace PhoeNix.Application.Modules.Commands;
 public sealed record ImportModuleTemplateCommand(ModuleTemplateResponse ImportData) : ICommand<ModuleTemplateResponse>;
 
 internal sealed class ImportModuleTemplateHandler(
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<ImportModuleTemplateCommand, ModuleTemplateResponse>
 {
     public async Task<Result<ModuleTemplateResponse>> Handle(
         ImportModuleTemplateCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ModuleTemplateResponse>(userIdResult.Error);
+
+        var userId = userIdResult.Value;
         var data = request.ImportData;
 
-        var existing = await moduleTemplateRepository.GetByNameAsync(data.Name, cancellationToken);
+        var existing = await moduleTemplateRepository.GetByNameAsync(data.Name, userId, cancellationToken);
 
         if (existing is not null)
             return Result.Failure<ModuleTemplateResponse>(ModuleErrors.NameAlreadyExists(data.Name));
@@ -45,6 +52,7 @@ internal sealed class ImportModuleTemplateHandler(
 
         return ModuleTemplate.Create(
                 moduleTemplateId,
+                userId,
                 data.Name,
                 data.Enabled,
                 data.Type,

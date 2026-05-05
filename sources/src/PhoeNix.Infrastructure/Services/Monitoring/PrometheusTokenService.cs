@@ -48,7 +48,7 @@ public sealed class PrometheusTokenService : IPrometheusTokenService
         using (var scope = _scopeFactory.CreateScope())
         {
             var repo = scope.ServiceProvider.GetRequiredService<IAppSettingsRepository>();
-            var settings = repo.GetAsync().GetAwaiter().GetResult();
+            var settings = repo.GetFirstAsync().GetAwaiter().GetResult();
             tokenTtl = settings is not null
                 ? TimeSpan.FromDays(settings.MonitoringTokenTtlDays)
                 : TimeSpan.FromDays(7);

@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Mappings;
 using PhoeNix.Application.Repositories;
@@ -14,16 +15,22 @@ public sealed record UpdateConfigurationCommand(
 
 internal sealed class UpdateConfigurationHandler(
     IConfigurationRepository configurationRepository,
-    IModuleTemplateRepository moduleTemplateRepository)
+    IModuleTemplateRepository moduleTemplateRepository,
+    ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateConfigurationCommand, ConfigurationResponse>
 {
     public Task<Result<ConfigurationResponse>> Handle(
         UpdateConfigurationCommand request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Task.FromResult(Result.Failure<ConfigurationResponse>(userIdResult.Error));
+
         return configurationRepository
             .GetByIdAsync(request.ConfigurationId, cancellationToken)
             .EnsureNotNull(ConfigurationErrors.NotFound(request.ConfigurationId))
+            .Ensure(c => c.OwnerId == userIdResult.Value, ConfigurationErrors.NotFound(request.ConfigurationId))
             .Tap(configuration => configuration.EditConfiguration(request.Title, request.Description))
             .Bind(async configuration =>
             {
@@ -32,7 +39,7 @@ internal sealed class UpdateConfigurationHandler(
                     .Distinct()
                     .ToList();
 
-                var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
+                var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, userIdResult.Value, cancellationToken);
                 var templatesById = moduleTemplates.ToDictionary(x => x.Id);
 
                 return Result.Success(ConfigurationMappings.MapConfigurationToDto(configuration, templatesById));

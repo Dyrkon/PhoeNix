@@ -4,6 +4,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
@@ -11,6 +12,7 @@ namespace PhoeNix.Domain.UnitTests;
 
 public class SetupSessionTests
 {
+    private static readonly UserId OwnerId = new(Guid.NewGuid());
     private readonly SetupSessionId _sessionId = new(Guid.NewGuid());
     private readonly MachineId _machineId = new(Guid.NewGuid());
     private readonly SystemId _systemId = new(Guid.NewGuid());
@@ -18,7 +20,7 @@ public class SetupSessionTests
     private readonly DateTime _now = DateTime.UtcNow;
 
     private SetupSession CreateSession() =>
-        SetupSession.Create(_sessionId, _now).Value;
+        SetupSession.Create(_sessionId, OwnerId, _now).Value;
 
     private SetupSession CreateSessionWithMachine()
     {
@@ -30,7 +32,7 @@ public class SetupSessionTests
     [Fact]
     public void SetupSession_Should_Create_Successfully()
     {
-        var result = SetupSession.Create(_sessionId, _now);
+        var result = SetupSession.Create(_sessionId, OwnerId, _now);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(_sessionId);

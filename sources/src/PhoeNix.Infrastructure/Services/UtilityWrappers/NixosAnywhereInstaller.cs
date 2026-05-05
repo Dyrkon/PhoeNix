@@ -23,7 +23,7 @@ public sealed class NixosAnywhereInstaller(
         string configurationName,
         CancellationToken cancellationToken)
     {
-        var settings = await settingsRepository.GetAsync(cancellationToken);
+        var settings = await settingsRepository.GetAsync(session.OwnerId, cancellationToken);
         if (settings is null)
             return Result.Failure(new Error(
                 "AppSettings.NotFound",

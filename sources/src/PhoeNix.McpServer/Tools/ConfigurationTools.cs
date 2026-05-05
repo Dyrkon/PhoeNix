@@ -236,7 +236,7 @@ public static class ConfigurationTools
             .Distinct()
             .ToList();
 
-        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, cancellationToken);
+        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, configuration.OwnerId, cancellationToken);
 
         var buildResult = materializer.MaterializeConfiguration(configuration, moduleTemplates);
         if (buildResult.IsFailure)

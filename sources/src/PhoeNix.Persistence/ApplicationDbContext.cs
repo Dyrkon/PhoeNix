@@ -7,8 +7,6 @@ using PhoeNix.Domain.Entities.Inputs;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.SetupSessions;
-using PhoeNix.Domain.Entities.Systems;
-using PhoeNix.Domain.Entities.SystemUsers;
 using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
@@ -24,7 +22,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Test> Tests { get; set; }
     public DbSet<EntryValue> EntryValues { get; set; }
     public DbSet<Domain.Entities.Systems.System> Systems { get; set; }
-    public DbSet<SystemUser> SystemUsers { get; set; }
     public DbSet<ModuleValue> ModuleValue { get; set; }
     public DbSet<Machine> Machines { get; set; }
     public DbSet<User> Users { get; set; }

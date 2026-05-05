@@ -1,3 +1,4 @@
+using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Abstractions.Nix;
 using PhoeNix.Application.Models.Modules;
@@ -12,19 +13,25 @@ public sealed record GetModuleScaffoldingQuery(ModuleTemplateId ModuleTemplateId
 
 internal sealed class GetModuleScaffoldingHandler(
     IModuleTemplateRepository moduleTemplateRepository,
-    INixBuildMaterializer scaffoldingProvider)
+    INixBuildMaterializer scaffoldingProvider,
+    ICurrentUserAccessor currentUserAccessor)
     : IQueryHandler<GetModuleScaffoldingQuery, ModuleScaffoldingResponse>
 {
     public async Task<Result<ModuleScaffoldingResponse>> Handle(
         GetModuleScaffoldingQuery request,
         CancellationToken cancellationToken)
     {
+        var userIdResult = currentUserAccessor.GetUserId();
+        if (userIdResult.IsFailure)
+            return Result.Failure<ModuleScaffoldingResponse>(userIdResult.Error);
+
         var template = await moduleTemplateRepository.GetByIdAsync(
             request.ModuleTemplateId,
             cancellationToken);
 
         return template
             .EnsureNotNull(ModuleErrors.NotFound(request.ModuleTemplateId))
+            .Ensure(t => t.OwnerId == userIdResult.Value, ModuleErrors.NotFound(request.ModuleTemplateId))
             .Map(t =>
             {
                 var moduleScaffolding = scaffoldingProvider.GetModuleScaffolding(t.Type);

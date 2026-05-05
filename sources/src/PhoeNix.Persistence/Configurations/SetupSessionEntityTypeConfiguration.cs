@@ -5,6 +5,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -21,6 +22,17 @@ internal sealed class SetupSessionEntityTypeConfiguration
                 id => id.Value,
                 value => new SetupSessionId(value))
             .ValueGeneratedNever();
+
+        builder.Property(x => x.OwnerId)
+            .IsRequired()
+            .HasConversion(id => id.Value, value => new UserId(value));
+
+        builder.HasIndex(x => x.OwnerId);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.StartTime)
             .IsRequired();

@@ -1,5 +1,6 @@
 using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Users;
 
 namespace PhoeNix.Application.Repositories;
 
@@ -7,6 +8,7 @@ public interface IConfigurationReadRepository
 {
     Task<PagedResponse<ConfigurationListResponse>> GetPageAsync(
         ListConfigurationsRequest request,
+        UserId ownerId,
         CancellationToken cancellationToken);
 
     Task<ConfigurationResponse?> GetByIdAsync(

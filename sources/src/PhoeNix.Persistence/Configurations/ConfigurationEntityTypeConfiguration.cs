@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence.Configurations;
@@ -18,6 +19,17 @@ internal sealed class ConfigurationEntityTypeConfiguration : IApplicationEntityT
                 id => id.Value,
                 value => new ConfigurationId(value))
             .ValueGeneratedNever();
+
+        builder.Property(c => c.OwnerId)
+            .IsRequired()
+            .HasConversion(id => id.Value, value => new UserId(value));
+
+        builder.HasIndex(c => c.OwnerId);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(c => c.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(c => c.Title)
             .IsRequired()
