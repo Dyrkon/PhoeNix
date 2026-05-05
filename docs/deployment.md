@@ -1,6 +1,6 @@
 # PhoeNix Deployment Guide
 
-This document covers how to deploy the PhoeNix orchestrator using NixOS. 
+This document covers how to deploy the PhoeNix orchestrator using NixOS. PhoeNix can be deployed as a NixOS module into an existing configuration, as a pre-built VM image, as an LXC container, or directly onto bare metal using `nixos-anywhere`.
 
 ## 1. Using the NixOS Module
 If you have an existing NixOS configuration, you can consume the PhoeNix module directly from the flake.
@@ -11,29 +11,49 @@ If you have an existing NixOS configuration, you can consume the PhoeNix module 
 
   services.phoenix = {
     enable = true;
+    mcpServer = {
+      enable = true;
+    };
     monitoring = {
       enable = true;
       prometheusServer.enable = true;
       prometheusServer.ui.nginxProxy = true; # Access UI at /prometheus
     };
     nginx.enable = true;
-    nginx.hostName = "orchestrator.internal";
   };
 }
 ```
 
 ## 2. Pre-built Reference Images
-The flake provides "Gold Images" for common infrastructure.
+
+Images are built using [nixos-generators](https://github.com/nix-community/nixos-generators), which is now part of nixpkgs. The `--image-variant` and `--format` flags correspond to nixos-generators format names. All formats listed in the [nixos-generators format reference](https://github.com/nix-community/nixos-generators?tab=readme-ov-file#supported-formats) are available.
+
+General command pattern:
+```bash
+nixos-rebuild build-image \
+  --flake github:Dyrkon/PhoeNix#phoenix-x86 \
+  --image-variant <format> \
+  --format <format>
+```
 
 ### Virtual Machine (QCOW2)
-Optimized for **Proxmox (UEFI)** and KVM.
-* **Build:** `nix build github:Dyrkon/PhoeNix#packages.x86_64-linux.vm`
-* **Features:** Includes VirtIO drivers, QEMU Guest Agent, and `systemd-boot`.
+Optimized for **Proxmox (UEFI)** and KVM. Includes VirtIO drivers, QEMU Guest Agent, and `systemd-boot`.
 
-### LXC Container
-Standard system container for Proxmox or Incus.
-* **Build:** `nix build github:Dyrkon/PhoeNix#packages.x86_64-linux.lxc`
-* **Note:** Automatically configures `boot.isContainer = true`.
+```bash
+nixos-rebuild build-image \
+  --flake github:Dyrkon/PhoeNix#phoenix-x86 \
+  --image-variant qemu \
+  --format qcow2
+```
+
+### LXC Container (Proxmox)
+
+```bash
+nixos-rebuild build-image \
+  --flake github:Dyrkon/PhoeNix#phoenix-x86 \
+  --image-variant proxmox-lxc \
+  --format proxmox-lxc
+```
 
 ## 3. Zero-Touch Remote Deployment
 You can deploy PhoeNix to a bare-metal server or fresh VM without cloning the repo using `nixos-anywhere`.
@@ -46,7 +66,24 @@ nix run github:nix-community/nixos-anywhere -- \
 *This command partitions the disk via **Disko**, installs NixOS, and sets up the Phoenix stack in one step.*
 
 ## 4. Post-Install Access
+
+> [!IMPORTANT]
+> You have to change Netboot (PXE) public API Base URL in settings before you start using the app to http://{your hostname or IP of the orchestrator machine}/api
+
 * **Default User:** `phoenix-admin`
 * **Initial Password:** `phoenix-default-pass` (Change this immediately!)
 * **SSH:** `ssh phoenix-admin@<IP>`
-* **Web UI:** `http://<IP>/` (App) and `http://<IP>/prometheus/` (Metrics)
+* **Web UI:** `https://<hostname>/` (proxied by nginx)
+* **Prometheus:** `https://<hostname>/prometheus/`
+* **MCP server:** `https://<hostname>/mcp` (requires JWT auth)
+
+## 5. Monitoring
+
+Prometheus is included and enabled via the NixOS module's `monitoring` option. When enabled:
+
+* Prometheus scrapes the PhoeNix API's HTTP service discovery endpoint (`/api/monitoring/targets`) to discover provisioned machines automatically
+* The scrape endpoint is token-protected; the API generates and rotates the token
+* Node Exporter runs on the orchestrator host and is scraped by default
+* The Prometheus UI is accessible at `/prometheus/` via nginx (when `prometheusServer.ui.nginxProxy = true`)
+
+Machine metrics collected by PhoeNix are displayed in the Machine detail page of the web UI and are queryable by AI agents via the `GetMachineMetrics` MCP tool.

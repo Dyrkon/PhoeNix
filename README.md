@@ -1,30 +1,40 @@
 # PhoeNix
 
-Nix based machine orchestration and management software made simple.
+PhoeNix is a NixOS machine provisioning and configuration management platform. It gives infrastructure administrators a web-based interface to build reproducible NixOS configurations from reusable module templates and provision bare-metal or virtual machines — without writing Nix code by hand.
 
-Configure, install and manage your machines with a web based tool that provides building blocks to create configuration that fits your needs.
+## What PhoeNix can do
 
-With PhoeNix, you can:
-- Create reproducible configuration without coding
-- Install your configuration on VM or bare metal machine
-- Manager your machines remotely
-- Monitor all kinds of useful metrics
-- Share your configuration
-- Leverage community made configurations and snippets
+- **Compose configurations visually** — browse a library of parameterized module templates and assemble NixOS configurations through forms instead of editing `.nix` files
+- **Provision machines over the network** — boot target machines via PXE, probe their hardware automatically, then install a fully configured NixOS system in one workflow
+- **Manage your fleet** — track machine status, hardware inventory, deployment snapshots, and configuration history from a single dashboard
+- **Update machines remotely** — push NixOS configuration changes to provisioned machines without manual SSH work
+- **Monitor infrastructure** — built-in Prometheus integration with per-machine metrics and a scrape-target discovery endpoint
+- **Control everything via AI agents** — a built-in MCP server exposes all functionality to Claude Code and other MCP-compatible agents
+- **Share and reuse** — export and import configurations and module templates across instances
 
-## Instalation
+## How it works
+
+1. A knowledgeable user writes a **module template** — a parameterized NixOS module with typed entry fields (text, integer, choice, list)
+2. Users compose a **configuration** by picking templates from the library and filling in their values
+3. A **setup session** is created for target machines: PhoeNix serves a bootstrap image, the machine PXE-boots, hardware is probed automatically
+4. PhoeNix generates the full NixOS flake, builds the system closure, and installs it via `nixos-anywhere` + `disko`
+5. The machine calls back on first boot and transitions to `Provisioned` state
+
+## Installation
 
 You will need [nix](https://nixos.org/download/) either as a package manager or an OS in form of NixOS.
 
-You can either
+You can either:
 - Install the [PhoeNix package](TODO)
-- Clone this repo and use `nix run` if you want to modify the project later.
+- Clone this repo and use `nix run` if you want to modify the project later
 
 ## Documentation
 
 - [Project structure](./docs/project-structure.md)
-- [Web documentation](./docs/web-app.md)
-- [API documentation](./docs/web-api.md)
+- [Development guide](./docs/development.md)
+- [Deployment guide](./docs/deployment.md)
+- [MCP server](./docs/mcp-server.md)
+- [Project technical overview](./docs/PROJECT.md) — architecture, domain model, tech stack (useful for AI agents)
 
 ## How to contribute?
 
@@ -35,5 +45,7 @@ Nix makes it simple:
 3. Add new awesome feature or fix a bug
 4. Test the change
 5. Create a pull request ([how to](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request))
+
+See [project-structure.md](./docs/project-structure.md) for a map of the codebase and [development.md](./docs/development.md) for the full local setup guide.
 
 ## Special thanks
