@@ -122,7 +122,7 @@ public static class ModuleTemplateTools
                  (without the scaffolding wrapper — use get_module_scaffolding_preview to see the wrapper).
                  Use placeholder names like 'myValue' in the content and define them in editableValueTypes.
 
-                 architectures: JSON array of strings, e.g. ["X86_64","Aarch64"]
+                 architectures: JSON array of strings, e.g. ["X86Linux", "Aarch64Linux", "X86Darwin", "Aarch64Darwin"]
                  editableValueTypes: JSON array of entry definitions:
                    { "name": string, "placeholder": string, "bindingKind": "None"|"RuntimeValue"|"InputValue",
                      "valueKind": "Text"|"Integer"|"Decimal"|"Enum"|"List",
@@ -143,7 +143,8 @@ public static class ModuleTemplateTools
         string type,
         [Description("Inner Nix expression content (without scaffolding wrapper)")]
         string content,
-        [Description("JSON array of architecture strings, e.g. [\"X86_64\"]")]
+        [Description(
+            "JSON array of architecture strings, e.g. [\"X86Linux\", \"Aarch64Linux\", \"X86Darwin\", \"Aarch64Darwin\"]")]
         string architecturesJson,
         [Description("JSON array of editable entry value type definitions (can be empty: [])")]
         string editableValueTypesJson,
@@ -201,7 +202,8 @@ public static class ModuleTemplateTools
         string type,
         [Description("Inner Nix expression content (without scaffolding wrapper)")]
         string content,
-        [Description("JSON array of architecture strings, e.g. [\"X86_64\"]")]
+        [Description(
+            "JSON array of architecture strings, e.g. [\"X86Linux\", \"Aarch64Linux\", \"X86Darwin\", \"Aarch64Darwin\"]")]
         string architecturesJson,
         [Description("JSON array of editable entry value type definitions (can be empty: [])")]
         string editableValueTypesJson,

@@ -18,7 +18,7 @@ public sealed class RequestLoggingBehavior<TRequest, TResponse>(
         var requestName = typeof(TRequest).Name;
         var stopwatch = Stopwatch.StartNew();
 
-        logger.LogInformation("Handling {RequestName}", requestName);
+        logger.LogDebug("Handling {RequestName}", requestName);
 
         var response = await next();
 

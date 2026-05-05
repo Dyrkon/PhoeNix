@@ -12,7 +12,8 @@ public static class ModuleMappings
             moduleTemplate.Name,
             moduleTemplate.Enabled,
             moduleTemplate.Type,
-            moduleTemplate.SupportedArchitectures.ToList());
+            moduleTemplate.SupportedArchitectures.ToList(),
+            moduleTemplate.EditableValueTypes.Count);
     }
 
     public static ModuleTemplateResponse MapModuleToDto(ModuleTemplate moduleTemplate)

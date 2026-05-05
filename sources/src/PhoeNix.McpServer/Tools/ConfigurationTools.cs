@@ -12,6 +12,7 @@ using PhoeNix.Contracts.Configurations;
 using PhoeNix.Contracts.Modules;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Modules;
+using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.McpServer.Tools;
@@ -148,6 +149,35 @@ public static class ConfigurationTools
     }
 
     [McpServerTool]
+    [Description(
+        "Add a module template instance to a specific system within a configuration. Returns the new module value with its ID and entry fields.")]
+    public static async Task<string> AddConfigurationSystemModule(
+        ISender sender,
+        [Description("Configuration ID (GUID)")]
+        Guid configurationId,
+        [Description("System ID (GUID)")]
+        Guid systemId,
+        [Description("Module template ID to instantiate (GUID)")]
+        Guid moduleTemplateId,
+        [Description("Whether this module is enabled in the configuration")]
+        bool enabled = true,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send(
+            new AddConfigurationSystemModuleCommand(
+                new ConfigurationId(configurationId),
+                new SystemId(systemId),
+                new ModuleTemplateId(moduleTemplateId),
+                enabled),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return JsonSerializer.Serialize(result.Value, JsonOptions);
+    }
+
+    [McpServerTool]
     [Description("""
                  Update a module instance within a configuration. Supply entry values as JSON array.
                  Each entry: { "name": string, "placeholder": string, "kind": "Text"|"Integer"|"Decimal"|"Enum"|"List",
@@ -194,7 +224,7 @@ public static class ConfigurationTools
         Guid configurationId,
         [Description("Name for the system (e.g. 'homeserver', 'laptop')")]
         string name,
-        [Description("Target architecture: X86_64, Aarch64, Armv7, RiscV64")]
+        [Description("Target architecture: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin")]
         string architecture,
         CancellationToken cancellationToken = default)
     {
@@ -236,7 +266,8 @@ public static class ConfigurationTools
             .Distinct()
             .ToList();
 
-        var moduleTemplates = await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, configuration.OwnerId, cancellationToken);
+        var moduleTemplates =
+            await moduleTemplateRepository.GetByIdsAsync(moduleTemplateIds, configuration.OwnerId, cancellationToken);
 
         var buildResult = materializer.MaterializeConfiguration(configuration, moduleTemplates);
         if (buildResult.IsFailure)

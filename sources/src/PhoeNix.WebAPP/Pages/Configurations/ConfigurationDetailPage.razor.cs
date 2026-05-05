@@ -20,6 +20,30 @@ public partial class ConfigurationDetailPage : ComponentBase
 
     private ConfigurationResponse? _configuration;
     private bool _isLoading = true;
+    private MudExpansionPanels? _sharedModulePanels;
+    private MudExpansionPanels? _systemPanels;
+    private bool _sharedModulesExpanded;
+    private bool _systemsExpanded;
+
+    private async Task ToggleSharedModulesAsync()
+    {
+        if (_sharedModulePanels is null) return;
+        if (_sharedModulesExpanded)
+            await _sharedModulePanels.CollapseAllAsync();
+        else
+            await _sharedModulePanels.ExpandAllAsync();
+        _sharedModulesExpanded = !_sharedModulesExpanded;
+    }
+
+    private async Task ToggleSystemsAsync()
+    {
+        if (_systemPanels is null) return;
+        if (_systemsExpanded)
+            await _systemPanels.CollapseAllAsync();
+        else
+            await _systemPanels.ExpandAllAsync();
+        _systemsExpanded = !_systemsExpanded;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -86,7 +110,8 @@ public partial class ConfigurationDetailPage : ComponentBase
         {
             { x => x.ConfigurationId, ConfigurationId }
         };
-        var dialog = await DialogService.ShowAsync<AddModuleDialog>("Add Shared Module", parameters);
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<AddModuleDialog>("Add Shared Module", parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false })
             await ReloadAsync();
@@ -99,6 +124,34 @@ public partial class ConfigurationDetailPage : ComponentBase
             { x => x.ConfigurationId, ConfigurationId }
         };
         var dialog = await DialogService.ShowAsync<AddSystemDialog>("Add System", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task OpenAddSystemModuleDialogAsync(Guid systemId)
+    {
+        var parameters = new DialogParameters<AddModuleDialog>
+        {
+            { x => x.ConfigurationId, ConfigurationId },
+            { x => x.SystemId, systemId }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<AddModuleDialog>("Add Module", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task OpenEditSystemDialogAsync(Guid systemId, string currentName)
+    {
+        var parameters = new DialogParameters<EditSystemDialog>
+        {
+            { x => x.ConfigurationId, ConfigurationId },
+            { x => x.SystemId, systemId },
+            { x => x.CurrentName, currentName }
+        };
+        var dialog = await DialogService.ShowAsync<EditSystemDialog>("Rename System", parameters);
         var result = await dialog.Result;
         if (result is { Canceled: false })
             await ReloadAsync();

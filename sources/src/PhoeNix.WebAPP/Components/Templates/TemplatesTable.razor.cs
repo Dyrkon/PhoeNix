@@ -15,6 +15,9 @@ public partial class TemplatesTable : ComponentBase
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
+    [Parameter] public bool SelectionMode { get; set; }
+    [Parameter] public EventCallback<Guid> OnTemplateSelected { get; set; }
+
     private MudDataGrid<ModuleTemplateTableRow>? _dataGrid;
 
     private string? _search;
@@ -54,7 +57,7 @@ public partial class TemplatesTable : ComponentBase
                 template.Enabled,
                 template.Type,
                 FormatArchitectures(template.SupportedArchitectures),
-                0))
+                template.EntryDefinitionCount))
             .ToList();
 
         return new GridData<ModuleTemplateTableRow>
@@ -84,10 +87,12 @@ public partial class TemplatesTable : ComponentBase
             await _dataGrid.ReloadServerData();
     }
 
-    private Task OnRowClickAsync(DataGridRowClickEventArgs<ModuleTemplateTableRow> args)
+    private async Task OnRowClickAsync(DataGridRowClickEventArgs<ModuleTemplateTableRow> args)
     {
-        NavigationManager.NavigateToTemplatesDetail(args.Item.Id);
-        return Task.CompletedTask;
+        if (SelectionMode)
+            await OnTemplateSelected.InvokeAsync(args.Item.Id);
+        else
+            NavigationManager.NavigateToTemplatesDetail(args.Item.Id);
     }
 
     private async Task OnSearchChangedAsync(string? value)

@@ -177,6 +177,9 @@ in {
           - "ASPNETCORE_URLS=http://0.0.0.0:5001"
           - "ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=${toString dbPort};Username=${dbUser};Database=${dbName};"
           - "Monitoring__PrometheusEndpoint=http://127.0.0.1:${toString promPort}/prometheus"
+          - "CallbackToken__SigningKey=dev-only-insecure-signing-key-32ch"
+          - "CallbackToken__Issuer=phoenix"
+          - "CallbackToken__Audience=phoenix"
         depends_on:
           postgres:
             condition: process_healthy

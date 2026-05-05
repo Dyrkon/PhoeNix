@@ -8,7 +8,8 @@ public sealed record ModuleTemplateListResponse(
     string Name,
     bool Enabled,
     ModuleType Type,
-    IReadOnlyList<Architecture> SupportedArchitectures);
+    IReadOnlyList<Architecture> SupportedArchitectures,
+    int EntryDefinitionCount);
 
 public sealed record EntryValueDefinitionResponse(
     string Name,
