@@ -42,8 +42,7 @@ Optimized for **Proxmox (UEFI)** and KVM. Includes VirtIO drivers, QEMU Guest Ag
 ```bash
 nixos-rebuild build-image \
   --flake github:Dyrkon/PhoeNix#phoenix-x86 \
-  --image-variant qemu \
-  --format qcow2
+  --image-variant qemu
 ```
 
 ### LXC Container (Proxmox)
@@ -51,8 +50,7 @@ nixos-rebuild build-image \
 ```bash
 nixos-rebuild build-image \
   --flake github:Dyrkon/PhoeNix#phoenix-x86 \
-  --image-variant proxmox-lxc \
-  --format proxmox-lxc
+  --image-variant proxmox-lxc
 ```
 
 ## 3. Zero-Touch Remote Deployment
