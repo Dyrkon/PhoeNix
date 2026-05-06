@@ -60,7 +60,7 @@ public class ProcessRunner : IProcessRunner
         DataReceivedEventHandler onStdErr = (_, e) =>
         {
             if (e.Data is null) return;
-            stderr.AppendLine(e.Data);
+            stderr.AppendLine(e.Data + '\n');
             perLineAction?.Invoke(e.Data);
         };
 
