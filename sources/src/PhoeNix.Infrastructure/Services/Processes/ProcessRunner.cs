@@ -59,8 +59,8 @@ public class ProcessRunner : IProcessRunner
 
         DataReceivedEventHandler onStdErr = (_, e) =>
         {
-            if (e.Data is null) return;
-            stderr.AppendLine(e.Data + '\n');
+            if (string.IsNullOrWhiteSpace(e.Data)) return;
+            stderr.AppendLine(e.Data);
             perLineAction?.Invoke(e.Data);
         };
 
@@ -123,8 +123,11 @@ public class ProcessRunner : IProcessRunner
         }
 
         if (process.ExitCode != 0)
+        {
+            var toolName = Path.GetFileName(executableName);
             return Result.Failure<ProcessResult>(new Error("",
-                $"Process {executableName} failed with exit code {process.ExitCode} after {sw.Elapsed}. Error: {stderr.ToString()}"));
+                $"{toolName} exited with code {process.ExitCode} after {sw.Elapsed}\n{stderr.ToString().TrimEnd()}"));
+        }
 
         return new ProcessResult(
             process.ExitCode,

@@ -35,7 +35,7 @@ public class AppSettingsTests
         settings.InstallerTargetUser.Should().Be("root");
         settings.InstallerTimeoutMinutes.Should().Be(90);
         settings.InstallerDisableHostKeyChecking.Should().BeTrue();
-        settings.InstallerBuildOnTarget.Should().BeTrue();
+        settings.InstallerBuildOnTarget.Should().BeFalse();
         settings.InstallerCopyHostKeys.Should().BeFalse();
         settings.UpdaterBuildHost.Should().Be("");
         settings.UpdaterUseRemoteSudo.Should().BeTrue();

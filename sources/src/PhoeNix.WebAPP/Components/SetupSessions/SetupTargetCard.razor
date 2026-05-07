@@ -56,24 +56,27 @@
 
     @if (Target.LastErrorCode is not null)
     {
-        <MudAlert Severity="Severity.Error" Dense="true">
+        <MudAlert Severity="Severity.Error" Dense="true" Style="width: 100%">
             <MudStack Spacing="1">
-                <MudText Typo="Typo.body2">
-                    <strong>@Target.LastErrorCode</strong>
-                    @if (Target.LastErrorSource is not null)
-                    {
-                        <text> (from @Target.LastErrorSource)</text>
-                    }
-                </MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.body2"><strong>@Target.LastErrorCode</strong></MudText>
+                        @if (Target.LastErrorAt.HasValue)
+                        {
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @Target.LastErrorAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                            </MudText>
+                        }
+                    </MudStack>
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                   Size="Size.Small"
+                                   Title="Copy to clipboard"
+                                   OnClick="CopyErrorToClipboardAsync"/>
+                </MudStack>
                 @if (Target.LastErrorDescription is not null)
                 {
-                    <MudText Typo="Typo.body2">@Target.LastErrorDescription</MudText>
-                }
-                @if (Target.LastErrorAt.HasValue)
-                {
-                    <MudText Typo="Typo.caption">
-                        @Target.LastErrorAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
-                    </MudText>
+                    <pre
+                        style="margin: 0; width: 100%; white-space: pre-wrap; word-break: break-word; font-size: 0.75rem; font-family: monospace; max-height: 300px; overflow-y: auto; background: transparent;">@CleanedDescription</pre>
                 }
             </MudStack>
         </MudAlert>
