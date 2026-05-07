@@ -2,7 +2,6 @@
 {
   imports = [
     inputs.self.nixosModules.default
-    ./disko.nix
   ];
 
   users.users.phoenix-admin = {
@@ -38,15 +37,10 @@
 
   boot.loader.systemd-boot.enable = lib.mkIf (!config.boot.isContainer) true;
   boot.loader.efi.canTouchEfiVariables = lib.mkIf (!config.boot.isContainer) true;
-  services.qemuGuest.enable = true;
+  services.qemuGuest.enable = lib.mkIf (!config.boot.isContainer) true;
   
-  boot.initrd.availableKernelModules = [ 
-    "virtio_pci" 
-    "virtio_blk" 
-    "virtio_scsi" 
-    "virtio_net" 
-    "virtio_balloon" 
-    "virtio_console" 
+  boot.initrd.availableKernelModules = lib.mkIf (!config.boot.isContainer) [ 
+    "virtio_pci" "virtio_blk" "virtio_scsi" "virtio_net" "virtio_balloon" "virtio_console" 
   ];
 
   services.phoenix = {

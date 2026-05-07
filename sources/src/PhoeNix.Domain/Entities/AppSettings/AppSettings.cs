@@ -141,7 +141,7 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             InstallerTargetUser = "root",
             InstallerTimeoutMinutes = 90,
             InstallerDisableHostKeyChecking = true,
-            InstallerBuildOnTarget = true,
+            InstallerBuildOnTarget = false,
             InstallerCopyHostKeys = false,
             UpdaterBuildHost = "",
             UpdaterUseRemoteSudo = true,

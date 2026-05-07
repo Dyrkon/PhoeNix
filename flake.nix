@@ -33,8 +33,17 @@
         specialArgs = { inherit inputs; };
         modules = [
           disko.nixosModules.disko
+          ./nix/configurations/phoenix-server/disko.nix
           ./nix/configurations/phoenix-server/default.nix
           { nixpkgs.hostPlatform = system; }
+        ];
+      };
+      mkLxc = system: nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs; };
+        modules = [
+          "${nixpkgs}/nixos/modules/virtualisation/proxmox-lxc.nix" 
+          ./nix/configurations/phoenix-server/default.nix
         ];
       };
     in
@@ -44,6 +53,7 @@
       nixosConfigurations = {
         phoenix-x86 = mkSystem "x86_64-linux";
         phoenix-arm = mkSystem "aarch64-linux";
+        phoenix-x86-lxc = mkLxc "x86_64-linux";
       };
     } //
     flake-utils.lib.eachDefaultSystem (

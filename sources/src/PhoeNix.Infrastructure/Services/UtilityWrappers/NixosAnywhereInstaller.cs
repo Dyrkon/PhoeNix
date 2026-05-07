@@ -86,8 +86,11 @@ public sealed class NixosAnywhereInstaller(
             settings.InstallerDisableHostKeyChecking,
             nixosAnywhereOptions.Value.ExtraArguments);
 
+        var nixosAnywherePath = Environment.GetEnvironmentVariable("PHOENIX_NIXOS_ANYWHERE_PATH") ??
+                                settings.InstallerExecutableName;
+
         var processResult = processRunner.RunProcess(
-            settings.InstallerExecutableName,
+            nixosAnywherePath,
             arguments,
             cancellationToken,
             timeOut: TimeSpan.FromMinutes(settings.InstallerTimeoutMinutes));
