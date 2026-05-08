@@ -2,7 +2,6 @@
 {
   imports = [
     inputs.self.nixosModules.default
-    ./disko.nix
   ];
 
   users.users.phoenix-admin = {
@@ -25,19 +24,23 @@
     };
   };
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    trusted-users = [ "root" "phoenix" "phoenix-admin" ];
+    sandbox = lib.mkIf config.boot.isContainer false;
+    substituters = [ "https://cache.nixos.org/" "https://nix-community.cachix.org" ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCUSeBo="
+    ];
+  };
 
   boot.loader.systemd-boot.enable = lib.mkIf (!config.boot.isContainer) true;
   boot.loader.efi.canTouchEfiVariables = lib.mkIf (!config.boot.isContainer) true;
-  services.qemuGuest.enable = true;
+  services.qemuGuest.enable = lib.mkIf (!config.boot.isContainer) true;
   
-  boot.initrd.availableKernelModules = [ 
-    "virtio_pci" 
-    "virtio_blk" 
-    "virtio_scsi" 
-    "virtio_net" 
-    "virtio_balloon" 
-    "virtio_console" 
+  boot.initrd.availableKernelModules = lib.mkIf (!config.boot.isContainer) [ 
+    "virtio_pci" "virtio_blk" "virtio_scsi" "virtio_net" "virtio_balloon" "virtio_console" 
   ];
 
   services.phoenix = {
