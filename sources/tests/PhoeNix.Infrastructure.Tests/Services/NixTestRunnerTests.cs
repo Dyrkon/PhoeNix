@@ -47,7 +47,8 @@ public class NixTestRunnerTests
         var sut = new NixTestRunner(parser, processRunner);
 
         // Act
-        var result = sut.RunModuleTest(id, testName, arch, path, CancellationToken.None);
+        var checkAttributeName = id.ToStringWithPrefix();
+        var result = sut.RunModuleTest(id, testName, checkAttributeName, arch, path, CancellationToken.None);
 
         // Assert - returned response
         result.IsSuccess.Should().BeTrue();
@@ -63,7 +64,7 @@ public class NixTestRunnerTests
         call.ExecutableName.Should().Be("nix");
         call.Arguments.Should().Equal(
             "build",
-            $"{path}#checks.{arch.ToArchitectureString()}.{id.ToStringWithPrefix()}",
+            $"{path}#checks.{arch.ToArchitectureString()}.{checkAttributeName}",
             "-L",
             "--quiet");
         call.TimeOut.Should().Be(TimeSpan.FromMinutes(3));

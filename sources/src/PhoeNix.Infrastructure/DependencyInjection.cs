@@ -4,6 +4,7 @@ using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Deployment;
+using PhoeNix.Application.Abstractions.Validation;
 using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Abstractions.FileSystem;
 using PhoeNix.Application.Abstractions.HardwareProbing;
@@ -20,6 +21,7 @@ using PhoeNix.Infrastructure.Services.HardwareManagement;
 using PhoeNix.Infrastructure.Services.Processes;
 using PhoeNix.Infrastructure.Services.Setup;
 using PhoeNix.Infrastructure.Services.Deployment;
+using PhoeNix.Infrastructure.Services.Validation;
 using PhoeNix.Infrastructure.Services.UtilityWrappers;
 
 namespace PhoeNix.Infrastructure;
@@ -46,7 +48,6 @@ public static class DependencyInjection
         services.AddScoped<ISetupSshKeyProvider, SetupSshKeyProvider>();
         services.AddScoped<IBootstrapImageBuilder, BootstrapImageBuilder>();
         services.AddSingleton<IBootstrapSessionQueue, BootstrapSessionQueue>();
-        services.AddHostedService<BootstrapBackgroundService>();
         services.AddScoped<IInstallDiskSelectionPolicy, InstallDiskSelectionPolicy>();
         services.AddScoped<IHardwareProbeService, SshHardwareProbeService>();
         services.AddScoped<IHardwareInventoryProjector, HardwareInventoryProjector>();
@@ -60,9 +61,12 @@ public static class DependencyInjection
         services.AddScoped<IUserPasswordHasher, AspNetUserPasswordHasher>();
         services.AddScoped<IUserSessionService, CookieUserSessionService>();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
-        services.AddHostedService<PrometheusTokenWriterService>();
         services.AddSingleton<IDeploymentJobTracker, DeploymentJobTracker>();
         services.AddHostedService<DeploymentBackgroundService>();
+        services.AddSingleton<IValidationJobTracker, ValidationJobTracker>();
+        services.AddHostedService<ValidationBackgroundService>();
+        services.AddHostedService<BootstrapBackgroundService>();
+        services.AddHostedService<PrometheusTokenWriterService>();
 
         return services;
     }

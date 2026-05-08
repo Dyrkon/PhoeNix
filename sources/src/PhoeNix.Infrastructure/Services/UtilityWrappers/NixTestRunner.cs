@@ -13,13 +13,13 @@ namespace PhoeNix.Infrastructure.Services.UtilityWrappers;
 public class NixTestRunner(INixErrorParserService nixErrorParserService, IProcessRunner processRunner)
     : INixTestRunner
 {
-    public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, Architecture architecture, string path,
-        CancellationToken cancellationToken)
+    public Result<ModuleTestResponse> RunModuleTest(TestId id, string testName, string checkAttributeName,
+        Architecture architecture, string path, CancellationToken cancellationToken)
     {
         List<string> arguments =
         [
             "build",
-            $"{path}#checks.{architecture.ToArchitectureString()}.{id.ToStringWithPrefix()}",
+            $"{path}#checks.{architecture.ToArchitectureString()}.{checkAttributeName}",
             "-L",
             "--quiet"
         ];

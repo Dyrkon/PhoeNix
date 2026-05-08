@@ -62,5 +62,76 @@
                 </RowTemplate>
             </MudTable>
         }
+
+        @if (SupportedArchitectures.Count > 0)
+        {
+            <MudDivider Class="my-3"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Tests</MudText>
+
+                @if (SupportedArchitectures.Count > 1)
+                {
+                    <MudSelect T="Architecture?"
+                               Value="_selectedArch"
+                               ValueChanged="OnArchitectureChangedAsync"
+                               Dense="true"
+                               Margin="Margin.Dense"
+                               Style="max-width: 180px;"
+                               Label="Architecture">
+                        @foreach (var arch in SupportedArchitectures)
+                        {
+                            <MudSelectItem T="Architecture?" Value="@((Architecture?)arch)">@arch.ToArchitectureString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else if (_selectedArch.HasValue)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_selectedArch.Value.ToArchitectureString()</MudChip>
+                }
+
+                @if (_validationStatus is not null)
+                {
+                    @switch (_validationStatus.State)
+                    {
+                        case "Queued":
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                                Queued
+                            </MudChip>
+                            break;
+                        case "Running":
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                                    Running
+                                </MudChip>
+                            </MudStack>
+                            break;
+                        case "Succeeded":
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                                Valid
+                            </MudChip>
+                            break;
+                        case "Failed":
+                            <MudTooltip Text="Click to view error details">
+                                <MudIconButton Icon="@Icons.Material.Filled.Error"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="OpenErrorDialogAsync"/>
+                            </MudTooltip>
+                            break;
+                    }
+                }
+
+                <MudTooltip Text="Modules requiring setup bindings will use placeholder values">
+                    <MudButton Size="Size.Small"
+                               Variant="Variant.Outlined"
+                               StartIcon="@(_validationStatus?.State is "Failed" ? Icons.Material.Filled.Refresh : Icons.Material.Filled.PlayArrow)"
+                               Disabled="@(_isValidating || !_selectedArch.HasValue)"
+                               OnClick="ScheduleValidationAsync">
+                        @(_validationStatus?.State is "Failed" ? "Retry" : "Validate")
+                    </MudButton>
+                </MudTooltip>
+            </MudStack>
+        }
     </MudCardContent>
 </MudCard>
