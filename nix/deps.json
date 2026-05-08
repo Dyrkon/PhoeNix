@@ -916,8 +916,8 @@
   },
   {
     "pname": "Microsoft.DotNet.HotReload.WebAssembly.Browser",
-    "version": "10.0.201",
-    "hash": "sha256-z1QpaipEn/QcWvTiuNB1KnuurPVrQKHwUbizQ0hEx4E="
+    "version": "10.0.202",
+    "hash": "sha256-Bci4l9L7XiAoPFKZ20aOUoJmkwzQ64Tv27rG3P4aHlY="
   },
   {
     "pname": "Microsoft.EntityFrameworkCore",
@@ -1561,8 +1561,8 @@
   },
   {
     "pname": "Microsoft.NET.Sdk.WebAssembly.Pack",
-    "version": "10.0.5",
-    "hash": "sha256-gwneB/pH5T80p0YW+XbMkep4BmZ+ycKEISol+fR2rGw="
+    "version": "10.0.6",
+    "hash": "sha256-z2yJ2p5cBo2Vth+hml+vGbyThuHYbD6ojqljPEu3Pig="
   },
   {
     "pname": "Microsoft.NET.Test.Sdk",

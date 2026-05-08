@@ -409,7 +409,7 @@ public class NixBuildMaterializer : INixBuildMaterializer
 
         var content =
             $"{{ description = \"{configuration.Description}\"; " +
-            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"github:nix-community/disko/latest\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n" +
+            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"github:nix-community/disko/v1.12.0\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n" +
             "outputs = {self, nixpkgs, flake-utils, ...} @ inputs: " +
             "let\n" +
             $"systems = [{supportedArchitectures.Aggregate(string.Empty, (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +

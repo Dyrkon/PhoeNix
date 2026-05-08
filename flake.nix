@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
 
-    disko.url = "github:nix-community/disko/latest";
+    disko.url = "github:nix-community/disko/v1.10.0";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
@@ -42,7 +42,7 @@
         inherit system;
         specialArgs = { inherit inputs; };
         modules = [
-          "${nixpkgs}/nixos/modules/virtualisation/proxmox-lxc.nix" 
+          "${nixpkgs}/nixos/modules/virtualisation/proxmox-lxc.nix"
           ./nix/configurations/phoenix-server/default.nix
         ];
       };

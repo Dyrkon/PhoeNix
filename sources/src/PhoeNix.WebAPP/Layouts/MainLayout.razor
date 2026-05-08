@@ -4,31 +4,32 @@
 @implements IDisposable
 @inject IAuthenticationApiClient AuthenticationApiClient
 
+<PageTitle>PhoeNix</PageTitle>
 <CascadingValue Value="_templatesState">
-<CascadingValue Value="_machineState">
-    <CascadingValue Value="_userState">
-        <CascadingValue Value="_setupSessionsState">
-        <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
-        <MudPopoverProvider/>
-        <MudDialogProvider MaxWidth="MaxWidth.Large"/>
-        <MudSnackbarProvider/>
-        @if (_userState.IsAuthenticated)
-        {
-            <MudLayout>
-                <LeftPanel></LeftPanel>
-                <AppBar></AppBar>
-                <MudMainContent Class="pt-4" style="min-height: 96vh">
-                    <MudContainer MaxWidth="MaxWidth.False" Class="mt-2 h-100">
-                        @Body
-                    </MudContainer>
-                </MudMainContent>
-            </MudLayout>
-        }
-        else if (!_userState.IsInitialized)
-        {
-            <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
-        }
+    <CascadingValue Value="_machineState">
+        <CascadingValue Value="_userState">
+            <CascadingValue Value="_setupSessionsState">
+                <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode"/>
+                <MudPopoverProvider/>
+                <MudDialogProvider MaxWidth="MaxWidth.Large"/>
+                <MudSnackbarProvider/>
+                @if (_userState.IsAuthenticated)
+                {
+                    <MudLayout>
+                        <LeftPanel></LeftPanel>
+                        <AppBar></AppBar>
+                        <MudMainContent Class="pt-4" style="min-height: 96vh">
+                            <MudContainer MaxWidth="MaxWidth.False" Class="mt-2 h-100">
+                                @Body
+                            </MudContainer>
+                        </MudMainContent>
+                    </MudLayout>
+                }
+                else if (!_userState.IsInitialized)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+                }
+            </CascadingValue>
         </CascadingValue>
     </CascadingValue>
-</CascadingValue>
 </CascadingValue>
