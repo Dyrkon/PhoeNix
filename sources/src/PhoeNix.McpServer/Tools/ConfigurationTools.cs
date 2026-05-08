@@ -3,8 +3,12 @@ using System.Text.Json;
 using MediatR;
 using ModelContextProtocol.Server;
 using PhoeNix.Application.Abstractions.Nix;
+using PhoeNix.Application.Abstractions.Validation;
 using PhoeNix.Application.Configurations.Commands;
 using PhoeNix.Application.Configurations.Queries;
+using PhoeNix.Application.Models.Validation;
+using PhoeNix.Application.Modules.Commands;
+using PhoeNix.Application.Systems.Commands;
 using PhoeNix.Application.Models.Files;
 using PhoeNix.Application.Models.Modules;
 using PhoeNix.Application.Repositories;
@@ -216,6 +220,55 @@ public static class ConfigurationTools
     }
 
     [McpServerTool]
+    [Description("""
+                 Update a module instance within a specific system in a configuration. Supply entry values as JSON array.
+                 Each entry: { "name": string, "placeholder": string, "kind": "Text"|"Integer"|"Decimal"|"Enum"|"List",
+                 "textValue": string|null, "integerUpperValue": int|null, "integerLowerValue": int|null,
+                 "decimalUpperValue": decimal|null, "decimalLowerValue": decimal|null,
+                 "selectedValue": string|null, "listItems": string[]|null }
+                 Returns the updated module value.
+                 """)]
+    public static async Task<string> UpdateConfigurationSystemModule(
+        ISender sender,
+        [Description("Configuration ID (GUID)")]
+        Guid configurationId,
+        [Description("System ID (GUID)")]
+        Guid systemId,
+        [Description("Module value ID to update (GUID)")]
+        Guid moduleValueId,
+        [Description("Whether this module is enabled")]
+        bool enabled,
+        [Description("JSON array of ModuleEntryValueUpsertModel entries")]
+        string entriesJson,
+        CancellationToken cancellationToken = default)
+    {
+        List<ModuleEntryValueUpsertModel>? entries;
+        try
+        {
+            entries = JsonSerializer.Deserialize<List<ModuleEntryValueUpsertModel>>(entriesJson, JsonOptions)
+                      ?? throw new InvalidOperationException("Failed to deserialize entries JSON.");
+        }
+        catch (Exception ex)
+        {
+            return JsonSerializer.Serialize(new { error = "DeserializationFailed", message = ex.Message }, JsonOptions);
+        }
+
+        var result = await sender.Send(
+            new UpdateConfigurationSystemModuleCommand(
+                new ConfigurationId(configurationId),
+                new SystemId(systemId),
+                new ModuleValueId(moduleValueId),
+                enabled,
+                entries),
+            cancellationToken);
+
+        if (result.IsFailure)
+            return JsonSerializer.Serialize(new { error = result.Error.Code, message = result.Error.Description }, JsonOptions);
+
+        return JsonSerializer.Serialize(result.Value, JsonOptions);
+    }
+
+    [McpServerTool]
     [Description(
         "Add a system target to a configuration. A system represents a specific machine architecture variant (e.g. x86_64-linux). Returns the new system.")]
     public static async Task<string> AddConfigurationSystem(
@@ -278,6 +331,157 @@ public static class ConfigurationTools
             throw new InvalidOperationException(folderResult.Error.Description ?? folderResult.Error.Code);
 
         return RenderFolderTree(folderResult.Value);
+    }
+
+    [McpServerTool]
+    [Description("""
+        Validate a NixOS system configuration by running nixos-anywhere --vm-test in a QEMU VM.
+        Schedules the validation job, waits for it to complete, and returns pass/fail with details.
+        Note: modules with runtime-bound values (e.g. disk paths) will use placeholder values during validation.
+        Can take up to 15 minutes for complex configurations.
+        Always returns JSON: { state: "Succeeded"|"Failed"|"TimedOut", ... }.
+        On failure includes errorCode and errorOutput (last 100 lines of nix build output).
+        """)]
+    public static async Task<string> ValidateSystem(
+        ISender sender,
+        IValidationJobTracker jobTracker,
+        [Description("Configuration ID (GUID)")] Guid configurationId,
+        [Description("System ID within the configuration (GUID)")] Guid systemId,
+        [Description("Maximum seconds to wait before giving up (default: 900)")] int timeoutSeconds = 900,
+        [Description("Seconds between status checks (default: 15)")] int pollIntervalSeconds = 15,
+        CancellationToken cancellationToken = default)
+    {
+        var configId = new ConfigurationId(configurationId);
+        var sysId = new SystemId(systemId);
+
+        var scheduleResult = await sender.Send(
+            new ScheduleSystemValidationCommand(configId, sysId),
+            cancellationToken);
+
+        if (scheduleResult.IsFailure)
+            return JsonSerializer.Serialize(new
+            {
+                state = "Failed",
+                errorCode = scheduleResult.Error.Code,
+                errorOutput = scheduleResult.Error.Description ?? scheduleResult.Error.Code
+            }, JsonOptions);
+
+        var key = new SystemValidationKey(configId, sysId);
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        while (DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(pollIntervalSeconds), cancellationToken);
+
+            var status = jobTracker.GetSystemStatus(key);
+
+            if (status.State == ValidationJobState.Succeeded)
+                return JsonSerializer.Serialize(new
+                {
+                    state = "Succeeded",
+                    duration = status.Duration,
+                    configurationId,
+                    systemId
+                }, JsonOptions);
+
+            if (status.State == ValidationJobState.Failed)
+            {
+                var rawError = status.ErrorMessage ?? string.Empty;
+                var lines = rawError.Split('\n');
+                var errorOutput = lines.Length > 100
+                    ? $"... (showing last 100 of {lines.Length} lines)\n" + string.Join('\n', lines[^100..])
+                    : rawError;
+                return JsonSerializer.Serialize(new
+                {
+                    state = "Failed",
+                    errorCode = status.ErrorCode,
+                    errorOutput
+                }, JsonOptions);
+            }
+        }
+
+        return JsonSerializer.Serialize(new
+        {
+            state = "TimedOut",
+            errorOutput = $"System validation did not complete within {timeoutSeconds} seconds."
+        }, JsonOptions);
+    }
+
+    [McpServerTool]
+    [Description("""
+        Validate a module template's Nix checks for a given architecture.
+        Schedules the validation job, waits for completion, and returns per-test results.
+        Note: modules with runtime-bound values (e.g. disk paths) will use placeholder values during validation.
+        On success: returns { state, testResults[] } with each test's outcome.
+        On failure: throws with the error code and per-test failure details (expected vs actual values)
+        to help diagnose and fix configuration issues.
+        """)]
+    public static async Task<string> ValidateModule(
+        ISender sender,
+        IValidationJobTracker jobTracker,
+        [Description("Configuration ID (GUID)")] Guid configurationId,
+        [Description("Module template ID (GUID)")] Guid moduleTemplateId,
+        [Description("Architecture: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin")] string architecture,
+        [Description("Maximum seconds to wait before giving up (default: 180)")] int timeoutSeconds = 180,
+        [Description("Seconds between status checks (default: 10)")] int pollIntervalSeconds = 10,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<Architecture>(architecture, true, out var arch))
+            throw new InvalidOperationException(
+                $"Unknown architecture '{architecture}'. Valid values: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin.");
+
+        var configId = new ConfigurationId(configurationId);
+        var moduleId = new ModuleTemplateId(moduleTemplateId);
+
+        var scheduleResult = await sender.Send(
+            new ScheduleModuleValidationCommand(configId, moduleId, arch),
+            cancellationToken);
+
+        if (scheduleResult.IsFailure)
+            throw new InvalidOperationException(scheduleResult.Error.Description ?? scheduleResult.Error.Code);
+
+        var key = new ModuleValidationKey(configId, moduleId, arch);
+        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+        while (DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(pollIntervalSeconds), cancellationToken);
+
+            var status = jobTracker.GetModuleStatus(key);
+
+            if (status.State == ValidationJobState.Succeeded)
+                return JsonSerializer.Serialize(new
+                {
+                    state = "Succeeded",
+                    configurationId,
+                    moduleTemplateId,
+                    architecture = arch.ToString(),
+                    testResults = status.TestResults
+                }, JsonOptions);
+
+            if (status.State == ValidationJobState.Failed)
+            {
+                var failedTests = status.TestResults?
+                    .Where(t => !t.IsSuccess)
+                    .Select(t => new
+                    {
+                        t.TestName,
+                        t.CheckAttributeName,
+                        errors = t.Errors.Select(e => new { e.Name, e.Expected, actual = e.Result })
+                    })
+                    .ToList();
+
+                var detail = failedTests?.Count > 0
+                    ? JsonSerializer.Serialize(failedTests, JsonOptions)
+                    : status.ErrorMessage;
+
+                throw new InvalidOperationException(
+                    $"Module validation failed.\nError: {status.ErrorCode}\n{detail}");
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Module validation did not complete within {timeoutSeconds} seconds.");
     }
 
     private static string RenderFolderTree(Folder folder, string indent = "")

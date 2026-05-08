@@ -26,7 +26,7 @@ internal static class SeedPlaceholders
     public const string Locale = "Locale";
     public const string KeyboardLayout = "KeyboardLayout";
     public const string AdminUser = "AdminUser";
-    public const string Sandbox = "SANDBOX";
+    public const string Sandbox = "Sandbox";
     public const string LogRetentionDays = "LogRetentionDays";
     public const string GpuEnable32Bit = "Enable32Bit";
     public const string NvidiaOpenKernel = "NvidiaOpenKernel";

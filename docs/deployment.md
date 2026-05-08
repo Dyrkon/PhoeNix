@@ -73,7 +73,10 @@ nix run github:nix-community/nixos-anywhere -- \
 * **SSH:** `ssh phoenix-admin@<IP>`
 * **Web UI:** `https://<hostname>/` (proxied by nginx)
 * **Prometheus:** `https://<hostname>/prometheus/`
-* **MCP server:** `https://<hostname>/mcp` (requires JWT auth)
+* **MCP server:** `https://<hostname>/mcp/` (requires JWT auth)
+
+> [!INFO]
+> Simplest way to add the MCP server: `claude mcp add --transport http phoenix-mcp-lxc http://<hostname>/mcp/`
 
 ## 5. Monitoring
 

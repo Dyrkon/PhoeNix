@@ -32,7 +32,7 @@ public class ConfigurationFilesBuilder(
             if (moduleBuildResult.ModuleTests != null)
                 foreach (var moduleTestBuildResult in moduleBuildResult.ModuleTests)
                     checksPaths +=
-                        $"{moduleTestBuildResult.Id.ToStringWithPrefix()} = " +
+                        $"{system.Id.ToStringWithPrefix()}-{moduleTestBuildResult.Id.ToStringWithPrefix()} = " +
                         $"import ./{confLayout.SystemModuleTestPath(system.Id, moduleBuildResult.Id, moduleTestBuildResult.Id)} {{ inherit inputs pkgs lib system; }}; ";
 
 

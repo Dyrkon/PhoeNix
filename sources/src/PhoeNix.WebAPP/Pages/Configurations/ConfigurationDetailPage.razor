@@ -200,6 +200,7 @@
                                     <ChildContent>
                                         <ConfiguredModuleCard Module="@module"
                                                               ConfigurationId="@ConfigurationId"
+                                                              SupportedArchitectures="@_configuration.SupportedArchitectures"
                                                               OnModuleUpdated="ReloadAsync"/>
                                     </ChildContent>
                                 </MudExpansionPanel>
@@ -272,6 +273,7 @@
                                     <ChildContent>
                                         <ConfiguredSystemCard System="@system"
                                                               ConfigurationId="@ConfigurationId"
+                                                              ConfigurationArchitectures="@_configuration.SupportedArchitectures"
                                                               OnModuleUpdated="ReloadAsync"/>
                                     </ChildContent>
                                 </MudExpansionPanel>

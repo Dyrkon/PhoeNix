@@ -1,5 +1,6 @@
 using PhoeNix.Common.Models;
 using PhoeNix.Contracts.Modules;
+using PhoeNix.Contracts.Validation;
 using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.WebAPP.ApiClient.Helpers;
@@ -62,5 +63,27 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         CancellationToken cancellationToken = default)
     {
         return PostWithResponseAsync<ModuleTemplateResponse>("modules/import", request, cancellationToken);
+    }
+
+    public Task<ApiResult> ScheduleModuleValidationAsync(
+        Guid configurationId,
+        Guid moduleTemplateId,
+        Architecture architecture,
+        CancellationToken cancellationToken = default)
+    {
+        return PostAsync(
+            $"validation/configurations/{configurationId}/modules/{moduleTemplateId}?architecture={architecture}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<ModuleValidationStatusResponse>> GetModuleValidationStatusAsync(
+        Guid configurationId,
+        Guid moduleTemplateId,
+        Architecture architecture,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsync<ModuleValidationStatusResponse>(
+            $"validation/configurations/{configurationId}/modules/{moduleTemplateId}/status?architecture={architecture}",
+            cancellationToken);
     }
 }

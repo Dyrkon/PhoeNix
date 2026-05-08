@@ -1,52 +1,102 @@
 @using PhoeNix.Domain.Enums
 
-@if (System.Modules.Count == 0)
-{
-    <MudText Typo="Typo.body2" Class="mud-text-secondary">No modules configured for this system.</MudText>
-}
-else
-{
-    <MudStack Spacing="0">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Class="mb-1">
-            <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">
-                @System.Modules.Count @(System.Modules.Count == 1 ? "module" : "modules")
-            </MudText>
-            <MudTooltip Text="@(_modulesExpanded ? "Collapse all modules" : "Expand all modules")">
-                <MudIconButton Icon="@(_modulesExpanded ? Icons.Material.Filled.UnfoldLess : Icons.Material.Filled.UnfoldMore)"
-                               Size="Size.Small"
-                               OnClick="ToggleModulesAsync"/>
-            </MudTooltip>
-        </MudStack>
+<MudStack Spacing="2">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">VM Test</MudText>
 
-        <MudExpansionPanels @ref="_modulePanels" MultiExpansion="true" Elevation="0">
-            @foreach (var module in System.Modules)
+        @if (_validationStatus is not null)
+        {
+            @switch (_validationStatus.State)
             {
-                <MudExpansionPanel>
-                    <TitleContent>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
-                                     @onclick:stopPropagation="true">
-                                @module.TemplateName
-                            </MudLink>
-                            <MudChip T="string"
-                                     Color="@(module.Enabled ? Color.Success : Color.Default)"
-                                     Variant="Variant.Text"
-                                     Size="Size.Small">
-                                @(module.Enabled ? "Enabled" : "Disabled")
-                            </MudChip>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
-                            </MudText>
-                        </MudStack>
-                    </TitleContent>
-                    <ChildContent>
-                        <ConfiguredModuleCard Module="@module"
-                                              ConfigurationId="@ConfigurationId"
-                                              SystemId="@System.Id"
-                                              OnModuleUpdated="OnModuleUpdated"/>
-                    </ChildContent>
-                </MudExpansionPanel>
+                case "Queued":
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                        Queued
+                    </MudChip>
+                    break;
+                case "Running":
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                            Running
+                        </MudChip>
+                    </MudStack>
+                    break;
+                case "Succeeded":
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                        Valid@(_validationStatus.Duration is not null ? $" ({_validationStatus.Duration})" : "")
+                    </MudChip>
+                    break;
+                case "Failed":
+                    <MudTooltip Text="Click to view error details">
+                        <MudIconButton Icon="@Icons.Material.Filled.Error"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="OpenErrorDialogAsync"/>
+                    </MudTooltip>
+                    break;
             }
-        </MudExpansionPanels>
+        }
+
+        <MudTooltip Text="Modules requiring setup bindings will use placeholder values">
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       StartIcon="@(_validationStatus?.State is "Failed" ? Icons.Material.Filled.Refresh : Icons.Material.Filled.PlayArrow)"
+                       Disabled="_isValidating"
+                       OnClick="ScheduleValidationAsync">
+                @(_validationStatus?.State is "Failed" ? "Retry" : "Validate")
+            </MudButton>
+        </MudTooltip>
     </MudStack>
-}
+
+    @if (System.Modules.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No modules configured for this system.</MudText>
+    }
+    else
+    {
+        <MudStack Spacing="0">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Class="mb-1">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">
+                    @System.Modules.Count @(System.Modules.Count == 1 ? "module" : "modules")
+                </MudText>
+                <MudTooltip Text="@(_modulesExpanded ? "Collapse all modules" : "Expand all modules")">
+                    <MudIconButton Icon="@(_modulesExpanded ? Icons.Material.Filled.UnfoldLess : Icons.Material.Filled.UnfoldMore)"
+                                   Size="Size.Small"
+                                   OnClick="ToggleModulesAsync"/>
+                </MudTooltip>
+            </MudStack>
+
+            <MudExpansionPanels @ref="_modulePanels" MultiExpansion="true" Elevation="0">
+                @foreach (var module in System.Modules)
+                {
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudLink Typo="Typo.body1" Href="@($"/templates/{module.ModuleTemplateId}")"
+                                         @onclick:stopPropagation="true">
+                                    @module.TemplateName
+                                </MudLink>
+                                <MudChip T="string"
+                                         Color="@(module.Enabled ? Color.Success : Color.Default)"
+                                         Variant="Variant.Text"
+                                         Size="Size.Small">
+                                    @(module.Enabled ? "Enabled" : "Disabled")
+                                </MudChip>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @module.Entries.Count @(module.Entries.Count == 1 ? "entry" : "entries")
+                                </MudText>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <ConfiguredModuleCard Module="@module"
+                                                  ConfigurationId="@ConfigurationId"
+                                                  SystemId="@System.Id"
+                                                  SupportedArchitectures="@(new[] { System.Architecture })"
+                                                  OnModuleUpdated="OnModuleUpdated"/>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        </MudStack>
+    }
+</MudStack>
