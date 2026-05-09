@@ -554,7 +554,7 @@ internal static class ModuleTemplateSeedFactory
             "security.audit.enable = true;\n  " +
             "security.audit.rules = [\n" +
             "    \"-a exit,always -F arch=b64 -S execve\"\n  ];\n" +
-            $"nix.useSandbox = {SeedPlaceholders.Sandbox};" +
+            $"nix.useSandbox = {SeedPlaceholders.Sandbox};\n" +
             "environment.defaultPackages = lib.mkForce [];\n" +
             "services.openssh.settings = {\n" +
             "  PasswordAuthentication = false;\n" +
