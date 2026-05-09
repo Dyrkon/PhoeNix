@@ -36,27 +36,27 @@ public class MachineRepositoryTests : PersistenceTestsBase
     [Fact]
     public async Task GetByTitleAsync_Should_Return_Machine_For_Exact_Title()
     {
-        var machine = CreateMachine("TestMachine");
+        var machine = CreateMachine("test-machine");
         await PhoeNixDbContextSUT.Set<Machine>().AddAsync(machine);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        var result = await MachineRepository.GetByTitleAsync("TestMachine", CancellationToken.None);
+        var result = await MachineRepository.GetByTitleAsync("test-machine", CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.Title.Should().Be("TestMachine");
+        result!.Title.Should().Be("test-machine");
     }
 
     [Fact]
     public async Task GetByTitleAsync_Should_Return_Machine_Case_Insensitive()
     {
-        var machine = CreateMachine("CaseMachine");
+        var machine = CreateMachine("case-machine");
         await PhoeNixDbContextSUT.Set<Machine>().AddAsync(machine);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
-        var result = await MachineRepository.GetByTitleAsync("casemachine", CancellationToken.None);
+        var result = await MachineRepository.GetByTitleAsync("CASE-MACHINE", CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.Title.Should().Be("CaseMachine");
+        result!.Title.Should().Be("case-machine");
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
     [Fact]
     public async Task GetByMacAddressAsync_Should_Return_Machine_With_Matching_Mac()
     {
-        var machine = CreateMachine("MacMachine", "11:22:33:44:55:66");
+        var machine = CreateMachine("mac-machine", "11:22:33:44:55:66");
         await PhoeNixDbContextSUT.Set<Machine>().AddAsync(machine);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
@@ -86,7 +86,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
         var result = await MachineRepository.GetByMacAddressAsync(mac, CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.Title.Should().Be("MacMachine");
+        result!.Title.Should().Be("mac-machine");
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
         var systemId = new SystemId(Guid.NewGuid());
         var machineId = new MachineId(Guid.NewGuid());
         var machine = Machine.Create(
-            machineId, OwnerId, "AA:BB:CC:DD:EE:01", "DeployedMachine", true,
+            machineId, OwnerId, "AA:BB:CC:DD:EE:01", "deployed-machine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
         machine.RecordDeploymentSnapshot(
@@ -127,7 +127,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
     public async Task GetAllByInstalledConfigurationIdAsync_Should_Not_Return_Machines_Without_Snapshot()
     {
         var configId = new ConfigurationId(Guid.NewGuid());
-        var machine = CreateMachine("NoSnapshot", "AA:BB:CC:DD:EE:02");
+        var machine = CreateMachine("no-snapshot", "AA:BB:CC:DD:EE:02");
         await PhoeNixDbContextSUT.Set<Machine>().AddAsync(machine);
         await PhoeNixDbContextSUT.SaveChangesAsync();
 
@@ -143,7 +143,7 @@ public class MachineRepositoryTests : PersistenceTestsBase
         var otherConfigId = new ConfigurationId(Guid.NewGuid());
         var systemId = new SystemId(Guid.NewGuid());
         var machine = Machine.Create(
-            new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:03", "OtherConfig", true,
+            new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:03", "other-config", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
         machine.RecordDeploymentSnapshot(

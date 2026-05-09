@@ -30,4 +30,12 @@ public sealed class MachinesApiClient(HttpClient httpClient, IAuthenticationInva
     {
         return await GetAsync<MachineDetailResponse>($"machines/{machineId}", cancellationToken);
     }
+
+    public async Task<ApiResult> UpdateMachineAsync(
+        Guid machineId,
+        UpdateMachineRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await PutAsync($"machines/{machineId}", request, cancellationToken);
+    }
 }

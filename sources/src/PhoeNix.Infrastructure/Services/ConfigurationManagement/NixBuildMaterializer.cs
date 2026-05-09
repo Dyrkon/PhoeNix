@@ -80,7 +80,35 @@ public class NixBuildMaterializer : INixBuildMaterializer
         if (builtInModules?.DeployAccess is not null)
             modules.Add(BuildDeployAccessBuiltInModule(builtInModules.DeployAccess));
 
+        if (builtInModules?.Hostname is not null)
+            modules.Add(BuildHostnameBuiltInModule(builtInModules.Hostname));
+
         return modules;
+    }
+
+    private ModuleBuildResult BuildHostnameBuiltInModule(HostnameModuleParameters parameters)
+    {
+        var avahi = parameters.EnableAvahi
+            ? "  services.avahi.enable = true;\n" +
+              "  services.avahi.nssmdns4 = true;\n" +
+              "  services.avahi.openFirewall = true;\n"
+            : "";
+
+        var content =
+            "{ ... }:\n" +
+            "{\n" +
+            $"  networking.hostName = {ToNixString(parameters.Hostname)};\n" +
+            avahi +
+            "}";
+
+        return new ModuleBuildResult(
+            new ModuleTemplateId(Guid.NewGuid()),
+            "PhoenixHostname",
+            content,
+            "{ }",
+            "values",
+            Guid.NewGuid().ToString(),
+            []);
     }
 
     private ModuleBuildResult BuildDeployAccessBuiltInModule(DeployAccessModuleParameters parameters)

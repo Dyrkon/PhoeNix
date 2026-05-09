@@ -1,4 +1,5 @@
 @page "/settings"
+@using PhoeNix.Domain.Enums
 @using PhoeNix.WebAPP.Components.Settings
 
 <MudText Typo="Typo.h4" Class="mb-4">Settings</MudText>
@@ -375,6 +376,34 @@ else
                                                  Min="1"
                                                  FullWidth="true"/>
                             </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Address Resolution"
+                                           Description="How Prometheus discovers managed machines. mDNS uses the machine hostname via Avahi (.local). Last Known IP uses the IP recorded at provisioning time."
+                                           Tooltip="Use Last Known IP if your network does not support mDNS (e.g. Proxmox hosts, routed networks).">
+                                <MudSelect T="MonitoringAddressResolution"
+                                           @bind-Value="_model.MonitoringAddressResolution"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           FullWidth="true">
+                                    <MudSelectItem Value="MonitoringAddressResolution.MdnsHostname">mDNS Hostname (.local)</MudSelectItem>
+                                    <MudSelectItem Value="MonitoringAddressResolution.LastKnownIp">Last Known IP</MudSelectItem>
+                                </MudSelect>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12">
+                            @if (_model.MonitoringAddressResolution == MonitoringAddressResolution.MdnsHostname)
+                            {
+                                <MudAlert Severity="Severity.Warning" Dense="true">
+                                    mDNS (.local) requires Avahi to be reachable from the Prometheus host. This may not work in all environments (e.g. Proxmox VMs, routed networks, or hosts where mDNS is firewalled). Avahi will be enabled automatically on managed machines via the built-in hostname module.
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Warning" Dense="true">
+                                    Last Known IP may become stale if the machine's IP address changes (DHCP reassignment). For reliable monitoring, ensure managed machines have static IP addresses or DHCP reservations.
+                                </MudAlert>
+                            }
                         </MudItem>
                     </MudGrid>
                 </ChildContent>

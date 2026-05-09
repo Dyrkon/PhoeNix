@@ -28,7 +28,8 @@ public class UpdateAppSettingsHandlerTests
             "ssh", "bootstrap", "probe-cmd", 5, 30, false,
             "nixos-install", "root", 60, false, false, false,
             "builder-host", false, false,
-            "http://prometheus", 7.0, "http://netboot", "/netboot", "0.0.0.0", 8080);
+            "http://prometheus", 7.0, PhoeNix.Domain.Enums.MonitoringAddressResolution.MdnsHostname,
+            "http://netboot", "/netboot", "0.0.0.0", 8080);
 
     [Fact]
     public async Task Handle_Should_Update_Settings()

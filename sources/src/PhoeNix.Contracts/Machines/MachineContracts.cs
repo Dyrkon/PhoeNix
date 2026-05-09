@@ -21,6 +21,13 @@ public record CreateMachineRequest(
     Architecture Architecture,
     InstallDiskSelectionPreference InstallDiskSelectionPreference);
 
+public record UpdateMachineRequest(
+    string Title,
+    bool Enabled,
+    string MacAddress,
+    Architecture Architecture,
+    InstallDiskSelectionPreference InstallDiskSelectionPreference);
+
 public sealed record ListMachinesRequest(
     MachineSortField SortField = MachineSortField.Title,
     int Page = 1,

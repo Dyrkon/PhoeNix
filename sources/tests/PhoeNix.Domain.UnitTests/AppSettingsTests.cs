@@ -78,6 +78,7 @@ public class AppSettingsTests
             true,
             "http://prom:9090",
             14,
+            PhoeNix.Domain.Enums.MonitoringAddressResolution.LastKnownIp,
             "http://api:8888",
             "/usr/bin/pixiecore",
             "127.0.0.1",

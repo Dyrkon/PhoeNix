@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
@@ -12,6 +13,13 @@ namespace PhoeNix.Domain.Entities.Machines;
 
 public class Machine : AggregateRoot<MachineId>
 {
+    private static readonly Regex HostnameRegex =
+        new(@"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$", RegexOptions.Compiled);
+
+    public static bool IsValidHostname(string hostname) =>
+        !string.IsNullOrWhiteSpace(hostname) &&
+        hostname.Length <= 63 &&
+        HostnameRegex.IsMatch(hostname);
     private Machine(MachineId id) : base(id)
     {
     }
@@ -35,6 +43,21 @@ public class Machine : AggregateRoot<MachineId>
     public DeploymentSnapshot? DeploymentSnapshot { get; private set; }
 
     public MachineStatus MachineStatus { get; private set; }
+
+    public Result ChangeTitle(string newTitle, DateTime now)
+    {
+        if (!IsValidHostname(newTitle))
+            return Result.Failure(new Error(
+                "MachineTitleInvalidHostname",
+                $"Machine title '{newTitle}' is not a valid RFC 1123 hostname. Use lowercase letters, digits, and hyphens only (no leading/trailing hyphens, max 63 chars)."));
+
+        Title = newTitle;
+
+        if (MachineStatus.MachineState is MachineState.Orchestrated or MachineState.Updated or MachineState.OutDated)
+            ChangeMachineState(MachineState.OutDated, now);
+
+        return Result.Success();
+    }
 
     public Result ChangeMacAddress(string addressString)
     {
@@ -132,6 +155,11 @@ public class Machine : AggregateRoot<MachineId>
         Architecture architecture,
         InstallDiskSelectionPreference installDiskSelectionPreference)
     {
+        if (!IsValidHostname(title))
+            return Result.Failure<Machine>(new Error(
+                "MachineTitleInvalidHostname",
+                $"Machine title '{title}' is not a valid RFC 1123 hostname. Use lowercase letters, digits, and hyphens only (no leading/trailing hyphens, max 63 chars)."));
+
         return Result.Success(new Machine(machineId)
                 {
                     OwnerId = ownerId,

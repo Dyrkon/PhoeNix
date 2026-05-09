@@ -62,6 +62,7 @@ internal sealed class AppSettingsEntityTypeConfiguration : IApplicationEntityTyp
 
         builder.Property(s => s.MonitoringPrometheusEndpoint).IsRequired().HasMaxLength(500);
         builder.Property(s => s.MonitoringTokenTtlDays).IsRequired();
+        builder.Property(s => s.MonitoringAddressResolution).IsRequired();
 
         builder.Property(s => s.NetbootApiBasePublicUrl).IsRequired().HasMaxLength(500);
         builder.Property(s => s.NetbootHostExecutablePath).IsRequired().HasMaxLength(500);

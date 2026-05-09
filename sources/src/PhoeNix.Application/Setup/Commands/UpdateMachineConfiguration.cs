@@ -10,6 +10,7 @@ using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -29,7 +30,8 @@ internal sealed class UpdateMachineConfigurationHandler(
     IFileSystemService fileSystemService,
     IDeploySshKeyProvider deploySshKeyProvider,
     IDeploymentBindingResolver deploymentBindingResolver,
-    IDeploymentJobTracker jobTracker)
+    IDeploymentJobTracker jobTracker,
+    IAppSettingsRepository appSettingsRepository)
     : ICommandHandler<UpdateMachineConfiguration>
 {
     public async Task<Result> Handle(
@@ -97,11 +99,15 @@ internal sealed class UpdateMachineConfigurationHandler(
         if (deployAccessResult.IsFailure)
             return deployAccessResult.Error;
 
+        var appSettings = await appSettingsRepository.GetFirstAsync(cancellationToken);
         var builtInModules = new BuiltInModuleParameters(
             null,
             new DeployAccessModuleParameters(
                 deployAccessResult.Value.DeployUser,
-                deployAccessResult.Value.CaPublicKey));
+                deployAccessResult.Value.CaPublicKey),
+            new HostnameModuleParameters(
+                machine.Title,
+                appSettings?.MonitoringAddressResolution != MonitoringAddressResolution.LastKnownIp));
 
         var bindingResult = deploymentBindingResolver.ApplyBindings(
             configuration,

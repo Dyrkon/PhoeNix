@@ -31,6 +31,11 @@ public class MachinesModule : ICarterModule
         app.MapGet("/machines/{machineId:guid}/metrics", GetMachineMetrics)
             .Produces<MachineMetricsResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        app.MapPut<UpdateMachineRequest>("/machines/{machineId:guid}", UpdateMachine)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private async Task<IResult> CreateMachine(
@@ -39,6 +44,24 @@ public class MachinesModule : ICarterModule
         CancellationToken cancellationToken)
     {
         var command = new CreateMachineCommand(
+            request.Title,
+            request.Enabled,
+            request.MacAddress,
+            request.Architecture,
+            request.InstallDiskSelectionPreference);
+
+        var result = await sender.Send(command, cancellationToken);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> UpdateMachine(
+        Guid machineId,
+        UpdateMachineRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateMachineCommand(
+            new MachineId(machineId),
             request.Title,
             request.Enabled,
             request.MacAddress,

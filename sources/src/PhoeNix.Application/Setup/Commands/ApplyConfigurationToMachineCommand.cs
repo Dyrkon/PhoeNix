@@ -174,7 +174,10 @@ internal sealed class ApplyConfigurationToMachineCommandHandler(
                 target.CallbackToken.Token),
             new DeployAccessModuleParameters(
                 deployAccessResult.Value.DeployUser,
-                deployAccessResult.Value.CaPublicKey));
+                deployAccessResult.Value.CaPublicKey),
+            new HostnameModuleParameters(
+                machine.Title,
+                settings?.MonitoringAddressResolution != Domain.Enums.MonitoringAddressResolution.LastKnownIp));
 
         var boundConfigurationResult = runtimeBindingResolver.ApplyBindings(
             configuration,

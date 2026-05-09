@@ -20,7 +20,6 @@ in
         set -euo pipefail
         mkdir -p ${tlsCertDir}
 
-        # Skip if cert exists and is valid for more than 7 days
         if [ -f "${tlsCertDir}/cert.crt" ]; then
           if ${pkgs.openssl}/bin/openssl x509 -checkend 604800 -noout -in "${tlsCertDir}/cert.crt" 2>/dev/null; then
             exit 0

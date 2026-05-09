@@ -41,7 +41,7 @@ public sealed class MonitoringModule : ICarterModule
 
         var targets = result.Value.Select(t => new
         {
-            targets = new[] { $"{t.IpAddress}:{t.MetricsPort}" },
+            targets = new[] { $"{t.Address}:{t.MetricsPort}" },
             labels = new Dictionary<string, string> { ["machine"] = t.Title }
         });
 

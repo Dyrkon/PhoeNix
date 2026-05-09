@@ -3,6 +3,7 @@ using PhoeNix.Infrastructure;
 using PhoeNix.McpServer;
 using PhoeNix.McpServer.Auth;
 using PhoeNix.Persistence;
+using PhoeNix.Persistence.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,5 +27,7 @@ app.UseAuthorization();
 McpOAuthEndpoints.Map(app);
 
 app.MapMcp("/mcp").RequireAuthorization();
+
+await app.Services.SeedApplicationDataAsync();
 
 app.Run("http://localhost:5003");
