@@ -639,7 +639,13 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.SshPermitRootLogin,
                 SeedPlaceholders.SshPermitRootLogin,
                 ["\"prohibit-password\"", "\"no\""],
-                "\"prohibit-password\"").Value
+                "\"prohibit-password\"").Value,
+            SingleChoiceValue.Create(
+                new EntryValueId(Guid.NewGuid()),
+                SeedPlaceholders.Sandbox,
+                SeedPlaceholders.Sandbox,
+                ["true", "false"],
+                "true").Value
         ]);
 
         var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);
@@ -819,7 +825,13 @@ internal static class ConfigurationSeedFactory
                 SeedPlaceholders.SshPermitRootLogin,
                 SeedPlaceholders.SshPermitRootLogin,
                 ["\"prohibit-password\"", "\"no\""],
-                "\"prohibit-password\"").Value
+                "\"prohibit-password\"").Value,
+            SingleChoiceValue.Create(
+                new EntryValueId(Guid.NewGuid()),
+                SeedPlaceholders.Sandbox,
+                SeedPlaceholders.Sandbox,
+                ["true", "false"],
+                "true").Value
         ]);
 
         var prometheusModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["PrometheusNodeExporter"]);

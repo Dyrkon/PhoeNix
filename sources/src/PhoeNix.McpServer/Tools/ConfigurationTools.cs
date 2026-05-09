@@ -220,6 +220,55 @@ public static class ConfigurationTools
     }
 
     [McpServerTool]
+    [Description("""
+                 Update a module instance within a specific system in a configuration. Supply entry values as JSON array.
+                 Each entry: { "name": string, "placeholder": string, "kind": "Text"|"Integer"|"Decimal"|"Enum"|"List",
+                 "textValue": string|null, "integerUpperValue": int|null, "integerLowerValue": int|null,
+                 "decimalUpperValue": decimal|null, "decimalLowerValue": decimal|null,
+                 "selectedValue": string|null, "listItems": string[]|null }
+                 Returns the updated module value.
+                 """)]
+    public static async Task<string> UpdateConfigurationSystemModule(
+        ISender sender,
+        [Description("Configuration ID (GUID)")]
+        Guid configurationId,
+        [Description("System ID (GUID)")]
+        Guid systemId,
+        [Description("Module value ID to update (GUID)")]
+        Guid moduleValueId,
+        [Description("Whether this module is enabled")]
+        bool enabled,
+        [Description("JSON array of ModuleEntryValueUpsertModel entries")]
+        string entriesJson,
+        CancellationToken cancellationToken = default)
+    {
+        List<ModuleEntryValueUpsertModel>? entries;
+        try
+        {
+            entries = JsonSerializer.Deserialize<List<ModuleEntryValueUpsertModel>>(entriesJson, JsonOptions)
+                      ?? throw new InvalidOperationException("Failed to deserialize entries JSON.");
+        }
+        catch (Exception ex)
+        {
+            return JsonSerializer.Serialize(new { error = "DeserializationFailed", message = ex.Message }, JsonOptions);
+        }
+
+        var result = await sender.Send(
+            new UpdateConfigurationSystemModuleCommand(
+                new ConfigurationId(configurationId),
+                new SystemId(systemId),
+                new ModuleValueId(moduleValueId),
+                enabled,
+                entries),
+            cancellationToken);
+
+        if (result.IsFailure)
+            return JsonSerializer.Serialize(new { error = result.Error.Code, message = result.Error.Description }, JsonOptions);
+
+        return JsonSerializer.Serialize(result.Value, JsonOptions);
+    }
+
+    [McpServerTool]
     [Description(
         "Add a system target to a configuration. A system represents a specific machine architecture variant (e.g. x86_64-linux). Returns the new system.")]
     public static async Task<string> AddConfigurationSystem(
@@ -290,8 +339,8 @@ public static class ConfigurationTools
         Schedules the validation job, waits for it to complete, and returns pass/fail with details.
         Note: modules with runtime-bound values (e.g. disk paths) will use placeholder values during validation.
         Can take up to 15 minutes for complex configurations.
-        On success: returns { state, duration, configurationId, systemId }.
-        On failure: throws with the error code and full nix build output to help diagnose configuration issues.
+        Always returns JSON: { state: "Succeeded"|"Failed"|"TimedOut", ... }.
+        On failure includes errorCode and errorOutput (last 100 lines of nix build output).
         """)]
     public static async Task<string> ValidateSystem(
         ISender sender,
@@ -310,7 +359,12 @@ public static class ConfigurationTools
             cancellationToken);
 
         if (scheduleResult.IsFailure)
-            throw new InvalidOperationException(scheduleResult.Error.Description ?? scheduleResult.Error.Code);
+            return JsonSerializer.Serialize(new
+            {
+                state = "Failed",
+                errorCode = scheduleResult.Error.Code,
+                errorOutput = scheduleResult.Error.Description ?? scheduleResult.Error.Code
+            }, JsonOptions);
 
         var key = new SystemValidationKey(configId, sysId);
         var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
@@ -331,12 +385,26 @@ public static class ConfigurationTools
                 }, JsonOptions);
 
             if (status.State == ValidationJobState.Failed)
-                throw new InvalidOperationException(
-                    $"System validation failed.\nError: {status.ErrorCode}\n{status.ErrorMessage}");
+            {
+                var rawError = status.ErrorMessage ?? string.Empty;
+                var lines = rawError.Split('\n');
+                var errorOutput = lines.Length > 100
+                    ? $"... (showing last 100 of {lines.Length} lines)\n" + string.Join('\n', lines[^100..])
+                    : rawError;
+                return JsonSerializer.Serialize(new
+                {
+                    state = "Failed",
+                    errorCode = status.ErrorCode,
+                    errorOutput
+                }, JsonOptions);
+            }
         }
 
-        throw new InvalidOperationException(
-            $"System validation did not complete within {timeoutSeconds} seconds.");
+        return JsonSerializer.Serialize(new
+        {
+            state = "TimedOut",
+            errorOutput = $"System validation did not complete within {timeoutSeconds} seconds."
+        }, JsonOptions);
     }
 
     [McpServerTool]
