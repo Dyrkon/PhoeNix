@@ -12,6 +12,7 @@ let
         PHOENIX_NIX_PATH = "${pkgs.nix}/bin/nix";
         PHOENIX_NIXOS_REBUILD_PATH = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
         PHOENIX_NIXOS_ANYWHERE_PATH = "${pkgs.nixos-anywhere}/bin/nixos-anywhere";
+        PHOENIX_DISKO_URL = "github:nix-community/disko/v1.12.0"; # 1.13.0 has an missmatch that prevents nixos-anywhere --vm-test from running
         PHOENIX_ALEJANDRA_PATH = "${pkgs.alejandra}/bin/alejandra";
         PHOENIX_DISKO_SOURCE_PATH = "github:nix-community/disko/v1.12.0";
       };
