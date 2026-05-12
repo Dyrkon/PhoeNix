@@ -76,15 +76,6 @@ public sealed class NixosAnywhereInstaller(
         if (chmodResult.IsFailure)
             return chmodResult;
 
-        RunUdevSettle(
-            target.IpAddress.ToString(),
-            keyPaths.PrivateKeyPath,
-            keyPaths.CertificatePath,
-            settings.InstallerTargetUser,
-            settings.InstallerDisableHostKeyChecking,
-            settings.HardwareProbeSshExecutable,
-            cancellationToken);
-
         var arguments = BuildArguments(
             configurationDirectoryPath,
             target.IpAddress.ToString(),
@@ -110,37 +101,6 @@ public sealed class NixosAnywhereInstaller(
             return Result.Failure(processResult.Error with { Code = "NixosAnywhereInstallFailed" });
 
         return Result.Success();
-    }
-
-    private void RunUdevSettle(
-        string ipAddress,
-        string privateKeyPath,
-        string certificatePath,
-        string targetUser,
-        bool disableHostKeyChecking,
-        string sshExecutable,
-        CancellationToken cancellationToken)
-    {
-        var sshPath = Environment.GetEnvironmentVariable("PHOENIX_SSH_PATH") ?? sshExecutable;
-
-        var arguments = new List<string>
-        {
-            "-o", "BatchMode=yes",
-            "-i", privateKeyPath,
-            "-o", $"CertificateFile={certificatePath}"
-        };
-
-        if (disableHostKeyChecking)
-        {
-            arguments.AddRange(["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]);
-        }
-
-        arguments.Add($"{targetUser}@{ipAddress}");
-        arguments.Add("udevadm trigger --subsystem-match=block && udevadm settle --timeout 60");
-
-        var result = processRunner.RunProcess(sshPath, arguments, cancellationToken, timeOut: TimeSpan.FromSeconds(90));
-        if (result.IsFailure)
-            logger.LogWarning("Pre-install udev settle failed (non-fatal): {Error}", result.Error.Description);
     }
 
     private static List<string> BuildArguments(
