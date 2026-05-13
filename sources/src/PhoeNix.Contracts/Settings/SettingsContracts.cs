@@ -65,6 +65,7 @@ public sealed record UpdateAppSettingsRequest(
     string MonitoringPrometheusEndpoint,
     double MonitoringTokenTtlDays,
     MonitoringAddressResolution MonitoringAddressResolution,
+    string LocalDomain,
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,

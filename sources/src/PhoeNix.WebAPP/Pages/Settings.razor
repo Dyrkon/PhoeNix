@@ -350,6 +350,47 @@ else
             <MudExpansionPanel>
                 <TitleContent>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Dns" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Machine Resolution</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Address Resolution"
+                                           Description="How Prometheus discovers managed machines. mDNS uses the machine hostname via Avahi (.local). Last Known IP uses the IP recorded at provisioning time."
+                                           Tooltip="Use Last Known IP if your network does not support mDNS (e.g. Proxmox hosts, routed networks).">
+                                <MudSelect T="MonitoringAddressResolution"
+                                           @bind-Value="_model.MonitoringAddressResolution"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           FullWidth="true">
+                                    <MudSelectItem Value="MonitoringAddressResolution.MdnsHostname">mDNS Hostname
+                                        (.local)
+                                    </MudSelectItem>
+                                    <MudSelectItem Value="MonitoringAddressResolution.DnsHostname">DND Hostname
+                                    </MudSelectItem>
+                                    <MudSelectItem Value="MonitoringAddressResolution.LastKnownIp">Last Known IP
+                                    </MudSelectItem>
+                                </MudSelect>
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Local Domain"
+                                           Description="When using DNS hostname resolution, you can specify your local domain. In case of DNS host resolving, local domain can prevent issues with name resolution."
+                                           Tooltip="">
+                                <MudTextField @bind-Value="_model.LocalDomain" Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth="true"></MudTextField>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         <MudIcon Icon="@Icons.Material.Outlined.BarChart" Size="Size.Small"/>
                         <MudText Typo="Typo.body1">Monitoring</MudText>
                     </MudStack>
@@ -377,32 +418,29 @@ else
                                                  FullWidth="true"/>
                             </SettingsField>
                         </MudItem>
-                        <MudItem xs="12" md="6">
-                            <SettingsField Label="Address Resolution"
-                                           Description="How Prometheus discovers managed machines. mDNS uses the machine hostname via Avahi (.local). Last Known IP uses the IP recorded at provisioning time."
-                                           Tooltip="Use Last Known IP if your network does not support mDNS (e.g. Proxmox hosts, routed networks).">
-                                <MudSelect T="MonitoringAddressResolution"
-                                           @bind-Value="_model.MonitoringAddressResolution"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense"
-                                           FullWidth="true">
-                                    <MudSelectItem Value="MonitoringAddressResolution.MdnsHostname">mDNS Hostname (.local)</MudSelectItem>
-                                    <MudSelectItem Value="MonitoringAddressResolution.LastKnownIp">Last Known IP</MudSelectItem>
-                                </MudSelect>
-                            </SettingsField>
-                        </MudItem>
                         <MudItem xs="12">
-                            @if (_model.MonitoringAddressResolution == MonitoringAddressResolution.MdnsHostname)
+                            @switch (_model.MonitoringAddressResolution)
                             {
-                                <MudAlert Severity="Severity.Warning" Dense="true">
-                                    mDNS (.local) requires Avahi to be reachable from the Prometheus host. This may not work in all environments (e.g. Proxmox VMs, routed networks, or hosts where mDNS is firewalled). Avahi will be enabled automatically on managed machines via the built-in hostname module.
-                                </MudAlert>
-                            }
-                            else
-                            {
-                                <MudAlert Severity="Severity.Warning" Dense="true">
-                                    Last Known IP may become stale if the machine's IP address changes (DHCP reassignment). For reliable monitoring, ensure managed machines have static IP addresses or DHCP reservations.
-                                </MudAlert>
+                                case MonitoringAddressResolution.DnsHostname:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        For DNS hostnames to work, you have to have working DNS on your network.
+                                    </MudAlert>
+                                    break;
+                                case MonitoringAddressResolution.MdnsHostname:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        mDNS (.local) requires Avahi to be reachable from the Prometheus host. This may
+                                        not work in all environments (e.g. Proxmox VMs, routed networks, or hosts where
+                                        mDNS is firewalled). Avahi will be enabled automatically on managed machines via
+                                        the built-in hostname module.
+                                    </MudAlert>
+                                    break;
+                                case MonitoringAddressResolution.LastKnownIp:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        Last Known IP may become stale if the machine's IP address changes (DHCP
+                                        reassignment). For reliable monitoring, ensure managed machines have static IP
+                                        addresses or DHCP reservations.
+                                    </MudAlert>
+                                    break;
                             }
                         </MudItem>
                     </MudGrid>

@@ -63,6 +63,7 @@ public partial class Settings : ComponentBase
             _model.MonitoringPrometheusEndpoint,
             _model.MonitoringTokenTtlDays,
             _model.MonitoringAddressResolution,
+            _model.LocalDomain,
             _model.NetbootApiBasePublicUrl,
             _model.NetbootHostExecutablePath,
             _model.NetbootListenAddress,
@@ -113,7 +114,11 @@ public partial class Settings : ComponentBase
 
         public string MonitoringPrometheusEndpoint { get; set; } = "http://localhost:9090/prometheus";
         public double MonitoringTokenTtlDays { get; set; } = 7;
-        public MonitoringAddressResolution MonitoringAddressResolution { get; set; } = MonitoringAddressResolution.MdnsHostname;
+
+        public MonitoringAddressResolution MonitoringAddressResolution { get; set; } =
+            MonitoringAddressResolution.MdnsHostname;
+
+        public string LocalDomain { get; set; } = "lan";
 
         public string NetbootApiBasePublicUrl { get; set; } = "http://YOUR-API-OR-HOSTNAME:8888/api";
         public string NetbootHostExecutablePath { get; set; } = "pixiecore";

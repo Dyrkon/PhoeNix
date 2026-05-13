@@ -66,6 +66,7 @@ public class AppSettingsModule : ICarterModule
             request.MonitoringPrometheusEndpoint,
             request.MonitoringTokenTtlDays,
             request.MonitoringAddressResolution,
+            request.LocalDomain,
             request.NetbootApiBasePublicUrl,
             request.NetbootHostExecutablePath,
             request.NetbootListenAddress,

@@ -20,16 +20,18 @@ public class UpdateAppSettingsHandlerTests
         _currentUserAccessor.GetUserId().Returns(Result.Success(OwnerId));
     }
 
-    private static UpdateAppSettingsCommand BuildCommand(string fileStorageRoot = "/storage") =>
-        new(
+    private static UpdateAppSettingsCommand BuildCommand(string fileStorageRoot = "/storage")
+    {
+        return new UpdateAppSettingsCommand(
             fileStorageRoot,
             "sshca-key", "principal", 24.0, "ed25519",
             "ed25519", "deployca-key", "deploy-principal", "deploy-user", 30.0,
             "ssh", "bootstrap", "probe-cmd", 5, 30, false,
             "nixos-install", "root", 60, false, false, false,
             "builder-host", false, false,
-            "http://prometheus", 7.0, PhoeNix.Domain.Enums.MonitoringAddressResolution.MdnsHostname,
+            "http://prometheus", 7.0, Domain.Enums.MonitoringAddressResolution.MdnsHostname, "lan",
             "http://netboot", "/netboot", "0.0.0.0", 8080);
+    }
 
     [Fact]
     public async Task Handle_Should_Update_Settings()

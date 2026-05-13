@@ -20,7 +20,7 @@ internal sealed class GetPrometheusTargetsQueryHandler(
     {
         var settings = await appSettingsRepository.GetFirstAsync(cancellationToken);
         var resolution = settings?.MonitoringAddressResolution ?? MonitoringAddressResolution.MdnsHostname;
-        var targets = await repository.GetTargetsAsync(resolution, cancellationToken);
+        var targets = await repository.GetTargetsAsync(resolution, settings?.LocalDomain ?? "", cancellationToken);
         return Result.Success(targets);
     }
 }

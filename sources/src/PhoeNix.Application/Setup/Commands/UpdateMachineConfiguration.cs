@@ -62,6 +62,7 @@ internal sealed class UpdateMachineConfigurationHandler(
         var deploymentSnapshot = machine.DeploymentSnapshot;
         var targetIpAddress = deploymentSnapshot.LastKnownIpAddress;
 
+
         var configurationResult = await configurationRepository
             .GetByIdAsync(request.ConfigurationId, cancellationToken)
             .EnsureNotNull(new Error(
@@ -145,16 +146,17 @@ internal sealed class UpdateMachineConfigurationHandler(
             .ToList();
 
         var job = new DeploymentJob(
-            MachineId: request.MachineId,
-            TargetIpAddress: targetIpAddress,
-            FlakeDirectory: writeResult.Value,
-            SystemAttribute: request.SystemId.ToStringWithPrefix(),
-            SshMaterial: deployAccessResult.Value,
-            ConfigurationId: request.ConfigurationId,
-            ConfigurationTitle: configuration.Title,
-            SystemId: request.SystemId,
-            SystemName: selectedSystem.Name,
-            BoundDiskPaths: boundDiskPaths);
+            request.MachineId,
+            targetIpAddress,
+            machine.Title,
+            writeResult.Value,
+            request.SystemId.ToStringWithPrefix(),
+            deployAccessResult.Value,
+            request.ConfigurationId,
+            configuration.Title,
+            request.SystemId,
+            selectedSystem.Name,
+            boundDiskPaths);
 
         jobTracker.Enqueue(job);
 

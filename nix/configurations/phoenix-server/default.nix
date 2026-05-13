@@ -24,6 +24,21 @@
     };
   };
 
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+    publish = {
+      enable = true;
+      addresses = true;
+      workstation = true;
+    };
+  };
+
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="net", KERNEL=="br[0-9]*|vmbr[0-9]*|docker[0-9]*", ATTR{bridge/multicast_snooping}="0"
+  '';
+
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     trusted-users = [ "root" "phoenix" "phoenix-admin" ];

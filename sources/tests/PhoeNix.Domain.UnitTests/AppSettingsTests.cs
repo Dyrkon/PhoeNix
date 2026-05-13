@@ -78,7 +78,8 @@ public class AppSettingsTests
             true,
             "http://prom:9090",
             14,
-            PhoeNix.Domain.Enums.MonitoringAddressResolution.LastKnownIp,
+            Enums.MonitoringAddressResolution.LastKnownIp,
+            "lan",
             "http://api:8888",
             "/usr/bin/pixiecore",
             "127.0.0.1",
@@ -112,6 +113,7 @@ public class AppSettingsTests
         settings.MonitoringPrometheusEndpoint.Should().Be("http://prom:9090");
         settings.MonitoringTokenTtlDays.Should().Be(14);
         settings.NetbootApiBasePublicUrl.Should().Be("http://api:8888");
+        settings.LocalDomain.Should().Be("lan");
         settings.NetbootHostExecutablePath.Should().Be("/usr/bin/pixiecore");
         settings.NetbootListenAddress.Should().Be("127.0.0.1");
         settings.NetbootPort.Should().Be(1234);

@@ -27,10 +27,11 @@ internal sealed class UpdateMachineCommandHandler(IMachineRepository machineRepo
         if (!string.Equals(machine.Title, request.Title, StringComparison.Ordinal))
         {
             var existing = await machineRepository.GetByTitleAsync(request.Title, cancellationToken);
-            if (existing is not null)
-                return Result.Failure(new Error(
-                    "Machines.TitleAlreadyExists",
-                    $"Machine with title '{request.Title}' already exists."));
+            if (existing is null) 
+            {
+                var titleResult = machine.ChangeTitle(request.Title, now);
+                if (titleResult.IsFailure) return titleResult.Error;
+            }
         }
 
         if (!string.Equals(machine.MacAddress.ToString(), request.MacAddress, StringComparison.OrdinalIgnoreCase))
@@ -38,18 +39,13 @@ internal sealed class UpdateMachineCommandHandler(IMachineRepository machineRepo
             if (System.Net.NetworkInformation.PhysicalAddress.TryParse(request.MacAddress, out var parsedMac))
             {
                 var existing = await machineRepository.GetByMacAddressAsync(parsedMac, cancellationToken);
-                if (existing is not null && existing.Id != machine.Id)
-                    return Result.Failure(new Error(
-                        "Machines.MacAddressAlreadyExists",
-                        $"Machine with MAC address '{request.MacAddress}' already exists."));
+                if (existing is null)
+                {
+                    var macResult = machine.ChangeMacAddress(request.MacAddress);
+                    if (macResult.IsFailure) return macResult.Error;
+                }
             }
         }
-
-        var titleResult = machine.ChangeTitle(request.Title, now);
-        if (titleResult.IsFailure) return titleResult.Error;
-
-        var macResult = machine.ChangeMacAddress(request.MacAddress);
-        if (macResult.IsFailure) return macResult.Error;
 
         machine.ChangeArchitecture(request.Architecture);
         machine.ChangeInstallDiskSelectionPreference(request.InstallDiskSelectionPreference);

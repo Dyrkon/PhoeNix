@@ -53,6 +53,23 @@ nixos-rebuild build-image \
   --image-variant proxmox-lxc
 ```
 
+Proxmox has **disabled mDNS** out of the box, you need to **enable** it by running following commands if you want to use hostnames for machine updates and metrics.
+
+```bash
+cat /sys/class/net/vmbr0/bridge/multicast_snooping # If this returns 1, mDNS will not work
+echo 0 > /sys/class/net/vmbr0/bridge/multicast_snooping # Enable multicast snooping
+```
+
+> [!WARNING]
+> Current version of Disko (1.12.0) is used, because version (1.13.0) breaks `--vm-test` until this [issue](https://github.com/nix-community/disko/issues/1203) is fixed, VMs in proxmox should be created with these parameters:
+
+- Machine: q35
+- BIOS: OVMF (UEFI)
+  - Disable prerolled keys
+  - Add EFI disk
+- Bus/Device: SCSI
+  - Set the index starting with 0
+
 ## 3. Zero-Touch Remote Deployment
 You can deploy PhoeNix to a bare-metal server or fresh VM without cloning the repo using `nixos-anywhere`.
 
@@ -66,7 +83,10 @@ nix run github:nix-community/nixos-anywhere -- \
 ## 4. Post-Install Access
 
 > [!IMPORTANT]
-> You have to change Netboot (PXE) public API Base URL in settings before you start using the app to http://{your hostname or IP of the orchestrator machine}/api
+> You have to change *Netboot (PXE)* public API Base URL in settings before you start using the app to http://{your hostname or IP of the orchestrator machine}/api
+
+> [!IMPORTANT]
+> If you want to resolve machines for updates and metrics via DNS, change your local domain in settings section *Machine Resolution*
 
 * **Default User:** `phoenix-admin`
 * **Initial Password:** `phoenix-default-pass` (Change this immediately!)
@@ -75,7 +95,7 @@ nix run github:nix-community/nixos-anywhere -- \
 * **Prometheus:** `https://<hostname>/prometheus/`
 * **MCP server:** `https://<hostname>/mcp/` (requires JWT auth)
 
-> [!INFO]
+> [!TIP]
 > Simplest way to add the MCP server: `claude mcp add --transport http phoenix-mcp-lxc http://<hostname>/mcp/`
 
 ## 5. Monitoring

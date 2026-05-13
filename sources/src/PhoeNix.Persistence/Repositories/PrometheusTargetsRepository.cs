@@ -16,6 +16,7 @@ public sealed class PrometheusTargetsRepository(ApplicationDbContext dbContext) 
 
     public async Task<IReadOnlyList<PrometheusTarget>> GetTargetsAsync(
         MonitoringAddressResolution resolution,
+        string localDomain,
         CancellationToken cancellationToken)
     {
         if (resolution == MonitoringAddressResolution.LastKnownIp)
@@ -23,7 +24,7 @@ public sealed class PrometheusTargetsRepository(ApplicationDbContext dbContext) 
             var machines = await dbContext.Machines
                 .AsNoTracking()
                 .Include(m => m.DeploymentSnapshot)
-                .Where(m => ActiveStates.Contains(m.MachineStatus.MachineState) && m.DeploymentSnapshot != null)
+                .Where(m => ActiveStates.Any(s => s == m.MachineStatus.MachineState) && m.DeploymentSnapshot != null)
                 .ToListAsync(cancellationToken);
 
             return machines
@@ -36,10 +37,10 @@ public sealed class PrometheusTargetsRepository(ApplicationDbContext dbContext) 
 
         return await dbContext.Machines
             .AsNoTracking()
-            .Where(m => ActiveStates.Contains(m.MachineStatus.MachineState) && m.DeploymentSnapshot != null)
+            .Where(m => ActiveStates.Any(s => s == m.MachineStatus.MachineState) && m.DeploymentSnapshot != null)
             .Select(m => new PrometheusTarget(
                 m.Title,
-                m.Title + ".local",
+                m.Title + (resolution == MonitoringAddressResolution.DnsHostname ? $".{localDomain}" : ".local"),
                 "9100"))
             .ToListAsync(cancellationToken);
     }

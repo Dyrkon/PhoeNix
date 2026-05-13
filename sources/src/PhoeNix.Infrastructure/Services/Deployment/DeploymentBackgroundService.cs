@@ -27,7 +27,8 @@ internal sealed class DeploymentBackgroundService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Unhandled exception executing deployment for machine {MachineId}.", job.MachineId.Value);
+                logger.LogError(ex, "Unhandled exception executing deployment for machine {MachineId}.",
+                    job.MachineId.Value);
                 jobTracker.SetStatus(job.MachineId, new DeploymentJobStatus(
                     DeploymentJobState.Failed,
                     "DeploymentUnhandledError",
@@ -50,6 +51,7 @@ internal sealed class DeploymentBackgroundService(
 
         var updateResult = await nixOsMachineUpdater.UpdateAsync(
             job.TargetIpAddress,
+            job.TargetHostname,
             job.FlakeDirectory,
             job.SystemAttribute,
             job.SshMaterial,

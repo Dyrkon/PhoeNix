@@ -78,8 +78,6 @@ internal static class ModuleTemplateSeedFactory
         var templateId = new ModuleTemplateId(Guid.NewGuid());
         var definitions = new List<EntryValueDefinition>
         {
-            new(templateId, SeedPlaceholders.HostName, SeedPlaceholders.HostName,
-                EntryBindingKind.UserProvided, EntryValueKind.Text, "\"machineone\""),
             new(templateId, SeedPlaceholders.StateVersion, SeedPlaceholders.StateVersion,
                 EntryBindingKind.UserProvided, EntryValueKind.Text, "\"25.11\""),
             new(templateId, SeedPlaceholders.RootAuthorizedKeys, SeedPlaceholders.RootAuthorizedKeys,
@@ -91,7 +89,6 @@ internal static class ModuleTemplateSeedFactory
         };
 
         var content =
-            $"networking.hostName = {SeedPlaceholders.HostName};\n" +
             "services.openssh.enable = true;\n" +
             $"users.users.root.openssh.authorizedKeys.keys = {SeedPlaceholders.RootAuthorizedKeys};\n" +
             "boot.loader.systemd-boot.enable = true;\n" +
@@ -100,7 +97,6 @@ internal static class ModuleTemplateSeedFactory
             $"system.stateVersion = {SeedPlaceholders.StateVersion};";
 
         var testContent =
-            "hostNameSet = { expr = HostName != \"\"; expected = true; };\n" +
             "stateVersionSet = { expr = StateVersion != \"\"; expected = true; };\n" +
             "keysSet = { expr = RootAuthorizedKeys != []; expected = true; };";
 
@@ -113,7 +109,7 @@ internal static class ModuleTemplateSeedFactory
             definitions,
             "minimal-base-test",
             testContent,
-            [SeedPlaceholders.HostName, SeedPlaceholders.StateVersion, SeedPlaceholders.RootAuthorizedKeys]
+            [SeedPlaceholders.StateVersion, SeedPlaceholders.RootAuthorizedKeys]
         );
     }
 
@@ -355,10 +351,10 @@ internal static class ModuleTemplateSeedFactory
         {
             new(templateId, SeedPlaceholders.NcpsCacheHostName,
                 SeedPlaceholders.NcpsCacheHostName, EntryBindingKind.UserProvided, EntryValueKind.Text,
-                "\"machine-hostname.lan\""),
+                "\"nix-cache\""),
             new(templateId, SeedPlaceholders.NcpsServerAddress,
                 SeedPlaceholders.NcpsServerAddress, EntryBindingKind.UserProvided, EntryValueKind.Text,
-                "\":8501\"")
+                "\":5000\"")
         };
 
         var content =
@@ -396,7 +392,7 @@ internal static class ModuleTemplateSeedFactory
         {
             new(templateId, SeedPlaceholders.LocalCacheSubstituters,
                 SeedPlaceholders.LocalCacheSubstituters, EntryBindingKind.UserProvided, EntryValueKind.List,
-                JsonSerializer.Serialize(new List<string> { "\"http://machine-hostname.lan:8501\"" })),
+                JsonSerializer.Serialize(new List<string> { "\"http://nix-cache:5000\"" })),
             new(templateId, SeedPlaceholders.LocalCachePublicKeys,
                 SeedPlaceholders.LocalCachePublicKeys, EntryBindingKind.UserProvided, EntryValueKind.List,
                 JsonSerializer.Serialize(new List<string>
