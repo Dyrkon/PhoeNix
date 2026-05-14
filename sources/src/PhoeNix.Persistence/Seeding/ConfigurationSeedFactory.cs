@@ -89,11 +89,6 @@ internal static class ConfigurationSeedFactory
         [
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
-                ToNixString(options.HostName),
-                SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName).Value,
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
                 ToNixString(options.StateVersion),
                 SeedPlaceholders.StateVersion,
                 SeedPlaceholders.StateVersion).Value,
@@ -293,11 +288,6 @@ internal static class ConfigurationSeedFactory
         var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
-                ToNixString("phoenix-server"),
-                SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName).Value,
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
                 ToNixString(options.StateVersion),
@@ -553,11 +543,6 @@ internal static class ConfigurationSeedFactory
         [
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
-                ToNixString("gnome-workstation"),
-                SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName).Value,
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
                 ToNixString(options.StateVersion),
                 SeedPlaceholders.StateVersion,
                 SeedPlaceholders.StateVersion).Value,
@@ -743,11 +728,6 @@ internal static class ConfigurationSeedFactory
         var baseModule = system.Modules.Single(m => m.ModuleTemplateId == templateIds["MinimalBaseSystem"]);
         baseModule.ReplaceEntries(
         [
-            TextValue.Create(
-                new EntryValueId(Guid.NewGuid()),
-                ToNixString("kde-workstation"),
-                SeedPlaceholders.HostName,
-                SeedPlaceholders.HostName).Value,
             TextValue.Create(
                 new EntryValueId(Guid.NewGuid()),
                 ToNixString(options.StateVersion),

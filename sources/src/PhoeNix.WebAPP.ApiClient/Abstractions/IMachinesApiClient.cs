@@ -10,6 +10,11 @@ public interface IMachinesApiClient
         CreateMachineRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<ApiResult> UpdateMachineAsync(
+        Guid machineId,
+        UpdateMachineRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<ApiResult<PagedResponse<MachineListResponse>>> GetMachinesAsync(
         ListMachinesRequest request,
         CancellationToken cancellationToken = default);

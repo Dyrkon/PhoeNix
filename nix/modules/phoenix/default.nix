@@ -13,6 +13,7 @@ let
         PHOENIX_NIXOS_REBUILD_PATH = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
         PHOENIX_NIXOS_ANYWHERE_PATH = "${pkgs.nixos-anywhere}/bin/nixos-anywhere";
         PHOENIX_ALEJANDRA_PATH = "${pkgs.alejandra}/bin/alejandra";
+        PHOENIX_DISKO_SOURCE_PATH = "github:nix-community/disko/v1.12.0";
       };
 in
 {

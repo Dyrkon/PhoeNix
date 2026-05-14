@@ -15,18 +15,18 @@ public class MachineTests
     private const string ValidMac = "AA:BB:CC:DD:EE:FF";
 
     private Machine CreateValid(bool enabled = true) =>
-        Machine.Create(_machineId, OwnerId, ValidMac, "TestMachine", enabled,
+        Machine.Create(_machineId, OwnerId, ValidMac, "test-machine", enabled,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
 
     [Fact]
     public void Machine_Should_Create_Successfully()
     {
-        var result = Machine.Create(_machineId, OwnerId, ValidMac, "TestMachine", true,
+        var result = Machine.Create(_machineId, OwnerId, ValidMac, "test-machine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(_machineId);
-        result.Value.Title.Should().Be("TestMachine");
+        result.Value.Title.Should().Be("test-machine");
         result.Value.Enabled.Should().BeTrue();
         result.Value.Architecture.Should().Be(Architecture.X86Linux);
         result.Value.InstallDiskSelectionPreference.Should().Be(InstallDiskSelectionPreference.Biggest);
@@ -37,7 +37,7 @@ public class MachineTests
     [Fact]
     public void Machine_Should_Fail_Create_With_Invalid_Mac()
     {
-        var result = Machine.Create(_machineId, OwnerId, "not-a-mac", "TestMachine", true,
+        var result = Machine.Create(_machineId, OwnerId, "not-a-mac", "test-machine", true,
             Architecture.X86Linux, InstallDiskSelectionPreference.Biggest);
 
         result.IsFailure.Should().BeTrue();

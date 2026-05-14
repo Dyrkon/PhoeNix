@@ -80,7 +80,42 @@ public class NixBuildMaterializer : INixBuildMaterializer
         if (builtInModules?.DeployAccess is not null)
             modules.Add(BuildDeployAccessBuiltInModule(builtInModules.DeployAccess));
 
+        if (builtInModules?.Hostname is not null)
+            modules.Add(BuildHostnameBuiltInModule(builtInModules.Hostname));
+
         return modules;
+    }
+
+    private ModuleBuildResult BuildHostnameBuiltInModule(HostnameModuleParameters parameters)
+    {
+        var avahi = parameters.EnableAvahi
+            ? "services.avahi = {\n" +
+              "  enable = lib.mkDefault true;\n" +
+              "  nssmdns4 = lib.mkDefault true;\n" +
+              "  openFirewall = lib.mkDefault true;\n" +
+              "  publish = {\n" +
+              "    enable = lib.mkDefault true;\n" +
+              "    addresses = lib.mkDefault true;\n" +
+              "    workstation = lib.mkDefault true;\n" +
+              "  };\n" +
+              "};\n"
+            : "";
+
+        var content =
+            "{ lib, ... }:\n" +
+            "{\n" +
+            $"  networking.hostName = lib.mkDefault {ToNixString(parameters.Hostname)};\n" +
+            avahi +
+            "}";
+
+        return new ModuleBuildResult(
+            new ModuleTemplateId(Guid.NewGuid()),
+            "PhoenixHostname",
+            content,
+            "{ }",
+            "values",
+            Guid.NewGuid().ToString(),
+            []);
     }
 
     private ModuleBuildResult BuildDeployAccessBuiltInModule(DeployAccessModuleParameters parameters)
@@ -407,9 +442,12 @@ public class NixBuildMaterializer : INixBuildMaterializer
 
         var inputsValues = inputs.Aggregate(string.Empty, (current, result) => current + $"{result.Value.Input}\n");
 
+        var diskoSource = Environment.GetEnvironmentVariable("PHOENIX_DISKO_SOURCE_PATH") ??
+                          "github:nix-community/disko/v1.12.0";
+
         var content =
             $"{{ description = \"{configuration.Description}\"; " +
-            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"github:nix-community/disko/v1.12.0\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n" +
+            $"inputs = {{ flake-utils.url = \"github:numtide/flake-utils\"; disko.url = \"{diskoSource}\"; disko.inputs.nixpkgs.follows = \"nixpkgs\"; {inputsValues} }};\n" +
             "outputs = {self, nixpkgs, flake-utils, ...} @ inputs: " +
             "let\n" +
             $"systems = [{supportedArchitectures.Aggregate(string.Empty, (s, architecture) => $"\"{s + architecture.ToArchitectureString()}\" ")}];" +

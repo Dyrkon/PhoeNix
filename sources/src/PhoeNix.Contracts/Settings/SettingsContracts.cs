@@ -1,3 +1,5 @@
+using PhoeNix.Domain.Enums;
+
 namespace PhoeNix.Contracts.Settings;
 
 public sealed record AppSettingsResponse(
@@ -28,6 +30,7 @@ public sealed record AppSettingsResponse(
     bool UpdaterFast,
     string MonitoringPrometheusEndpoint,
     double MonitoringTokenTtlDays,
+    MonitoringAddressResolution MonitoringAddressResolution,
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
@@ -61,6 +64,8 @@ public sealed record UpdateAppSettingsRequest(
     bool UpdaterFast,
     string MonitoringPrometheusEndpoint,
     double MonitoringTokenTtlDays,
+    MonitoringAddressResolution MonitoringAddressResolution,
+    string LocalDomain,
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,

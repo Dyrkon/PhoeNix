@@ -9,6 +9,7 @@ namespace PhoeNix.Application.Models.Deployment;
 public record DeploymentJob(
     MachineId MachineId,
     IPAddress TargetIpAddress,
+    string TargetHostname,
     string FlakeDirectory,
     string SystemAttribute,
     DeploySshAccessMaterial SshMaterial,

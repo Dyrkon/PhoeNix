@@ -52,6 +52,7 @@ internal sealed class GetAppSettingsQueryHandler(
                 settings.UpdaterFast,
                 settings.MonitoringPrometheusEndpoint,
                 settings.MonitoringTokenTtlDays,
+                settings.MonitoringAddressResolution,
                 settings.NetbootApiBasePublicUrl,
                 settings.NetbootHostExecutablePath,
                 settings.NetbootListenAddress,

@@ -10,9 +10,12 @@ public sealed record DeployAccessModuleParameters(
     string DeployUser,
     string DeployCaPublicKey);
 
+public sealed record HostnameModuleParameters(string Hostname, bool EnableAvahi);
+
 public sealed record BuiltInModuleParameters(
     CallbackModuleParameters? Callback = null,
-    DeployAccessModuleParameters? DeployAccess = null);
+    DeployAccessModuleParameters? DeployAccess = null,
+    HostnameModuleParameters? Hostname = null);
 
 public sealed record SetupSessionsRequest(
     int Page = 1,

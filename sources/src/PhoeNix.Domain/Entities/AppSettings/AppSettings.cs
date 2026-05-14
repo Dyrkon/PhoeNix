@@ -1,4 +1,5 @@
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Primitives;
 
 namespace PhoeNix.Domain.Entities.AppSettings;
@@ -44,6 +45,8 @@ public class AppSettings : AggregateRoot<AppSettingsId>
 
     public string MonitoringPrometheusEndpoint { get; private set; } = default!;
     public double MonitoringTokenTtlDays { get; private set; }
+    public MonitoringAddressResolution MonitoringAddressResolution { get; private set; }
+    public string LocalDomain { get; private set; }
 
     public string NetbootApiBasePublicUrl { get; private set; } = default!;
     public string NetbootHostExecutablePath { get; private set; } = default!;
@@ -78,6 +81,8 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         bool updaterFast,
         string monitoringPrometheusEndpoint,
         double monitoringTokenTtlDays,
+        MonitoringAddressResolution monitoringAddressResolution,
+        string localDomain,
         string netbootApiBasePublicUrl,
         string netbootHostExecutablePath,
         string netbootListenAddress,
@@ -110,6 +115,8 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         UpdaterFast = updaterFast;
         MonitoringPrometheusEndpoint = monitoringPrometheusEndpoint;
         MonitoringTokenTtlDays = monitoringTokenTtlDays;
+        MonitoringAddressResolution = monitoringAddressResolution;
+        LocalDomain = localDomain;
         NetbootApiBasePublicUrl = netbootApiBasePublicUrl;
         NetbootHostExecutablePath = netbootHostExecutablePath;
         NetbootListenAddress = netbootListenAddress;
@@ -148,6 +155,8 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             UpdaterFast = false,
             MonitoringPrometheusEndpoint = "http://localhost:9090/prometheus",
             MonitoringTokenTtlDays = 7,
+            MonitoringAddressResolution = MonitoringAddressResolution.MdnsHostname,
+            LocalDomain = "lan",
             NetbootApiBasePublicUrl = "http://YOUR-API-OR-HOSTNAME:8888/api",
             NetbootHostExecutablePath = "/run/wrappers/bin/pixiecore",
             NetbootListenAddress = "0.0.0.0",

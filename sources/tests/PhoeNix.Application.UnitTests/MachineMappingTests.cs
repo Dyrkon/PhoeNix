@@ -10,7 +10,7 @@ public class MachineMappingTests
 {
     private static readonly UserId OwnerId = new(Guid.NewGuid());
 
-    private static Machine CreateMachine(string title = "TestMachine", string mac = "AA:BB:CC:DD:EE:FF") =>
+    private static Machine CreateMachine(string title = "test-machine", string mac = "AA:BB:CC:DD:EE:FF") =>
         Machine.Create(
             new MachineId(Guid.NewGuid()),
             OwnerId,
@@ -28,7 +28,7 @@ public class MachineMappingTests
         var dto = MachineMapping.MapMachineToListDto(machine);
 
         dto.Id.Should().Be(machine.Id.Value);
-        dto.Title.Should().Be("TestMachine");
+        dto.Title.Should().Be("test-machine");
         dto.Enabled.Should().BeTrue();
         dto.Architecture.Should().Be(Architecture.X86Linux);
         dto.MachineState.Should().Be(MachineState.Registered);
@@ -43,7 +43,7 @@ public class MachineMappingTests
 
         var dto = MachineMapping.MapMachineToDto(machine);
 
-        dto.Title.Should().Be("TestMachine");
+        dto.Title.Should().Be("test-machine");
         dto.Enabled.Should().BeTrue();
         dto.Architecture.Should().Be(Architecture.X86Linux);
         dto.InstallDiskSelectionPreference.Should().Be(InstallDiskSelectionPreference.Biggest);

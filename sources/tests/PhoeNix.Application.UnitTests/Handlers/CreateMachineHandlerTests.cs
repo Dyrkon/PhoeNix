@@ -31,7 +31,7 @@ public class CreateMachineHandlerTests
 
         var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
-            "My Machine",
+            "my-machine",
             true,
             "AA:BB:CC:DD:EE:FF",
             Architecture.X86Linux,
@@ -47,13 +47,13 @@ public class CreateMachineHandlerTests
     [Fact]
     public async Task Handle_Should_Fail_When_Title_Already_Exists()
     {
-        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "My Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
-        _machineRepository.GetByTitleAsync("My Machine", Arg.Any<CancellationToken>())
+        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "my-machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        _machineRepository.GetByTitleAsync("my-machine", Arg.Any<CancellationToken>())
             .Returns(existing);
 
         var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
-            "My Machine",
+            "my-machine",
             true,
             "AA:BB:CC:DD:EE:FF",
             Architecture.X86Linux,
@@ -73,7 +73,7 @@ public class CreateMachineHandlerTests
 
         var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
-            "My Machine",
+            "my-machine",
             true,
             "not-a-mac",
             Architecture.X86Linux,
@@ -90,13 +90,13 @@ public class CreateMachineHandlerTests
     {
         _machineRepository.GetByTitleAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Machine?)null);
-        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "Other Machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var existing = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "other-machine", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
         _machineRepository.GetByMacAddressAsync(Arg.Any<System.Net.NetworkInformation.PhysicalAddress>(), Arg.Any<CancellationToken>())
             .Returns(existing);
 
         var handler = new CreateMachineHandler(_machineRepository, _currentUserAccessor);
         var command = new CreateMachineCommand(
-            "My Machine",
+            "my-machine",
             true,
             "AA:BB:CC:DD:EE:FF",
             Architecture.X86Linux,

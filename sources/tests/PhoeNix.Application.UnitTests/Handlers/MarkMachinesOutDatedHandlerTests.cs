@@ -18,8 +18,8 @@ public class MarkMachinesOutDatedHandlerTests
     public async Task Handle_Should_Mark_All_Machines_As_OutDated()
     {
         var configId = new ConfigurationId(Guid.NewGuid());
-        var machine1 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "M1", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
-        var machine2 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FE", "M2", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var machine1 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FF", "m1", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
+        var machine2 = Machine.Create(new MachineId(Guid.NewGuid()), OwnerId, "AA:BB:CC:DD:EE:FE", "m2", true, Architecture.X86Linux, InstallDiskSelectionPreference.Biggest).Value;
         _machineRepository.GetAllByInstalledConfigurationIdAsync(configId, Arg.Any<CancellationToken>())
             .Returns(new List<Machine> { machine1, machine2 });
 

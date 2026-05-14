@@ -121,6 +121,46 @@ public static class MachineTools
 
     [McpServerTool]
     [Description("""
+                 Update the editable properties of a machine.
+                 The title must be a valid RFC 1123 hostname: lowercase letters (a-z), digits (0-9), and hyphens only.
+                 No leading or trailing hyphens. Maximum 63 characters.
+                 Renaming a machine that is already deployed (Orchestrated/Updated) will mark it as OutDated,
+                 requiring a nixos-rebuild switch to apply the new hostname.
+                 """)]
+    public static async Task<string> UpdateMachine(
+        ISender sender,
+        [Description("Machine ID (GUID)")] Guid machineId,
+        [Description("New hostname (RFC 1123: lowercase letters, digits, hyphens; max 63 chars)")]
+        string title,
+        [Description("MAC address (e.g. 'aa:bb:cc:dd:ee:ff')")]
+        string macAddress,
+        [Description("Target architecture: X86Linux, Aarch64Linux, X86Darwin, Aarch64Darwin")]
+        string architecture,
+        [Description("Whether this machine is enabled for provisioning")]
+        bool enabled = true,
+        [Description("Disk selection strategy: Biggest, Fastest, FastestAndBiggest, BiggestAndFastest (default: Biggest)")]
+        string installDiskSelectionPreference = "Biggest",
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<Architecture>(architecture, true, out var arch))
+            throw new InvalidOperationException($"Unknown architecture '{architecture}'.");
+
+        if (!Enum.TryParse<InstallDiskSelectionPreference>(installDiskSelectionPreference, true, out var diskPref))
+            throw new InvalidOperationException(
+                $"Unknown disk selection preference '{installDiskSelectionPreference}'. Valid values: {string.Join(", ", Enum.GetNames<InstallDiskSelectionPreference>())}");
+
+        var result = await sender.Send(
+            new UpdateMachineCommand(new MachineId(machineId), title, enabled, macAddress, arch, diskPref),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return JsonSerializer.Serialize(new { success = true }, JsonOptions);
+    }
+
+    [McpServerTool]
+    [Description("""
                  Get live Prometheus metrics for a machine. Returns CPU, RAM, disk usage, and network I/O time series.
                  Range options: 1h, 6h, 24h (default), 7d, 30d.
                  Returns isUp (bool) and uptime string, plus metric series with timestamps and values.

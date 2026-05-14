@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Contracts.Settings;
+using PhoeNix.Domain.Enums;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 
 namespace PhoeNix.WebAPP.Pages;
@@ -61,6 +62,8 @@ public partial class Settings : ComponentBase
             _model.UpdaterFast,
             _model.MonitoringPrometheusEndpoint,
             _model.MonitoringTokenTtlDays,
+            _model.MonitoringAddressResolution,
+            _model.LocalDomain,
             _model.NetbootApiBasePublicUrl,
             _model.NetbootHostExecutablePath,
             _model.NetbootListenAddress,
@@ -112,6 +115,11 @@ public partial class Settings : ComponentBase
         public string MonitoringPrometheusEndpoint { get; set; } = "http://localhost:9090/prometheus";
         public double MonitoringTokenTtlDays { get; set; } = 7;
 
+        public MonitoringAddressResolution MonitoringAddressResolution { get; set; } =
+            MonitoringAddressResolution.MdnsHostname;
+
+        public string LocalDomain { get; set; } = "lan";
+
         public string NetbootApiBasePublicUrl { get; set; } = "http://YOUR-API-OR-HOSTNAME:8888/api";
         public string NetbootHostExecutablePath { get; set; } = "pixiecore";
         public string NetbootListenAddress { get; set; } = "0.0.0.0";
@@ -148,6 +156,7 @@ public partial class Settings : ComponentBase
                 UpdaterFast = r.UpdaterFast,
                 MonitoringPrometheusEndpoint = r.MonitoringPrometheusEndpoint,
                 MonitoringTokenTtlDays = r.MonitoringTokenTtlDays,
+                MonitoringAddressResolution = r.MonitoringAddressResolution,
                 NetbootApiBasePublicUrl = r.NetbootApiBasePublicUrl,
                 NetbootHostExecutablePath = r.NetbootHostExecutablePath,
                 NetbootListenAddress = r.NetbootListenAddress,

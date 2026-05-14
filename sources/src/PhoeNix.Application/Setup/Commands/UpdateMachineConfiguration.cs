@@ -10,6 +10,7 @@ using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -29,7 +30,8 @@ internal sealed class UpdateMachineConfigurationHandler(
     IFileSystemService fileSystemService,
     IDeploySshKeyProvider deploySshKeyProvider,
     IDeploymentBindingResolver deploymentBindingResolver,
-    IDeploymentJobTracker jobTracker)
+    IDeploymentJobTracker jobTracker,
+    IAppSettingsRepository appSettingsRepository)
     : ICommandHandler<UpdateMachineConfiguration>
 {
     public async Task<Result> Handle(
@@ -59,6 +61,7 @@ internal sealed class UpdateMachineConfigurationHandler(
 
         var deploymentSnapshot = machine.DeploymentSnapshot;
         var targetIpAddress = deploymentSnapshot.LastKnownIpAddress;
+
 
         var configurationResult = await configurationRepository
             .GetByIdAsync(request.ConfigurationId, cancellationToken)
@@ -97,11 +100,15 @@ internal sealed class UpdateMachineConfigurationHandler(
         if (deployAccessResult.IsFailure)
             return deployAccessResult.Error;
 
+        var appSettings = await appSettingsRepository.GetFirstAsync(cancellationToken);
         var builtInModules = new BuiltInModuleParameters(
             null,
             new DeployAccessModuleParameters(
                 deployAccessResult.Value.DeployUser,
-                deployAccessResult.Value.CaPublicKey));
+                deployAccessResult.Value.CaPublicKey),
+            new HostnameModuleParameters(
+                machine.Title,
+                appSettings?.MonitoringAddressResolution != MonitoringAddressResolution.LastKnownIp));
 
         var bindingResult = deploymentBindingResolver.ApplyBindings(
             configuration,
@@ -139,16 +146,17 @@ internal sealed class UpdateMachineConfigurationHandler(
             .ToList();
 
         var job = new DeploymentJob(
-            MachineId: request.MachineId,
-            TargetIpAddress: targetIpAddress,
-            FlakeDirectory: writeResult.Value,
-            SystemAttribute: request.SystemId.ToStringWithPrefix(),
-            SshMaterial: deployAccessResult.Value,
-            ConfigurationId: request.ConfigurationId,
-            ConfigurationTitle: configuration.Title,
-            SystemId: request.SystemId,
-            SystemName: selectedSystem.Name,
-            BoundDiskPaths: boundDiskPaths);
+            request.MachineId,
+            targetIpAddress,
+            machine.Title,
+            writeResult.Value,
+            request.SystemId.ToStringWithPrefix(),
+            deployAccessResult.Value,
+            request.ConfigurationId,
+            configuration.Title,
+            request.SystemId,
+            selectedSystem.Name,
+            boundDiskPaths);
 
         jobTracker.Enqueue(job);
 

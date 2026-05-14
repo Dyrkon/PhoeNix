@@ -1,6 +1,7 @@
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Messaging;
 using PhoeNix.Application.Repositories;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Shared;
 
@@ -34,6 +35,8 @@ public sealed record UpdateAppSettingsCommand(
     bool UpdaterFast,
     string MonitoringPrometheusEndpoint,
     double MonitoringTokenTtlDays,
+    MonitoringAddressResolution MonitoringAddressResolution,
+    string LocalDomain,
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
@@ -85,6 +88,8 @@ internal sealed class UpdateAppSettingsCommandHandler(
                     request.UpdaterFast,
                     request.MonitoringPrometheusEndpoint,
                     request.MonitoringTokenTtlDays,
+                    request.MonitoringAddressResolution,
+                    request.LocalDomain,
                     request.NetbootApiBasePublicUrl,
                     request.NetbootHostExecutablePath,
                     request.NetbootListenAddress,

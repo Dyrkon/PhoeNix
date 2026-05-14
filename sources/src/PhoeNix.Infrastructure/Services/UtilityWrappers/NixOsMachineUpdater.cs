@@ -5,6 +5,7 @@ using PhoeNix.Application.Abstractions.Setup;
 using PhoeNix.Application.Models.Processes;
 using PhoeNix.Application.Models.SshIdentity;
 using PhoeNix.Application.Repositories;
+using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
 namespace PhoeNix.Infrastructure.Services.UtilityWrappers;
@@ -17,6 +18,7 @@ internal sealed class NixOsMachineUpdater(
 {
     public async Task<Result<ProcessResult>> UpdateAsync(
         IPAddress targetIpAddress,
+        string targetHostname,
         string flakeDirectory,
         string systemAttribute,
         DeploySshAccessMaterial deployIdentity,
@@ -28,7 +30,22 @@ internal sealed class NixOsMachineUpdater(
                 "AppSettings.NotFound",
                 "Application settings have not been initialized."));
 
-        var targetHost = $"{deployIdentity.DeployUser}@{targetIpAddress}";
+        string targetAddress;
+        switch (settings.MonitoringAddressResolution)
+        {
+            case MonitoringAddressResolution.MdnsHostname:
+                targetAddress = $"{targetHostname}.local";
+                break;
+            case MonitoringAddressResolution.DnsHostname:
+                targetAddress = $"{targetHostname}.{settings.LocalDomain}";
+                break;
+            case MonitoringAddressResolution.LastKnownIp:
+            default:
+                targetAddress = $"{targetIpAddress}";
+                break;
+        }
+
+        var targetHost = $"{deployIdentity.DeployUser}@{targetAddress}";
         var arguments = new List<string>
         {
             "switch",

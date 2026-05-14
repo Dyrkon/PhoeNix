@@ -179,6 +179,32 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
         }
     }
 
+    private async Task OpenEditMachineDialogAsync()
+    {
+        if (_machine is null)
+            return;
+
+        var parameters = new DialogParameters<EditMachineDialog>
+        {
+            { x => x.MachineId, MachineId },
+            { x => x.Machine, _machine }
+        };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<EditMachineDialog>("Edit Machine", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var refreshed = await MachinesApiClient.GetMachineAsync(MachineId);
+            if (refreshed is { IsSuccess: true, Value: not null })
+            {
+                _machine = refreshed.Value;
+                StateHasChanged();
+            }
+        }
+    }
+
     private async Task OpenUpdateResultDialogAsync()
     {
         var entry = MachineState.GetUpdate(MachineId);

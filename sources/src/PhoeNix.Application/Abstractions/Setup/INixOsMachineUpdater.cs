@@ -9,6 +9,7 @@ public interface INixOsMachineUpdater
 {
     Task<Result<ProcessResult>> UpdateAsync(
         IPAddress targetIpAddress,
+        string targetHostname,
         string flakeDirectory,
         string systemAttribute,
         DeploySshAccessMaterial deployIdentity,
