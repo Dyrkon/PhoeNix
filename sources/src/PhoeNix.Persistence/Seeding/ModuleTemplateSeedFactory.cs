@@ -130,8 +130,8 @@ internal static class ModuleTemplateSeedFactory
             "  content = {\n" +
             "    type = \"gpt\";\n" +
             "    partitions = {\n" +
-            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
-            "      root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; }; };\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; preCreateHook = \"sleep 3\"; }; };\n" +
+            "      root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "    };\n" +
             "  };\n" +
             "};";
@@ -592,12 +592,13 @@ internal static class ModuleTemplateSeedFactory
             "  content = {\n" +
             "    type = \"gpt\";\n" +
             "    partitions = {\n" +
-            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "      root = {\n" +
             "        size = \"100%\";\n" +
             "        content = {\n" +
             "          type = \"btrfs\";\n" +
             "          extraArgs = [ \"-L\" \"nixos\" \"-f\" ];\n" +
+            "          preCreateHook = \"sleep 3\";\n" +
             "          subvolumes = {\n" +
             "            \"/root\" = { mountpoint = \"/\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n" +
             "            \"/home\" = { mountpoint = \"/home\"; mountOptions = [ \"compress=zstd\" \"noatime\" ]; };\n" +
@@ -641,17 +642,19 @@ internal static class ModuleTemplateSeedFactory
             "  content = {\n" +
             "    type = \"gpt\";\n" +
             "    partitions = {\n" +
-            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
+            "      ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "      luks = {\n" +
             "        size = \"100%\";\n" +
             "        content = {\n" +
             "          type = \"luks\";\n" +
             "          name = \"cryptroot\";\n" +
             "          extraOpenArgs = [ \"--allow-discards\" ];\n" +
+            "          preCreateHook = \"sleep 3\";\n" +
             "          content = {\n" +
             "            type = \"filesystem\";\n" +
             "            format = \"ext4\";\n" +
             "            mountpoint = \"/\";\n" +
+            "            preCreateHook = \"sleep 3\";\n" +
             "          };\n" +
             "        };\n" +
             "      };\n" +
@@ -695,8 +698,8 @@ internal static class ModuleTemplateSeedFactory
             "    content = {\n" +
             "      type = \"gpt\";\n" +
             "      partitions = {\n" +
-            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
-            "        zfs = { size = \"100%\"; content = { type = \"zfs\"; pool = \"zroot\"; }; };\n" +
+            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; preCreateHook = \"sleep 3\"; }; };\n" +
+            "        zfs = { size = \"100%\"; content = { type = \"zfs\"; pool = \"zroot\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "      };\n" +
             "    };\n" +
             "  };\n" +
@@ -748,8 +751,8 @@ internal static class ModuleTemplateSeedFactory
             "    content = {\n" +
             "      type = \"gpt\";\n" +
             "      partitions = {\n" +
-            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; }; };\n" +
-            "        root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; }; };\n" +
+            "        ESP = { size = \"512M\"; type = \"EF00\"; content = { type = \"filesystem\"; format = \"vfat\"; mountpoint = \"/boot\"; preCreateHook = \"sleep 3\"; }; };\n" +
+            "        root = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "      };\n" +
             "    };\n" +
             "  };\n" +
@@ -759,7 +762,7 @@ internal static class ModuleTemplateSeedFactory
             "    content = {\n" +
             "      type = \"gpt\";\n" +
             "      partitions = {\n" +
-            "        data = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/home\"; }; };\n" +
+            "        data = { size = \"100%\"; content = { type = \"filesystem\"; format = \"ext4\"; mountpoint = \"/home\"; preCreateHook = \"sleep 3\"; }; };\n" +
             "      };\n" +
             "    };\n" +
             "  };\n" +
