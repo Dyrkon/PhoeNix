@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Processes;
@@ -13,7 +14,8 @@ public sealed class NixosAnywhereInstaller(
     IProcessRunner processRunner,
     ISshKeyFileStore sshKeyFileStore,
     IOptions<NixosInstallerOptions> nixosAnywhereOptions,
-    IAppSettingsRepository settingsRepository)
+    IAppSettingsRepository settingsRepository,
+    ILogger<NixosAnywhereInstaller> logger)
     : INixosInstaller
 {
     public async Task<Result> InstallAsync(

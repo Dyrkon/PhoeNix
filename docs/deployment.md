@@ -88,6 +88,9 @@ nix run github:nix-community/nixos-anywhere -- \
 > [!IMPORTANT]
 > If you want to resolve machines for updates and metrics via DNS, change your local domain in settings section *Machine Resolution*
 
+> [!TIP]
+> There is no default user, create it first. Every created user gets default configurations and module templates.
+
 * **Default User:** `phoenix-admin`
 * **Initial Password:** `phoenix-default-pass` (Change this immediately!)
 * **SSH:** `ssh phoenix-admin@<IP>`

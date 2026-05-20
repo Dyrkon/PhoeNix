@@ -26,7 +26,7 @@ in
           fi
         fi
 
-        HOSTNAME=$(${pkgs.inetutils}/bin/hostname -f)
+        HOSTNAME=$(${pkgs.inetutils}/bin/hostname -f 2>/dev/null || ${pkgs.inetutils}/bin/hostname -s)
         SHORT=$(${pkgs.inetutils}/bin/hostname -s)
         IP=$(${pkgs.iproute2}/bin/ip route get 1 2>/dev/null | ${pkgs.gawk}/bin/awk '{for(i=1;i<=NF;i++) if($i=="src") {print $(i+1); exit}}' || echo "")
 
