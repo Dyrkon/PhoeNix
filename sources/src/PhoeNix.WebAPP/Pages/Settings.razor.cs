@@ -16,6 +16,8 @@ public partial class Settings : ComponentBase
     private bool _isSaving;
     private string? _loadError;
     private string? _saveError;
+    private string _newSubstituter;
+    private string _newSubstituterKey;
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,6 +29,18 @@ public partial class Settings : ComponentBase
             _model = SettingsFormModel.FromResponse(result.Value!);
 
         _isLoading = false;
+    }
+
+    private void AddSubstituter()
+    {
+        _model.Substituters.Add(_newSubstituter);
+        _newSubstituter = string.Empty;
+    }
+
+    private void AddSubstituterKey()
+    {
+        _model.SubstitutersKeys.Add(_newSubstituterKey);
+        _newSubstituterKey = string.Empty;
     }
 
     private async Task SaveAsync()
@@ -67,7 +81,10 @@ public partial class Settings : ComponentBase
             _model.NetbootApiBasePublicUrl,
             _model.NetbootHostExecutablePath,
             _model.NetbootListenAddress,
-            _model.NetbootPort);
+            _model.NetbootPort,
+            _model.Substituters,
+            _model.SubstitutersKeys,
+            _model.BootstrapUseSubstituters);
 
         var result = await SettingsApiClient.UpdateSettingsAsync(request);
 
@@ -125,6 +142,11 @@ public partial class Settings : ComponentBase
         public string NetbootListenAddress { get; set; } = "0.0.0.0";
         public int NetbootPort { get; set; } = 64172;
 
+        public List<string> Substituters { get; set; } = [];
+        public List<string> SubstitutersKeys { get; set; } = [];
+        public bool BootstrapUseSubstituters { get; set; } = true;
+
+
         public static SettingsFormModel FromResponse(AppSettingsResponse r)
         {
             return new SettingsFormModel
@@ -160,7 +182,10 @@ public partial class Settings : ComponentBase
                 NetbootApiBasePublicUrl = r.NetbootApiBasePublicUrl,
                 NetbootHostExecutablePath = r.NetbootHostExecutablePath,
                 NetbootListenAddress = r.NetbootListenAddress,
-                NetbootPort = r.NetbootPort
+                NetbootPort = r.NetbootPort,
+                Substituters = r.Substituters,
+                SubstitutersKeys = r.SubstituterKeys,
+                BootstrapUseSubstituters = r.BootstrapUseSubstituters
             };
         }
     }

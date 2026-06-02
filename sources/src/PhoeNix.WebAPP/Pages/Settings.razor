@@ -384,6 +384,31 @@ else
                                               FullWidth="true"></MudTextField>
                             </SettingsField>
                         </MudItem>
+                        <MudItem xs="12">
+                            @switch (_model.MonitoringAddressResolution)
+                            {
+                                case MonitoringAddressResolution.DnsHostname:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        For DNS hostnames to work, you have to have working DNS on your network.
+                                    </MudAlert>
+                                    break;
+                                case MonitoringAddressResolution.MdnsHostname:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        mDNS (.local) requires Avahi to be reachable from the Prometheus host. This may
+                                        not work in all environments (e.g. Proxmox VMs, routed networks, or hosts where
+                                        mDNS is firewalled). Avahi will be enabled automatically on managed machines via
+                                        the built-in hostname module.
+                                    </MudAlert>
+                                    break;
+                                case MonitoringAddressResolution.LastKnownIp:
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        Last Known IP may become stale if the machine's IP address changes (DHCP
+                                        reassignment). For reliable monitoring, ensure managed machines have static IP
+                                        addresses or DHCP reservations.
+                                    </MudAlert>
+                                    break;
+                            }
+                        </MudItem>
                     </MudGrid>
                 </ChildContent>
             </MudExpansionPanel>
@@ -417,31 +442,6 @@ else
                                                  Min="1"
                                                  FullWidth="true"/>
                             </SettingsField>
-                        </MudItem>
-                        <MudItem xs="12">
-                            @switch (_model.MonitoringAddressResolution)
-                            {
-                                case MonitoringAddressResolution.DnsHostname:
-                                    <MudAlert Severity="Severity.Warning" Dense="true">
-                                        For DNS hostnames to work, you have to have working DNS on your network.
-                                    </MudAlert>
-                                    break;
-                                case MonitoringAddressResolution.MdnsHostname:
-                                    <MudAlert Severity="Severity.Warning" Dense="true">
-                                        mDNS (.local) requires Avahi to be reachable from the Prometheus host. This may
-                                        not work in all environments (e.g. Proxmox VMs, routed networks, or hosts where
-                                        mDNS is firewalled). Avahi will be enabled automatically on managed machines via
-                                        the built-in hostname module.
-                                    </MudAlert>
-                                    break;
-                                case MonitoringAddressResolution.LastKnownIp:
-                                    <MudAlert Severity="Severity.Warning" Dense="true">
-                                        Last Known IP may become stale if the machine's IP address changes (DHCP
-                                        reassignment). For reliable monitoring, ensure managed machines have static IP
-                                        addresses or DHCP reservations.
-                                    </MudAlert>
-                                    break;
-                            }
                         </MudItem>
                     </MudGrid>
                 </ChildContent>
@@ -496,6 +496,93 @@ else
                                                  Min="1"
                                                  Max="65535"
                                                  FullWidth="true"/>
+                            </SettingsField>
+                        </MudItem>
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.AcUnit" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Substituters</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Substituters"
+                                           Description="To reduce build times, use substituters (caches). These substituters will be used for setup installation and updates."
+                                           Tooltip="You can create and use a Nix binary cache using one of the default templates.">
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                                    <MudTextField T="string"
+                                                  @bind-Value="_newSubstituter"
+                                                  Label="New substituter"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Style="flex: 1;"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                   Color="Color.Primary"
+                                                   OnClick="@AddSubstituter"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_newSubstituter)"/>
+                                </MudStack>
+                                @if (_model.Substituters.Count > 0)
+                                {
+                                    <MudChipSet T="string" ReadOnly="false">
+                                        @foreach (var option in _model.Substituters)
+                                        {
+                                            <MudChip T="string"
+                                                     Value="@option"
+                                                     Color="Color.Primary"
+                                                     Variant="Variant.Outlined"
+                                                     OnClose="@(() => _model.Substituters.Remove(option))">
+                                                @option
+                                            </MudChip>
+                                        }
+                                    </MudChipSet>
+                                }
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Substituter keys"
+                                           Description="Keys for all selected substituters"
+                                           Tooltip="Each substituter has to have a key which verifies its authenticity.">
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                                    <MudTextField T="string"
+                                                  @bind-Value="_newSubstituterKey"
+                                                  Label="New substituter key"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Style="flex: 1;"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                   Color="Color.Primary"
+                                                   OnClick="@AddSubstituterKey"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_newSubstituterKey)"/>
+                                </MudStack>
+                                @if (_model.SubstitutersKeys.Count > 0)
+                                {
+                                    <MudChipSet T="string" ReadOnly="false">
+                                        @foreach (var option in _model.SubstitutersKeys)
+                                        {
+                                            <MudChip T="string"
+                                                     Value="@option"
+                                                     Color="Color.Primary"
+                                                     Variant="Variant.Outlined"
+                                                     OnClose="@(() => _model.SubstitutersKeys.Remove(option))">
+                                                @option
+                                            </MudChip>
+                                        }
+                                    </MudChipSet>
+                                }
+                            </SettingsField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Use substituters for bootstrap image"
+                                           Description="When enabled, the configured substituters are also passed when building the PXE bootstrap image."
+                                           Tooltip="Disable this if your substituters are not reachable during the bootstrap image build phase.">
+                                <MudSwitch @bind-Value="_model.BootstrapUseSubstituters"
+                                           Color="Color.Primary"/>
                             </SettingsField>
                         </MudItem>
                     </MudGrid>

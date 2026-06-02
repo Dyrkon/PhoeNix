@@ -2,10 +2,10 @@
   description = "PhoeNix flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
 
-    disko.url = "github:nix-community/disko/v1.10.0";
+    disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";

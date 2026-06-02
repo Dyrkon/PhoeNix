@@ -53,6 +53,10 @@ public class AppSettings : AggregateRoot<AppSettingsId>
     public string NetbootListenAddress { get; private set; } = default!;
     public int NetbootPort { get; private set; }
 
+    public List<string> Substituters { get; private set; }
+    public List<string> SubstituterKeys { get; private set; }
+    public bool BootstrapUseSubstituters { get; private set; }
+
     public void Update(
         string fileStorageRootPath,
         string sshCaKeyName,
@@ -86,7 +90,10 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         string netbootApiBasePublicUrl,
         string netbootHostExecutablePath,
         string netbootListenAddress,
-        int netbootPort)
+        int netbootPort,
+        List<string> substituters,
+        List<string> substituterKeys,
+        bool bootstrapUseSubstituters)
     {
         FileStorageRootPath = fileStorageRootPath;
         SshCaKeyName = sshCaKeyName;
@@ -121,6 +128,9 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         NetbootHostExecutablePath = netbootHostExecutablePath;
         NetbootListenAddress = netbootListenAddress;
         NetbootPort = netbootPort;
+        Substituters = substituters;
+        SubstituterKeys = substituterKeys;
+        BootstrapUseSubstituters = bootstrapUseSubstituters;
     }
 
     public static AppSettings CreateDefault(AppSettingsId id, UserId ownerId)
@@ -160,7 +170,10 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             NetbootApiBasePublicUrl = "http://YOUR-API-OR-HOSTNAME:8888/api",
             NetbootHostExecutablePath = "/run/wrappers/bin/pixiecore",
             NetbootListenAddress = "0.0.0.0",
-            NetbootPort = 64172
+            NetbootPort = 64172,
+            Substituters = ["https://cache.nixos.org"],
+            SubstituterKeys = ["cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="],
+            BootstrapUseSubstituters = true
         };
     }
 }

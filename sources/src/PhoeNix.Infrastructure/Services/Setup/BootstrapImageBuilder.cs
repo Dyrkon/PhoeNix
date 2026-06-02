@@ -2,7 +2,9 @@ using System.Text.Json;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
 using PhoeNix.Application.Abstractions.Processes;
+using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.SetupSessions;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
@@ -10,22 +12,42 @@ namespace PhoeNix.Infrastructure.Services.Setup;
 
 public sealed class BootstrapImageBuilder(
     IProcessRunner processRunner,
-    ISshKeyFileStore sshKeyFileStore)
+    ISshKeyFileStore sshKeyFileStore,
+    IAppSettingsRepository settingsRepository)
     : IBootstrapImageBuilder
 {
     public async Task<Result<BootstrapImageDescriptor>> BuildAsync(
         Architecture architecture,
+        UserId ownerId,
         CancellationToken cancellationToken)
     {
         var caKeyResult = await sshKeyFileStore.ReadCaPublicKeyAsync(cancellationToken);
         if (caKeyResult.IsFailure)
             return Result.Failure<BootstrapImageDescriptor>(caKeyResult.Error);
 
-
         if (architecture != Architecture.X86Linux && architecture != Architecture.Aarch64Linux)
             return Result.Failure<BootstrapImageDescriptor>(new Error(
                 "BootstrapArchitectureUnsupported",
                 $"Architecture '{architecture}' is not supported by the bootstrap image builder."));
+
+        var settings = await settingsRepository.GetAsync(ownerId, cancellationToken);
+        if (settings is null)
+            return Result.Failure<BootstrapImageDescriptor>(new Error(
+                "AppSettings.NotFound",
+                "Application settings have not been initialized."));
+
+        var arguments = new List<string>();
+
+        if (settings.BootstrapUseSubstituters && settings.Substituters.Count > 0)
+        {
+            arguments.Add("--option");
+            arguments.Add("extra-substituters");
+            arguments.Add(string.Join(' ', settings.Substituters));
+
+            arguments.Add("--option");
+            arguments.Add("extra-trusted-public-keys");
+            arguments.Add(string.Join(' ', settings.SubstituterKeys));
+        }
 
         var environmentVariables = new Dictionary<string, string>
         {
@@ -35,7 +57,7 @@ public sealed class BootstrapImageBuilder(
 
         var result = processRunner.RunProcess(
             "phoenix-create-pxe-image",
-            [],
+            arguments,
             cancellationToken,
             environmentVariables);
 

@@ -1,4 +1,5 @@
 using PhoeNix.Domain.Entities.SetupSessions;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Shared;
 
@@ -8,5 +9,6 @@ public interface IBootstrapImageBuilder
 {
     Task<Result<BootstrapImageDescriptor>> BuildAsync(
         Architecture architecture,
+        UserId ownerId,
         CancellationToken cancellationToken);
 }

@@ -86,6 +86,8 @@ public sealed class NixosAnywhereInstaller(
             settings.InstallerBuildOnTarget,
             settings.InstallerCopyHostKeys,
             settings.InstallerDisableHostKeyChecking,
+            settings.Substituters,
+            settings.SubstituterKeys,
             nixosAnywhereOptions.Value.ExtraArguments);
 
         var nixosAnywherePath = Environment.GetEnvironmentVariable("PHOENIX_NIXOS_ANYWHERE_PATH") ??
@@ -113,6 +115,8 @@ public sealed class NixosAnywhereInstaller(
         bool buildOnTarget,
         bool copyHostKeys,
         bool disableHostKeyChecking,
+        List<string> substituters,
+        List<string> substituterKeys,
         IReadOnlyList<string> extraArguments)
     {
         var arguments = new List<string>
@@ -120,6 +124,15 @@ public sealed class NixosAnywhereInstaller(
             "--flake",
             $"path:{configurationDirectoryPath}#{configurationName}"
         };
+
+        arguments.Add("--option");
+        arguments.Add("extra-substituters");
+        arguments.Add(string.Join(' ', substituters));
+
+        arguments.Add("--option");
+        arguments.Add("extra-trusted-public-keys");
+        arguments.Add(string.Join(' ', substituterKeys));
+
 
         if (buildOnTarget)
             arguments.Add("--build-on-remote");

@@ -68,5 +68,19 @@ internal sealed class AppSettingsEntityTypeConfiguration : IApplicationEntityTyp
         builder.Property(s => s.NetbootHostExecutablePath).IsRequired().HasMaxLength(500);
         builder.Property(s => s.NetbootListenAddress).IsRequired().HasMaxLength(200);
         builder.Property(s => s.NetbootPort).IsRequired();
+
+        builder.Property(s => s.Substituters).IsRequired();
+        builder.Property(s => s.Substituters)
+            .HasConversion(
+                v => string.Join(',', v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+
+        builder.Property(s => s.SubstituterKeys).IsRequired();
+        builder.Property(s => s.SubstituterKeys)
+            .HasConversion(
+                v => string.Join(',', v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+
+        builder.Property(s => s.BootstrapUseSubstituters).IsRequired();
     }
 }

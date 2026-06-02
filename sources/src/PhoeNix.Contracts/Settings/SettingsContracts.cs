@@ -34,7 +34,10 @@ public sealed record AppSettingsResponse(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort);
+    int NetbootPort,
+    List<string> Substituters,
+    List<string> SubstituterKeys,
+    bool BootstrapUseSubstituters);
 
 public sealed record UpdateAppSettingsRequest(
     string FileStorageRootPath,
@@ -69,4 +72,7 @@ public sealed record UpdateAppSettingsRequest(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort);
+    int NetbootPort,
+    List<string> Substituters,
+    List<string> SubstituterKeys,
+    bool BootstrapUseSubstituters);
