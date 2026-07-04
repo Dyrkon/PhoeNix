@@ -25,6 +25,9 @@ public partial class SetupSessionDetail : ComponentBase, IDisposable
 
     private bool _hasFailed => _session?.Targets.Any(t => t.SetupStage is SetupStage.Failed) ?? false;
 
+    private bool _hasRerunnable => _session?.Targets
+        .Any(t => t.SetupStage is SetupStage.Failed or SetupStage.Cancelled) ?? false;
+
     private int _doneMachines => _session?.Targets
         .Count(t => t.SetupStage is SetupStage.Finished or SetupStage.Cancelled) ?? 0;
 
@@ -111,6 +114,74 @@ public partial class SetupSessionDetail : ComponentBase, IDisposable
 
         Snackbar.Add("Session cancelled.", Severity.Success);
         await RefreshAsync();
+    }
+
+    private async Task OpenRerunSessionDialogAsync()
+    {
+        var rerunCount = _session?.Targets
+            .Count(t => t.SetupStage is SetupStage.Failed or SetupStage.Cancelled) ?? 0;
+
+        var parameters = new DialogParameters<RerunSessionDialog>
+        {
+            { d => d.RerunMachineCount, rerunCount }
+        };
+
+        var dialog = await DialogService.ShowAsync<RerunSessionDialog>(
+            "Rerun Setup Session",
+            parameters,
+            new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        var targets = _session?.Targets
+            .Where(t => t.SetupStage is SetupStage.Failed or SetupStage.Cancelled)
+            .ToList() ?? [];
+
+        var succeeded = 0;
+        foreach (var target in targets)
+        {
+            if (await RerunMachineAsync(target))
+                succeeded++;
+        }
+
+        if (succeeded == 0)
+            Snackbar.Add("Failed to rerun machines.", Severity.Error);
+        else
+            Snackbar.Add($"Rerun started for {succeeded} machine{(succeeded == 1 ? "" : "s")}.", Severity.Success);
+
+        await RefreshAsync();
+        StartRefreshTimer();
+    }
+
+    private async Task RerunSingleMachineAsync(SetupTargetResponse target)
+    {
+        var success = await RerunMachineAsync(target);
+
+        if (!success)
+        {
+            Snackbar.Add("Failed to rerun machine.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Rerun started.", Severity.Success);
+        await RefreshAsync();
+        StartRefreshTimer();
+    }
+
+    private async Task<bool> RerunMachineAsync(SetupTargetResponse target)
+    {
+        if (target.SelectedConfigurationId is null || target.SelectedSystemId is null)
+            return false;
+
+        var request = new StartMachineSetupRequest(
+            target.SelectedConfigurationId.Value,
+            target.SelectedSystemId.Value);
+
+        var result = await SetupApiClient.StartMachineSetupAsync(SessionId, target.MachineId, request);
+        return result.IsSuccess;
     }
 
     internal static Color StageColor(SetupStage stage)

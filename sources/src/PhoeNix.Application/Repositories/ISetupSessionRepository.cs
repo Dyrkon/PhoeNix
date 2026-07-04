@@ -10,6 +10,8 @@ public interface ISetupSessionRepository : IRepository<SetupSession, SetupSessio
 {
     Task<SetupSession?> GetWithEnrolledMachineAsync(MachineId machineId, CancellationToken cancellationToken);
 
+    Task<bool> HasActiveSessionAsync(UserId ownerId, CancellationToken cancellationToken);
+
     Task<PagedResponse<SetupSession>> GetSetupSessions(
         SetupSessionsRequest sessionsRequest,
         UserId ownerId,

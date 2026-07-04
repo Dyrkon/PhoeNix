@@ -7,6 +7,7 @@ namespace PhoeNix.WebAPP.Components.SetupSessions;
 public partial class SetupTargetCard
 {
     [Parameter] [EditorRequired] public SetupTargetResponse Target { get; set; } = null!;
+    [Parameter] public EventCallback OnRerun { get; set; }
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private string? CleanedDescription => Target.LastErrorDescription is null

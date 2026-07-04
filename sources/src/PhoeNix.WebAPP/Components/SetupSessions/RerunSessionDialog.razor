@@ -1,0 +1,20 @@
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Replay" Color="Color.Warning"/>
+            <MudText Typo="Typo.h6">Rerun Setup Session</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            <strong>@RerunMachineCount @(RerunMachineCount == 1 ? "machine" : "machines")</strong>
+            will be restarted from the beginning. Previous disk assignments and callback tokens will be cleared.
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="@Confirm" Color="Color.Warning" Variant="Variant.Filled">
+            Rerun
+        </MudButton>
+    </DialogActions>
+</MudDialog>
