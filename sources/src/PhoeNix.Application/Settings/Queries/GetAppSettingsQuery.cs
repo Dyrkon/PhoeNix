@@ -56,6 +56,15 @@ internal sealed class GetAppSettingsQueryHandler(
                 settings.NetbootApiBasePublicUrl,
                 settings.NetbootHostExecutablePath,
                 settings.NetbootListenAddress,
-                settings.NetbootPort));
+                settings.NetbootPort,
+                settings.GitSyncMode,
+                settings.GitRemoteUrl,
+                settings.GitBranch,
+                settings.GitAuthMethod,
+                settings.GitAuthSecret,
+                settings.GitPushNixFiles,
+                settings.GitPushValidationTier,
+                settings.GitPullPollingIntervalMinutes,
+                settings.GitPullDeleteOrphans));
     }
 }

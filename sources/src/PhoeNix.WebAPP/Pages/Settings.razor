@@ -502,6 +502,166 @@ else
                 </ChildContent>
             </MudExpansionPanel>
 
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Sync" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Git Sync</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid Class="pt-2">
+                        <MudItem xs="12" md="6">
+                            <SettingsField Label="Sync Mode"
+                                           Description="Controls how PhoeNix synchronizes configurations and templates with a git remote."
+                                           Tooltip="Push Only: DB is source of truth, git is versioned backup. Pull Only: git is source of truth, local state is overridden. None: git sync disabled.">
+                                <MudSelect T="GitSyncMode"
+                                           @bind-Value="_model.GitSyncMode"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           FullWidth="true">
+                                    <MudSelectItem Value="GitSyncMode.None">None</MudSelectItem>
+                                    <MudSelectItem Value="GitSyncMode.PushOnly">Push Only</MudSelectItem>
+                                    <MudSelectItem Value="GitSyncMode.PullOnly">Pull Only</MudSelectItem>
+                                </MudSelect>
+                            </SettingsField>
+                        </MudItem>
+
+                        @if (_model.GitSyncMode != GitSyncMode.None)
+                        {
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Remote URL"
+                                               Description="Git remote URL to synchronize with (HTTPS or SSH)."
+                                               Tooltip="For SSH: git@github.com:user/repo.git. For HTTPS: https://github.com/user/repo.git">
+                                    <MudTextField @bind-Value="_model.GitRemoteUrl"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  FullWidth="true"/>
+                                </SettingsField>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Branch"
+                                               Description="Git branch to push to or pull from."
+                                               Tooltip="Defaults to 'main'. Must exist on the remote for pull mode.">
+                                    <MudTextField @bind-Value="_model.GitBranch"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  FullWidth="true"/>
+                                </SettingsField>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Authentication Method"
+                                               Description="How PhoeNix authenticates with the git remote."
+                                               Tooltip="SSH Key: uses a key file path. Token: uses a personal access token in the URL.">
+                                    <MudSelect T="GitAuthMethod"
+                                               @bind-Value="_model.GitAuthMethod"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               FullWidth="true">
+                                        <MudSelectItem Value="GitAuthMethod.None">None</MudSelectItem>
+                                        <MudSelectItem Value="GitAuthMethod.SshKey">SSH Key</MudSelectItem>
+                                        <MudSelectItem Value="GitAuthMethod.Token">Token</MudSelectItem>
+                                    </MudSelect>
+                                </SettingsField>
+                            </MudItem>
+                            @if (_model.GitAuthMethod != GitAuthMethod.None)
+                            {
+                                <MudItem xs="12" md="6">
+                                    <SettingsField Label="Auth Secret"
+                                                   Description="@(_model.GitAuthMethod == GitAuthMethod.SshKey ? "Path to the SSH private key file." : "Personal access token for HTTPS authentication.")"
+                                                   Tooltip="@(_model.GitAuthMethod == GitAuthMethod.SshKey ? "Must be readable by the PhoeNix service user." : "Use a fine-grained token with repository read/write scope.")">
+                                        <MudTextField @bind-Value="_model.GitAuthSecret"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      InputType="@(_model.GitAuthMethod == GitAuthMethod.Token ? InputType.Password : InputType.Text)"
+                                                      FullWidth="true"/>
+                                    </SettingsField>
+                                </MudItem>
+                            }
+                        }
+
+                        @if (_model.GitSyncMode == GitSyncMode.PushOnly)
+                        {
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Push Nix Files"
+                                               Description="When enabled, materialized Nix flake files with human-readable names are included in the push alongside JSON exports."
+                                               Tooltip="Enables CI validation directly against the pushed flake files without needing a PhoeNix instance.">
+                                    <MudSwitch @bind-Value="_model.GitPushNixFiles"
+                                               Color="Color.Primary"/>
+                                </SettingsField>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Validation Tier"
+                                               Description="Level of on-machine validation to run before pushing to git. Set to None to skip local validation (e.g. when using CI)."
+                                               Tooltip="Syntax: nix flake check. Module: nix build checks. Configuration: full VM test. Higher tiers take longer but catch more issues.">
+                                    <MudSelect T="ValidationTier"
+                                               @bind-Value="_model.GitPushValidationTier"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               FullWidth="true">
+                                        <MudSelectItem Value="ValidationTier.None">None</MudSelectItem>
+                                        <MudSelectItem Value="ValidationTier.Syntax">Syntax</MudSelectItem>
+                                        <MudSelectItem Value="ValidationTier.Module">Module</MudSelectItem>
+                                        <MudSelectItem Value="ValidationTier.Configuration">Configuration</MudSelectItem>
+                                    </MudSelect>
+                                </SettingsField>
+                            </MudItem>
+                        }
+
+                        @if (_model.GitSyncMode == GitSyncMode.PullOnly)
+                        {
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Polling Interval (minutes)"
+                                               Description="How often to check the git remote for new changes. Leave empty for manual-only sync."
+                                               Tooltip="Set to null or 0 to disable automatic polling. When set, PhoeNix will periodically fetch and apply changes from the remote.">
+                                    <MudNumericField @bind-Value="_model.GitPullPollingIntervalMinutes"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Min="0"
+                                                     Clearable="true"
+                                                     FullWidth="true"/>
+                                </SettingsField>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <SettingsField Label="Delete Orphans"
+                                               Description="When enabled, configurations and templates that exist in the database but not in git will be deleted during pull."
+                                               Tooltip="Enable with caution — this permanently removes local data that has no corresponding file in the git repository.">
+                                    <MudSwitch @bind-Value="_model.GitPullDeleteOrphans"
+                                               Color="Color.Primary"/>
+                                </SettingsField>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    In Pull Only mode, configurations and templates are managed via git.
+                                    Local editing is disabled — push changes to the configured branch to update.
+                                </MudAlert>
+                            </MudItem>
+                        }
+
+                        @if (_model.GitSyncMode != GitSyncMode.None)
+                        {
+                            <MudItem xs="12">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Outlined.Sync"
+                                           OnClick="SyncNowAsync"
+                                           Disabled="_isSyncing">
+                                    @if (_isSyncing)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2"/>
+                                        <span>Syncing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Sync Now</span>
+                                    }
+                                </MudButton>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </ChildContent>
+            </MudExpansionPanel>
+
         </MudExpansionPanels>
 
         <MudStack Row="true" Justify="Justify.FlexEnd">

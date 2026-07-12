@@ -70,7 +70,16 @@ public class AppSettingsModule : ICarterModule
             request.NetbootApiBasePublicUrl,
             request.NetbootHostExecutablePath,
             request.NetbootListenAddress,
-            request.NetbootPort);
+            request.NetbootPort,
+            request.GitSyncMode,
+            request.GitRemoteUrl,
+            request.GitBranch,
+            request.GitAuthMethod,
+            request.GitAuthSecret,
+            request.GitPushNixFiles,
+            request.GitPushValidationTier,
+            request.GitPullPollingIntervalMinutes,
+            request.GitPullDeleteOrphans);
 
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();

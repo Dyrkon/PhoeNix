@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Persistence.Extensions;
 
@@ -30,6 +31,12 @@ internal sealed class ConfigurationRepository : RepositoryBase<Configuration, Co
     {
         return await DbContext.Configurations
             .SingleOrDefaultAsync(c => c.Title == title, token);
+    }
+
+    public async Task<Configuration?> GetByTitleAsync(string title, UserId ownerId, CancellationToken token)
+    {
+        return await DbContext.Configurations
+            .SingleOrDefaultAsync(c => c.Title == title && c.OwnerId == ownerId, token);
     }
 
     public async Task<Result> RemoveByIdAsync(ConfigurationId id, CancellationToken token)

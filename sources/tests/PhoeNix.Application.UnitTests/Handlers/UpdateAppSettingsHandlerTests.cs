@@ -30,7 +30,10 @@ public class UpdateAppSettingsHandlerTests
             "nixos-install", "root", 60, false, false, false,
             "builder-host", false, false,
             "http://prometheus", 7.0, Domain.Enums.MonitoringAddressResolution.MdnsHostname, "lan",
-            "http://netboot", "/netboot", "0.0.0.0", 8080);
+            "http://netboot", "/netboot", "0.0.0.0", 8080,
+            Domain.Enums.GitSyncMode.None, "", "main",
+            Domain.Enums.GitAuthMethod.None, "", false,
+            Domain.Enums.ValidationTier.None, null, false);
     }
 
     [Fact]

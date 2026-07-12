@@ -20,6 +20,8 @@ internal class SystemEntityTypeConfiguration : IApplicationEntityTypeConfigurati
 
         builder.Property(s => s.Name).HasMaxLength(50);
 
+        builder.HasIndex(s => new { s.ConfigurationId, s.Name }).IsUnique();
+
         builder.HasMany(s => s.Modules)
             .WithOne()
             .HasForeignKey("SystemId")

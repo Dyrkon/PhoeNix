@@ -30,8 +30,14 @@ internal sealed class ImportConfigurationHandler(
 
         var data = request.ImportData;
 
+        // Upsert: if a configuration with this ID already exists, remove it first
+        var importId = new ConfigurationId(data.Id);
+        var existingById = await configurationRepository.GetByIdAsync(importId, cancellationToken);
+        if (existingById is not null)
+            await configurationRepository.RemoveByIdAsync(importId, cancellationToken);
+
         var configResult = Configuration.Create(
-            new ConfigurationId(Guid.NewGuid()),
+            importId,
             userIdResult.Value,
             data.Title,
             data.Description);
@@ -84,7 +90,7 @@ internal sealed class ImportConfigurationHandler(
         foreach (var system in data.Systems)
         {
             var addSystemResult = configuration.AddSystem(
-                new SystemId(Guid.NewGuid()),
+                new SystemId(system.Id),
                 system.Architecture,
                 system.Name);
 

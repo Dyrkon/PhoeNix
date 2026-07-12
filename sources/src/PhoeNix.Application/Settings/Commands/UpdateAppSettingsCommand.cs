@@ -40,7 +40,16 @@ public sealed record UpdateAppSettingsCommand(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort) : ICommand;
+    int NetbootPort,
+    GitSyncMode GitSyncMode,
+    string GitRemoteUrl,
+    string GitBranch,
+    GitAuthMethod GitAuthMethod,
+    string GitAuthSecret,
+    bool GitPushNixFiles,
+    ValidationTier GitPushValidationTier,
+    int? GitPullPollingIntervalMinutes,
+    bool GitPullDeleteOrphans) : ICommand;
 
 internal sealed class UpdateAppSettingsCommandHandler(
     IAppSettingsRepository settingsRepository,
@@ -93,7 +102,16 @@ internal sealed class UpdateAppSettingsCommandHandler(
                     request.NetbootApiBasePublicUrl,
                     request.NetbootHostExecutablePath,
                     request.NetbootListenAddress,
-                    request.NetbootPort);
+                    request.NetbootPort,
+                    request.GitSyncMode,
+                    request.GitRemoteUrl,
+                    request.GitBranch,
+                    request.GitAuthMethod,
+                    request.GitAuthSecret,
+                    request.GitPushNixFiles,
+                    request.GitPushValidationTier,
+                    request.GitPullPollingIntervalMinutes,
+                    request.GitPullDeleteOrphans);
 
                 return Result.Success();
             });

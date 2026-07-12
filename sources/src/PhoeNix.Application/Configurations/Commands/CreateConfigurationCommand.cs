@@ -18,22 +18,24 @@ internal sealed class CreateConfigurationHandler(
     ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<CreateConfigurationCommand, ConfigurationResponse>
 {
-    public Task<Result<ConfigurationResponse>> Handle(
+    public async Task<Result<ConfigurationResponse>> Handle(
         CreateConfigurationCommand request,
         CancellationToken cancellationToken)
     {
         var userIdResult = currentUserAccessor.GetUserId();
         if (userIdResult.IsFailure)
-            return Task.FromResult(Result.Failure<ConfigurationResponse>(userIdResult.Error));
+            return Result.Failure<ConfigurationResponse>(userIdResult.Error);
+
+        var existing = await configurationRepository.GetByTitleAsync(request.Title, userIdResult.Value, cancellationToken);
+        if (existing is not null)
+            return Result.Failure<ConfigurationResponse>(ConfigurationErrors.TitleAlreadyExists(request.Title));
 
         var configurationId = new ConfigurationId(Guid.NewGuid());
 
-        var result = Configuration.Create(configurationId, userIdResult.Value, request.Title, request.Description)
+        return Configuration.Create(configurationId, userIdResult.Value, request.Title, request.Description)
             .Tap(configurationRepository.Add)
             .Map(configuration =>
                 ConfigurationMappings.MapConfigurationToDto(configuration,
                     new Dictionary<ModuleTemplateId, ModuleTemplate>()));
-
-        return Task.FromResult(result);
     }
 }

@@ -19,15 +19,19 @@ internal sealed class UpdateConfigurationHandler(
     ICurrentUserAccessor currentUserAccessor)
     : ICommandHandler<UpdateConfigurationCommand, ConfigurationResponse>
 {
-    public Task<Result<ConfigurationResponse>> Handle(
+    public async Task<Result<ConfigurationResponse>> Handle(
         UpdateConfigurationCommand request,
         CancellationToken cancellationToken)
     {
         var userIdResult = currentUserAccessor.GetUserId();
         if (userIdResult.IsFailure)
-            return Task.FromResult(Result.Failure<ConfigurationResponse>(userIdResult.Error));
+            return Result.Failure<ConfigurationResponse>(userIdResult.Error);
 
-        return configurationRepository
+        var existingWithTitle = await configurationRepository.GetByTitleAsync(request.Title, userIdResult.Value, cancellationToken);
+        if (existingWithTitle is not null && existingWithTitle.Id != request.ConfigurationId)
+            return Result.Failure<ConfigurationResponse>(ConfigurationErrors.TitleAlreadyExists(request.Title));
+
+        return await configurationRepository
             .GetByIdAsync(request.ConfigurationId, cancellationToken)
             .EnsureNotNull(ConfigurationErrors.NotFound(request.ConfigurationId))
             .Ensure(c => c.OwnerId == userIdResult.Value, ConfigurationErrors.NotFound(request.ConfigurationId))

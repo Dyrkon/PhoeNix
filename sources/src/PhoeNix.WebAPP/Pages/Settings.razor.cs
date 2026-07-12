@@ -9,11 +9,13 @@ namespace PhoeNix.WebAPP.Pages;
 public partial class Settings : ComponentBase
 {
     [Inject] private ISettingsApiClient SettingsApiClient { get; set; } = default!;
+    [Inject] private IGitOpsApiClient GitOpsApiClient { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
     private SettingsFormModel _model = new();
     private bool _isLoading = true;
     private bool _isSaving;
+    private bool _isSyncing;
     private string? _loadError;
     private string? _saveError;
 
@@ -67,7 +69,16 @@ public partial class Settings : ComponentBase
             _model.NetbootApiBasePublicUrl,
             _model.NetbootHostExecutablePath,
             _model.NetbootListenAddress,
-            _model.NetbootPort);
+            _model.NetbootPort,
+            _model.GitSyncMode,
+            _model.GitRemoteUrl,
+            _model.GitBranch,
+            _model.GitAuthMethod,
+            _model.GitAuthSecret,
+            _model.GitPushNixFiles,
+            _model.GitPushValidationTier,
+            _model.GitPullPollingIntervalMinutes,
+            _model.GitPullDeleteOrphans);
 
         var result = await SettingsApiClient.UpdateSettingsAsync(request);
 
@@ -77,6 +88,23 @@ public partial class Settings : ComponentBase
             Snackbar.Add("Settings saved successfully.", Severity.Success);
 
         _isSaving = false;
+    }
+
+    private async Task SyncNowAsync()
+    {
+        _isSyncing = true;
+        StateHasChanged();
+
+        var result = _model.GitSyncMode == Domain.Enums.GitSyncMode.PushOnly
+            ? await GitOpsApiClient.TriggerPushAsync()
+            : await GitOpsApiClient.TriggerPullAsync();
+
+        if (result.IsFailure)
+            Snackbar.Add(result.Error?.Description ?? "Sync failed.", Severity.Error);
+        else
+            Snackbar.Add("Sync completed successfully.", Severity.Success);
+
+        _isSyncing = false;
     }
 
     private sealed class SettingsFormModel
@@ -125,6 +153,16 @@ public partial class Settings : ComponentBase
         public string NetbootListenAddress { get; set; } = "0.0.0.0";
         public int NetbootPort { get; set; } = 64172;
 
+        public GitSyncMode GitSyncMode { get; set; } = GitSyncMode.None;
+        public string GitRemoteUrl { get; set; } = "";
+        public string GitBranch { get; set; } = "main";
+        public GitAuthMethod GitAuthMethod { get; set; } = GitAuthMethod.None;
+        public string GitAuthSecret { get; set; } = "";
+        public bool GitPushNixFiles { get; set; }
+        public ValidationTier GitPushValidationTier { get; set; } = ValidationTier.None;
+        public int? GitPullPollingIntervalMinutes { get; set; }
+        public bool GitPullDeleteOrphans { get; set; }
+
         public static SettingsFormModel FromResponse(AppSettingsResponse r)
         {
             return new SettingsFormModel
@@ -160,7 +198,16 @@ public partial class Settings : ComponentBase
                 NetbootApiBasePublicUrl = r.NetbootApiBasePublicUrl,
                 NetbootHostExecutablePath = r.NetbootHostExecutablePath,
                 NetbootListenAddress = r.NetbootListenAddress,
-                NetbootPort = r.NetbootPort
+                NetbootPort = r.NetbootPort,
+                GitSyncMode = r.GitSyncMode,
+                GitRemoteUrl = r.GitRemoteUrl,
+                GitBranch = r.GitBranch,
+                GitAuthMethod = r.GitAuthMethod,
+                GitAuthSecret = r.GitAuthSecret,
+                GitPushNixFiles = r.GitPushNixFiles,
+                GitPushValidationTier = r.GitPushValidationTier,
+                GitPullPollingIntervalMinutes = r.GitPullPollingIntervalMinutes,
+                GitPullDeleteOrphans = r.GitPullDeleteOrphans
             };
         }
     }

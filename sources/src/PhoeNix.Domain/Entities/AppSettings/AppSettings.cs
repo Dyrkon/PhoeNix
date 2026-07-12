@@ -2,6 +2,8 @@ using PhoeNix.Domain.Entities.Users;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Domain.Primitives;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
+
 namespace PhoeNix.Domain.Entities.AppSettings;
 
 public class AppSettings : AggregateRoot<AppSettingsId>
@@ -53,6 +55,16 @@ public class AppSettings : AggregateRoot<AppSettingsId>
     public string NetbootListenAddress { get; private set; } = default!;
     public int NetbootPort { get; private set; }
 
+    public GitSyncMode GitSyncMode { get; private set; }
+    public string GitRemoteUrl { get; private set; } = string.Empty;
+    public string GitBranch { get; private set; } = "main";
+    public GitAuthMethod GitAuthMethod { get; private set; }
+    public string GitAuthSecret { get; private set; } = string.Empty;
+    public bool GitPushNixFiles { get; private set; }
+    public ValidationTier GitPushValidationTier { get; private set; }
+    public int? GitPullPollingIntervalMinutes { get; private set; }
+    public bool GitPullDeleteOrphans { get; private set; }
+
     public void Update(
         string fileStorageRootPath,
         string sshCaKeyName,
@@ -86,7 +98,16 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         string netbootApiBasePublicUrl,
         string netbootHostExecutablePath,
         string netbootListenAddress,
-        int netbootPort)
+        int netbootPort,
+        GitSyncMode gitSyncMode,
+        string gitRemoteUrl,
+        string gitBranch,
+        GitAuthMethod gitAuthMethod,
+        string gitAuthSecret,
+        bool gitPushNixFiles,
+        ValidationTier gitPushValidationTier,
+        int? gitPullPollingIntervalMinutes,
+        bool gitPullDeleteOrphans)
     {
         FileStorageRootPath = fileStorageRootPath;
         SshCaKeyName = sshCaKeyName;
@@ -121,6 +142,15 @@ public class AppSettings : AggregateRoot<AppSettingsId>
         NetbootHostExecutablePath = netbootHostExecutablePath;
         NetbootListenAddress = netbootListenAddress;
         NetbootPort = netbootPort;
+        GitSyncMode = gitSyncMode;
+        GitRemoteUrl = gitRemoteUrl;
+        GitBranch = gitBranch;
+        GitAuthMethod = gitAuthMethod;
+        GitAuthSecret = gitAuthSecret;
+        GitPushNixFiles = gitPushNixFiles;
+        GitPushValidationTier = gitPushValidationTier;
+        GitPullPollingIntervalMinutes = gitPullPollingIntervalMinutes;
+        GitPullDeleteOrphans = gitPullDeleteOrphans;
     }
 
     public static AppSettings CreateDefault(AppSettingsId id, UserId ownerId)
@@ -160,7 +190,16 @@ public class AppSettings : AggregateRoot<AppSettingsId>
             NetbootApiBasePublicUrl = "http://YOUR-API-OR-HOSTNAME:8888/api",
             NetbootHostExecutablePath = "/run/wrappers/bin/pixiecore",
             NetbootListenAddress = "0.0.0.0",
-            NetbootPort = 64172
+            NetbootPort = 64172,
+            GitSyncMode = GitSyncMode.None,
+            GitRemoteUrl = "",
+            GitBranch = "main",
+            GitAuthMethod = GitAuthMethod.None,
+            GitAuthSecret = "",
+            GitPushNixFiles = false,
+            GitPushValidationTier = ValidationTier.None,
+            GitPullPollingIntervalMinutes = null,
+            GitPullDeleteOrphans = false
         };
     }
 }
