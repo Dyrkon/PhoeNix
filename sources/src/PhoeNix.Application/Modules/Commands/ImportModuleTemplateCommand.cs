@@ -27,31 +27,46 @@ internal sealed class ImportModuleTemplateHandler(
         var userId = userIdResult.Value;
         var data = request.ImportData;
 
-        var existing = await moduleTemplateRepository.GetByNameAsync(data.Name, userId, cancellationToken);
+        var importId = new ModuleTemplateId(data.Id);
 
-        if (existing is not null)
+        // Check if an entity with this ID already exists (upsert path)
+        var existingById = await moduleTemplateRepository.GetByIdAsync(importId, cancellationToken);
+        if (existingById is not null)
+            return await UpdateExisting(existingById, data);
+
+        // Check for name conflict
+        var existingByName = await moduleTemplateRepository.GetByNameAsync(data.Name, userId, cancellationToken);
+        if (existingByName is not null)
             return Result.Failure<ModuleTemplateResponse>(ModuleErrors.NameAlreadyExists(data.Name));
 
-        var moduleTemplateId = new ModuleTemplateId(Guid.NewGuid());
+        return CreateNew(importId, userId, data);
+    }
 
-        var editableValueTypes = data.EditableValueTypes
-            .Select(e => new ModuleTemplateEntryValueDefinitionModel(
-                e.Name, e.Placeholder, e.BindingKind, e.ValueKind,
-                e.DefaultValue, e.DefaultLowerValue,
-                e.IntegerMin, e.IntegerMax, e.DecimalMin, e.DecimalMax,
-                e.AllowLowerValue, e.Options?.ToList(), e.BindingIndex))
-            .Select(model => ModuleMappings.MapEntryValueDefinitionToDomain(moduleTemplateId, model))
-            .ToList();
+    private Task<Result<ModuleTemplateResponse>> UpdateExisting(ModuleTemplate existing, ModuleTemplateResponse data)
+    {
+        var editableValueTypes = BuildEditableValueTypes(existing.Id, data);
+        var tests = BuildTests(data);
+        var requiredInputs = (data.RequiredInputs ?? []).Select(r => (r.Name, r.Source));
 
-        var tests = data.Tests
-            .Select(t => new ModuleTemplateTestDefinition(null, t.Name, t.Content, t.VariableNames.ToList()))
-            .ToList();
+        existing.EditModule(data.Name);
+        existing.SetEnabled(data.Enabled);
+        existing.ChangeType(data.Type);
+        existing.ReplaceArchitectureSupport(data.SupportedArchitectures);
+        existing.ChangeContent(data.Content, editableValueTypes);
+        existing.ReconcileTests(tests);
+        existing.SetRequiredInputs(requiredInputs);
 
-        var requiredInputs = (data.RequiredInputs ?? [])
-            .Select(r => (r.Name, r.Source));
+        return Task.FromResult(Result.Success(ModuleMappings.MapModuleToDto(existing)));
+    }
+
+    private Result<ModuleTemplateResponse> CreateNew(ModuleTemplateId id, Domain.Entities.Users.UserId userId, ModuleTemplateResponse data)
+    {
+        var editableValueTypes = BuildEditableValueTypes(id, data);
+        var tests = BuildTests(data);
+        var requiredInputs = (data.RequiredInputs ?? []).Select(r => (r.Name, r.Source));
 
         return ModuleTemplate.Create(
-                moduleTemplateId,
+                id,
                 userId,
                 data.Name,
                 data.Enabled,
@@ -62,5 +77,24 @@ internal sealed class ImportModuleTemplateHandler(
             .Tap(template => template.SetRequiredInputs(requiredInputs))
             .Tap(moduleTemplateRepository.Add)
             .Map(ModuleMappings.MapModuleToDto);
+    }
+
+    private static List<EntryValueDefinition> BuildEditableValueTypes(ModuleTemplateId id, ModuleTemplateResponse data)
+    {
+        return data.EditableValueTypes
+            .Select(e => new ModuleTemplateEntryValueDefinitionModel(
+                e.Name, e.Placeholder, e.BindingKind, e.ValueKind,
+                e.DefaultValue, e.DefaultLowerValue,
+                e.IntegerMin, e.IntegerMax, e.DecimalMin, e.DecimalMax,
+                e.AllowLowerValue, e.Options?.ToList(), e.BindingIndex))
+            .Select(model => ModuleMappings.MapEntryValueDefinitionToDomain(id, model))
+            .ToList();
+    }
+
+    private static List<ModuleTemplateTestDefinition> BuildTests(ModuleTemplateResponse data)
+    {
+        return data.Tests
+            .Select(t => new ModuleTemplateTestDefinition(null, t.Name, t.Content, t.VariableNames.ToList()))
+            .ToList();
     }
 }

@@ -83,7 +83,16 @@ public class AppSettingsTests
             "http://api:8888",
             "/usr/bin/pixiecore",
             "127.0.0.1",
-            1234);
+            1234,
+            Enums.GitSyncMode.PushOnly,
+            "https://github.com/user/repo.git",
+            "main",
+            Enums.GitAuthMethod.Token,
+            "ghp_token123",
+            true,
+            Enums.ValidationTier.Module,
+            null,
+            false);
 
         settings.FileStorageRootPath.Should().Be("/data/storage");
         settings.SshCaKeyName.Should().Be("my-ssh-ca");

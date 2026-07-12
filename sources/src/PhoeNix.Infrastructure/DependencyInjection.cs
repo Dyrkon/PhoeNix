@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PhoeNix.Application.Abstractions.Authentication;
 using PhoeNix.Application.Abstractions.Bootstrap;
+using PhoeNix.Application.Abstractions.Git;
 using PhoeNix.Application.Abstractions.Monitoring;
 using PhoeNix.Application.Abstractions.Deployment;
 using PhoeNix.Application.Abstractions.Validation;
@@ -22,6 +23,7 @@ using PhoeNix.Infrastructure.Services.Processes;
 using PhoeNix.Infrastructure.Services.Setup;
 using PhoeNix.Infrastructure.Services.Deployment;
 using PhoeNix.Infrastructure.Services.Validation;
+using PhoeNix.Infrastructure.Services.Git;
 using PhoeNix.Infrastructure.Services.UtilityWrappers;
 
 namespace PhoeNix.Infrastructure;
@@ -67,6 +69,14 @@ public static class DependencyInjection
         services.AddHostedService<ValidationBackgroundService>();
         services.AddHostedService<BootstrapBackgroundService>();
         services.AddHostedService<PrometheusTokenWriterService>();
+        services.AddSingleton<IGitSyncService, GitSyncService>();
+        services.AddSingleton<IGitOpsModuleFilesBuilder, FriendlyModuleFilesBuilder>();
+        services.AddSingleton<IGitOpsConfigurationFilesBuilder, FriendlyConfigurationFilesBuilder>();
+        services.AddScoped<IGitOpsExportService, GitOpsExportService>();
+        services.AddScoped<IGitOpsPushOrchestrator, GitOpsPushOrchestrator>();
+        services.AddScoped<IGitOpsImportService, GitOpsImportService>();
+        services.AddScoped<IGitOpsPullOrchestrator, GitOpsPullOrchestrator>();
+        services.AddHostedService<GitOpsPollBackgroundService>();
 
         return services;
     }

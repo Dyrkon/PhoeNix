@@ -26,6 +26,8 @@ internal sealed class ConfigurationEntityTypeConfiguration : IApplicationEntityT
 
         builder.HasIndex(c => c.OwnerId);
 
+        builder.HasIndex(c => new { c.Title, c.OwnerId }).IsUnique();
+
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(c => c.OwnerId)

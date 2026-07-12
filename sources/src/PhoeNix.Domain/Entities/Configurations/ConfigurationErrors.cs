@@ -13,4 +13,9 @@ public static class ConfigurationErrors
     {
         return new Error("Configurations.NotFound", $"Configuration '{configurationId}' was not found.");
     }
+
+    public static Error TitleAlreadyExists(string title)
+    {
+        return new Error("Configurations.TitleAlreadyExists", $"A configuration with title '{title}' already exists.");
+    }
 }

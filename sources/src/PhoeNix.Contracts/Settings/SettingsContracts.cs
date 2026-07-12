@@ -34,7 +34,16 @@ public sealed record AppSettingsResponse(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort);
+    int NetbootPort,
+    GitSyncMode GitSyncMode,
+    string GitRemoteUrl,
+    string GitBranch,
+    GitAuthMethod GitAuthMethod,
+    string GitAuthSecret,
+    bool GitPushNixFiles,
+    ValidationTier GitPushValidationTier,
+    int? GitPullPollingIntervalMinutes,
+    bool GitPullDeleteOrphans);
 
 public sealed record UpdateAppSettingsRequest(
     string FileStorageRootPath,
@@ -69,4 +78,13 @@ public sealed record UpdateAppSettingsRequest(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort);
+    int NetbootPort,
+    GitSyncMode GitSyncMode,
+    string GitRemoteUrl,
+    string GitBranch,
+    GitAuthMethod GitAuthMethod,
+    string GitAuthSecret,
+    bool GitPushNixFiles,
+    ValidationTier GitPushValidationTier,
+    int? GitPullPollingIntervalMinutes,
+    bool GitPullDeleteOrphans);
