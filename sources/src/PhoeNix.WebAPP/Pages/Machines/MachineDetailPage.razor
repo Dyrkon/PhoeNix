@@ -222,6 +222,98 @@
             </MudCardContent>
         </MudCard>
 
+        @* Management Profile / Power Controls *@
+        @if (_machine.ManagementProfile is not null)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.PowerSettingsNew" Size="Size.Small"/>
+                            <MudText Typo="Typo.h6">Power Management</MudText>
+                        </MudStack>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                                 Color="@PowerStateColor(_machine.ManagementProfile.PowerState)">
+                            @_machine.ManagementProfile.PowerState.ToString()
+                        </MudChip>
+                    </MudStack>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">VM Host</MudText>
+                            <MudLink Href="@($"/vm-hosts/{_machine.ManagementProfile.VmHostId}")">
+                                @_machine.ManagementProfile.VmHostName
+                            </MudLink>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">External VM ID</MudText>
+                            <MudText Typo="Typo.body1">@_machine.ManagementProfile.ExternalId</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption">Last Power Check</MudText>
+                            <MudText Typo="Typo.body1">@FormatDateTimeValue(_machine.ManagementProfile.LastPowerStateCheckUtc)</MudText>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2"/>
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                                           Size="Size.Small"
+                                           Disabled="_isPowerAction"
+                                           OnClick="() => PowerActionAsync(PhoeNix.Domain.Enums.PowerAction.Start)">
+                                    Start
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.Stop"
+                                           Size="Size.Small"
+                                           Disabled="_isPowerAction"
+                                           OnClick="() => PowerActionAsync(PhoeNix.Domain.Enums.PowerAction.Stop)">
+                                    Stop
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.PowerOff"
+                                           Size="Size.Small"
+                                           Disabled="_isPowerAction"
+                                           OnClick="() => PowerActionAsync(PhoeNix.Domain.Enums.PowerAction.ForceStop)">
+                                    Force Stop
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.Refresh"
+                                           Size="Size.Small"
+                                           Disabled="_isPowerAction"
+                                           OnClick="() => PowerActionAsync(PhoeNix.Domain.Enums.PowerAction.Reboot)">
+                                    Reboot
+                                </MudButton>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Text" Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="ClearManagementProfileAsync">
+                                    Remove Profile
+                                </MudButton>
+                            </MudStack>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.PowerSettingsNew" Size="Size.Small" Class="mud-text-secondary"/>
+                            <MudText Typo="Typo.body1" Class="mud-text-secondary">No management profile assigned</MudText>
+                        </MudStack>
+                        <MudButton Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   OnClick="OpenAssignProfileDialogAsync">
+                            Assign Profile
+                        </MudButton>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+
         <MudExpansionPanels MultiExpansion="true" Elevation="0">
 
             <MachineStatusPanel Status="@_machine.MachineStatus"/>

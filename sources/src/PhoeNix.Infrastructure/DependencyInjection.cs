@@ -22,7 +22,9 @@ using PhoeNix.Infrastructure.Services.Processes;
 using PhoeNix.Infrastructure.Services.Setup;
 using PhoeNix.Infrastructure.Services.Deployment;
 using PhoeNix.Infrastructure.Services.Validation;
+using PhoeNix.Application.Abstractions.Virtualization;
 using PhoeNix.Infrastructure.Services.UtilityWrappers;
+using PhoeNix.Infrastructure.Services.Virtualization;
 
 namespace PhoeNix.Infrastructure;
 
@@ -67,6 +69,15 @@ public static class DependencyInjection
         services.AddHostedService<ValidationBackgroundService>();
         services.AddHostedService<BootstrapBackgroundService>();
         services.AddHostedService<PrometheusTokenWriterService>();
+
+        services.AddSingleton<IVirtualizationProvider, LibvirtProvider>();
+        services.AddSingleton<IVirtualizationProvider, ProxmoxProvider>();
+        services.AddSingleton<IVirtualizationProviderFactory, VirtualizationProviderFactory>();
+        services.AddHttpClient("Proxmox")
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+            });
 
         return services;
     }

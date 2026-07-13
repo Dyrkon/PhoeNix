@@ -1,0 +1,69 @@
+@using PhoeNix.Domain.Enums
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Register VM Host</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_name"
+                          Label="Name"
+                          Required="true"
+                          Placeholder="e.g. lab-hypervisor-01"/>
+
+            <MudSelect @bind-Value="_provider" Label="Provider" Required="true">
+                <MudSelectItem Value="VmHostProvider.Libvirt">Libvirt (SSH)</MudSelectItem>
+                <MudSelectItem Value="VmHostProvider.Proxmox">Proxmox (API)</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField @bind-Value="_host"
+                          Label="@(_provider == VmHostProvider.Libvirt ? "SSH Host" : "API URL")"
+                          Required="true"
+                          Placeholder="@(_provider == VmHostProvider.Libvirt ? "192.168.1.100" : "https://pve.local:8006")"/>
+
+            <MudNumericField @bind-Value="_port"
+                             Label="Port (optional)"
+                             Min="1" Max="65535"/>
+
+            <MudTextField @bind-Value="_username"
+                          Label="@(_provider == VmHostProvider.Libvirt ? "SSH Username" : "API Token User")"
+                          Placeholder="@(_provider == VmHostProvider.Libvirt ? "root" : "user@realm!tokenid")"/>
+
+            <MudTextField @bind-Value="_secret"
+                          Label="@(_provider == VmHostProvider.Libvirt ? "SSH Key Path" : "API Token Secret")"
+                          InputType="@(_showSecret ? InputType.Text : InputType.Password)"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@(_showSecret ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                          OnAdornmentClick="() => _showSecret = !_showSecret"/>
+
+            <MudTextField @bind-Value="_extraConfig"
+                          Label="Extra Config (JSON, optional)"
+                          Lines="3"
+                          Placeholder="@(_provider == VmHostProvider.Libvirt
+                              ? "{\"storagePool\":\"default\",\"network\":\"br0\"}"
+                              : "{\"node\":\"pve\",\"storage\":\"local-lvm\",\"bridge\":\"vmbr0\"}")"/>
+
+            @if (_errorMessage is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="_isSaving"
+                   OnClick="SubmitAsync">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"/>
+                <span>Registering...</span>
+            }
+            else
+            {
+                <span>Register</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

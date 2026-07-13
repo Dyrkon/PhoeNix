@@ -1,0 +1,205 @@
+@page "/vm-hosts/{VmHostId:guid}"
+@using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.Helpers
+
+<MudStack Spacing="3">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+    }
+    else if (_vmHost is null)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            VM host could not be loaded.
+        </MudAlert>
+    }
+    else
+    {
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h4">@_vmHost.Name</MudText>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Color="@(_vmHost.Provider == VmHostProvider.Libvirt ? Color.Info : Color.Warning)">
+                    @_vmHost.Provider.ToString()
+                </MudChip>
+            </MudStack>
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Sync"
+                           Disabled="_isSyncing"
+                           OnClick="SyncResourcesAsync">
+                    Sync Resources
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.NetworkCheck"
+                           Disabled="_isTesting"
+                           OnClick="TestConnectionAsync">
+                    Test Connection
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/vm-hosts">
+                    Back
+                </MudButton>
+            </MudStack>
+        </MudStack>
+
+        @* Credentials Section *@
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4">Connection Details</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField @bind-Value="_editHost"
+                                      Label="@(_vmHost.Provider == VmHostProvider.Libvirt ? "SSH Host" : "API URL")"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="2">
+                        <MudNumericField @bind-Value="_editPort" Label="Port" Min="1" Max="65535"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value="_editUsername"
+                                      Label="@(_vmHost.Provider == VmHostProvider.Libvirt ? "SSH User" : "API Token User")"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value="_editSecret"
+                                      Label="@(_vmHost.Provider == VmHostProvider.Libvirt ? "SSH Key Path" : "Token Secret")"
+                                      InputType="@(_showSecret ? InputType.Text : InputType.Password)"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(_showSecret ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                      OnAdornmentClick="() => _showSecret = !_showSecret"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField @bind-Value="_editName" Label="Name"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="8">
+                        <MudTextField @bind-Value="_editExtraConfig" Label="Extra Config (JSON)" Lines="2"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   Disabled="_isSaving"
+                                   OnClick="SaveCredentialsAsync">
+                            Save Changes
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        @* Resources Section *@
+        @if (_vmHost.Resources is not null)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                        <MudText Typo="Typo.h6">Resources</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            Last synced: @_vmHost.LastSyncedAtUtc.FormatDateTime()
+                        </MudText>
+                    </MudStack>
+                    <MudGrid>
+                        <MudItem xs="12" md="4">
+                            <MudText Typo="Typo.caption">CPU</MudText>
+                            <MudProgressLinear Value="@ResourcePercent(_vmHost.Resources.UsedCpuCores, _vmHost.Resources.TotalCpuCores)"
+                                               Color="Color.Primary" Size="Size.Medium" Class="my-1"/>
+                            <MudText Typo="Typo.body2">
+                                @_vmHost.Resources.UsedCpuCores / @_vmHost.Resources.TotalCpuCores cores
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudText Typo="Typo.caption">Memory</MudText>
+                            <MudProgressLinear Value="@ResourcePercent(_vmHost.Resources.UsedMemoryMb, _vmHost.Resources.TotalMemoryMb)"
+                                               Color="Color.Secondary" Size="Size.Medium" Class="my-1"/>
+                            <MudText Typo="Typo.body2">
+                                @FormatMb(_vmHost.Resources.UsedMemoryMb) / @FormatMb(_vmHost.Resources.TotalMemoryMb)
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudText Typo="Typo.caption">Storage</MudText>
+                            <MudProgressLinear Value="@ResourcePercent(_vmHost.Resources.UsedStorageGb, _vmHost.Resources.TotalStorageGb)"
+                                               Color="Color.Tertiary" Size="Size.Medium" Class="my-1"/>
+                            <MudText Typo="Typo.body2">
+                                @_vmHost.Resources.UsedStorageGb / @_vmHost.Resources.TotalStorageGb GB
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        }
+
+        @* Discovered VMs Section *@
+        <MudCard>
+            <MudCardContent>
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Virtual Machines</MudText>
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   Disabled="_isDiscovering"
+                                   Size="Size.Small"
+                                   OnClick="DiscoverVmsAsync">
+                            Discover
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Size="Size.Small"
+                                   OnClick="OpenCreateVmDialogAsync">
+                            Create VM
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+
+                @if (_isDiscovering)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="d-flex mx-auto my-4"/>
+                }
+                else if (_discoveredVms.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        No VMs discovered. Click "Discover" to scan the host.
+                    </MudText>
+                }
+                else
+                {
+                    <MudTable Items="_discoveredVms" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            <MudTh>External ID</MudTh>
+                            <MudTh>CPU</MudTh>
+                            <MudTh>RAM</MudTh>
+                            <MudTh>MAC</MudTh>
+                            <MudTh>Power</MudTh>
+                            <MudTh>Linked Machine</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Name</MudTd>
+                            <MudTd>@context.ExternalId</MudTd>
+                            <MudTd>@context.CpuCores</MudTd>
+                            <MudTd>@FormatMb(context.MemoryMb)</MudTd>
+                            <MudTd>@(context.MacAddress ?? "-")</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                                         Color="@PowerStateColor(context.PowerState)">
+                                    @context.PowerState.ToString()
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                @if (context.LinkedMachineId.HasValue)
+                                {
+                                    <MudLink Href="@($"/machines/{context.LinkedMachineId}")">
+                                        Linked
+                                    </MudLink>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Unlinked</MudText>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+</MudStack>

@@ -1,0 +1,122 @@
+@page "/vm-hosts"
+@using PhoeNix.Domain.Enums
+@using PhoeNix.WebAPP.Helpers
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.h4">VM Hosts</MudText>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenRegisterDialogAsync">
+            Register VM Host
+        </MudButton>
+    </MudStack>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex mx-auto my-8"/>
+    }
+    else if (_vmHosts.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">
+            No VM hosts registered yet. Click "Register VM Host" to add one.
+        </MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_vmHosts" Hover="true" Striped="true" Dense="true" Elevation="1">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Provider</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Machines</MudTh>
+                <MudTh>CPU</MudTh>
+                <MudTh>RAM</MudTh>
+                <MudTh>Storage</MudTh>
+                <MudTh>Last Synced</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudLink OnClick="() => NavigateToDetail(context.Id)">
+                        @context.Name
+                    </MudLink>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Color="@(context.Provider == VmHostProvider.Libvirt ? Color.Info : Color.Warning)">
+                        @context.Provider.ToString()
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                             Color="@(context.Enabled ? Color.Success : Color.Default)">
+                        @(context.Enabled ? "Enabled" : "Disabled")
+                    </MudChip>
+                </MudTd>
+                <MudTd>@context.LinkedMachineCount</MudTd>
+                <MudTd>
+                    @if (context.Resources is not null)
+                    {
+                        <MudTooltip Text="@($"{context.Resources.UsedCpuCores} / {context.Resources.TotalCpuCores} cores")">
+                            <MudProgressLinear Value="@ResourcePercent(context.Resources.UsedCpuCores, context.Resources.TotalCpuCores)"
+                                               Color="Color.Primary" Size="Size.Small" Style="min-width: 60px"/>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">-</MudText>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (context.Resources is not null)
+                    {
+                        <MudTooltip Text="@($"{FormatMb(context.Resources.UsedMemoryMb)} / {FormatMb(context.Resources.TotalMemoryMb)}")">
+                            <MudProgressLinear Value="@ResourcePercent(context.Resources.UsedMemoryMb, context.Resources.TotalMemoryMb)"
+                                               Color="Color.Secondary" Size="Size.Small" Style="min-width: 60px"/>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">-</MudText>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (context.Resources is not null)
+                    {
+                        <MudTooltip Text="@($"{context.Resources.UsedStorageGb} / {context.Resources.TotalStorageGb} GB")">
+                            <MudProgressLinear Value="@ResourcePercent(context.Resources.UsedStorageGb, context.Resources.TotalStorageGb)"
+                                               Color="Color.Tertiary" Size="Size.Small" Style="min-width: 60px"/>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">-</MudText>
+                    }
+                </MudTd>
+                <MudTd>@context.LastSyncedAtUtc.FormatDateTime()</MudTd>
+                <MudTd>
+                    <MudStack Row="true" Spacing="1">
+                        <MudTooltip Text="Sync Resources">
+                            <MudIconButton Icon="@Icons.Material.Filled.Sync"
+                                           Size="Size.Small"
+                                           OnClick="() => SyncResourcesAsync(context.Id)"/>
+                        </MudTooltip>
+                        <MudTooltip Text="Test Connection">
+                            <MudIconButton Icon="@Icons.Material.Filled.NetworkCheck"
+                                           Size="Size.Small"
+                                           OnClick="() => TestConnectionAsync(context.Id)"/>
+                        </MudTooltip>
+                        <MudTooltip Text="Delete">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="() => DeleteVmHostAsync(context)"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudStack>

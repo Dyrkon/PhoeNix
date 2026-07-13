@@ -6,3 +6,4 @@ global using PhoeNix.Contracts.Machines;
 global using PhoeNix.Contracts.Modules;
 global using PhoeNix.Contracts.Settings;
 global using PhoeNix.Contracts.Setup;
+global using PhoeNix.Contracts.VmHosts;
