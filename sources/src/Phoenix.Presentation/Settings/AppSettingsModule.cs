@@ -70,7 +70,10 @@ public class AppSettingsModule : ICarterModule
             request.NetbootApiBasePublicUrl,
             request.NetbootHostExecutablePath,
             request.NetbootListenAddress,
-            request.NetbootPort);
+            request.NetbootPort,
+            request.Substituters,
+            request.SubstituterKeys,
+            request.BootstrapUseSubstituters);
 
         var result = await sender.Send(command, cancellationToken);
         return result.AsHttpResult();

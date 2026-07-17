@@ -56,6 +56,9 @@ internal sealed class GetAppSettingsQueryHandler(
                 settings.NetbootApiBasePublicUrl,
                 settings.NetbootHostExecutablePath,
                 settings.NetbootListenAddress,
-                settings.NetbootPort));
+                settings.NetbootPort,
+                settings.Substituters,
+                settings.SubstituterKeys,
+                settings.BootstrapUseSubstituters));
     }
 }

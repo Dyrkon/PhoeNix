@@ -40,7 +40,10 @@ public sealed record UpdateAppSettingsCommand(
     string NetbootApiBasePublicUrl,
     string NetbootHostExecutablePath,
     string NetbootListenAddress,
-    int NetbootPort) : ICommand;
+    int NetbootPort,
+    List<string> Substituters,
+    List<string> SubstituterKeys,
+    bool BootstrapUseSubstituters) : ICommand;
 
 internal sealed class UpdateAppSettingsCommandHandler(
     IAppSettingsRepository settingsRepository,
@@ -93,7 +96,10 @@ internal sealed class UpdateAppSettingsCommandHandler(
                     request.NetbootApiBasePublicUrl,
                     request.NetbootHostExecutablePath,
                     request.NetbootListenAddress,
-                    request.NetbootPort);
+                    request.NetbootPort,
+                    request.Substituters,
+                    request.SubstituterKeys,
+                    request.BootstrapUseSubstituters);
 
                 return Result.Success();
             });

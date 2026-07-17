@@ -52,7 +52,13 @@ internal sealed class NixOsMachineUpdater(
             "--flake",
             $"{flakeDirectory}#{systemAttribute}",
             "--target-host",
-            targetHost
+            targetHost,
+            "--option",
+            "extra-substituters",
+            string.Join(' ', settings.Substituters),
+            "--option",
+            "extra-trusted-public-keys",
+            string.Join(' ', settings.SubstituterKeys)
         };
 
         if (!string.IsNullOrWhiteSpace(settings.UpdaterBuildHost))

@@ -48,7 +48,7 @@ internal sealed class BootstrapBackgroundService(
         logger.LogInformation("Building bootstrap image for session {SessionId}.", sessionId.Value);
 
         // TODO need to add support for more architectures
-        var imageResult = await bootstrapImageBuilder.BuildAsync(Architecture.X86Linux, cancellationToken);
+        var imageResult = await bootstrapImageBuilder.BuildAsync(Architecture.X86Linux, session.OwnerId, cancellationToken);
 
         if (imageResult.IsFailure)
         {

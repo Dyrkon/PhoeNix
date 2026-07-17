@@ -83,7 +83,10 @@ public class AppSettingsTests
             "http://api:8888",
             "/usr/bin/pixiecore",
             "127.0.0.1",
-            1234);
+            1234,
+            ["https://cache.nixos.org"],
+            ["cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="],
+            false);
 
         settings.FileStorageRootPath.Should().Be("/data/storage");
         settings.SshCaKeyName.Should().Be("my-ssh-ca");

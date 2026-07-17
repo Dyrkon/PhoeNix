@@ -25,16 +25,16 @@ PhoeNix is a NixOS machine provisioning and configuration management platform. I
 You will need [nix](https://nixos.org/download/) either as a package manager or an OS in form of NixOS.
 
 You can either:
-- Install the [PhoeNix package](TODO)
-- Clone this repo and use `nix run` if you want to modify the project later
+- Go trough [deployment documentation](./docs/deployment.md)
+- Clone this repo and use `nix run .#up` if you want to modify the project later
 
 ## Documentation
 
+- [Simple user documentation / walkthrough](./docs/user-docs.md)
 - [Project structure](./docs/project-structure.md)
 - [Development guide](./docs/development.md)
 - [Deployment guide](./docs/deployment.md)
 - [MCP server](./docs/mcp-server.md)
-- [Project technical overview](./docs/PROJECT.md) — architecture, domain model, tech stack (useful for AI agents)
 
 ## How to contribute?
 
