@@ -1,4 +1,5 @@
 @using Humanizer
+@using PhoeNix.Domain.Enums
 @using static PhoeNix.WebAPP.Pages.SetupSessions.SetupSessionDetail
 
 <MudStack Spacing="3">
@@ -96,5 +97,18 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
+    }
+
+    @if (Target.SetupStage is SetupStage.Failed or SetupStage.Cancelled && OnRerun.HasDelegate)
+    {
+        <MudStack Row="true" Justify="Justify.FlexEnd">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Warning"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Replay"
+                       OnClick="OnRerun">
+                Rerun
+            </MudButton>
+        </MudStack>
     }
 </MudStack>

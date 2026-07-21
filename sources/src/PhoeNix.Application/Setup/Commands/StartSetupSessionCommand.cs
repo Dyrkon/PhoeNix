@@ -22,6 +22,10 @@ internal sealed class StartSetupSessionCommandHandler(
         if (userIdResult.IsFailure)
             return Result.Failure<string>(userIdResult.Error);
 
+        var hasActive = await setupSessionRepository.HasActiveSessionAsync(userIdResult.Value, cancellationToken);
+        if (hasActive)
+            return Result.Failure<string>(SetupSessionErrors.ActiveSessionAlreadyExists());
+
         var sessionResult = SetupSession.Create(new SetupSessionId(Guid.NewGuid()), userIdResult.Value, DateTime.UtcNow);
         if (sessionResult.IsFailure)
             return Result.Failure<string>(sessionResult.Error);

@@ -8,6 +8,7 @@ using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Enums;
 using Xunit.Abstractions;
 
 namespace PhoeNix.Persistence.Tests;
@@ -25,6 +26,13 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
     private static SetupSession CreateSession(DateTime startTime)
     {
         return SetupSession.Create(new SetupSessionId(Guid.NewGuid()), OwnerId, startTime).Value;
+    }
+
+    private static SetupSession CreateSessionWithActiveSsh(DateTime startTime)
+    {
+        var session = SetupSession.Create(new SetupSessionId(Guid.NewGuid()), OwnerId, startTime).Value;
+        session.AssignSshCredential(new SshCredential("pk", "cert", startTime.AddHours(2), null), startTime);
+        return session;
     }
 
     [Fact]
@@ -142,5 +150,102 @@ public class SetupSessionRepositoryTests : PersistenceTestsBase
         var result = await SetupSessionRepository.GetSetupSessions(request, OwnerId, CancellationToken.None);
 
         result.Items.Should().BeInDescendingOrder(s => s.StartTime);
+    }
+
+    [Fact]
+    public async Task HasActiveSessionAsync_Returns_False_When_No_Sessions()
+    {
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(SetupStage.Created)]
+    [InlineData(SetupStage.WaitingForPxe)]
+    [InlineData(SetupStage.ArtefactsAssigned)]
+    [InlineData(SetupStage.Bootstrapped)]
+    [InlineData(SetupStage.Probed)]
+    [InlineData(SetupStage.Orchestrated)]
+    public async Task HasActiveSessionAsync_Returns_True_When_Session_Has_Non_Terminal_Target(SetupStage stage)
+    {
+        var now = DateTime.UtcNow;
+        var session = CreateSession(now);
+        var machineId = new MachineId(Guid.NewGuid());
+        session.EnrollMachine(machineId, new SystemId(Guid.NewGuid()), new ConfigurationId(Guid.NewGuid()), now);
+        if (stage != SetupStage.Created)
+            session.UpdateMachineStage(machineId, stage, now);
+
+        await PhoeNixDbContextSUT.Set<SetupSession>().AddAsync(session);
+        await PhoeNixDbContextSUT.SaveChangesAsync();
+
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(SetupStage.Finished)]
+    [InlineData(SetupStage.Failed)]
+    [InlineData(SetupStage.Cancelled)]
+    public async Task HasActiveSessionAsync_Returns_False_When_All_Targets_Are_Terminal(SetupStage stage)
+    {
+        var now = DateTime.UtcNow;
+        var session = CreateSession(now);
+        var machineId = new MachineId(Guid.NewGuid());
+        session.EnrollMachine(machineId, new SystemId(Guid.NewGuid()), new ConfigurationId(Guid.NewGuid()), now);
+        session.UpdateMachineStage(machineId, stage, now);
+
+        await PhoeNixDbContextSUT.Set<SetupSession>().AddAsync(session);
+        await PhoeNixDbContextSUT.SaveChangesAsync();
+
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HasActiveSessionAsync_Returns_True_When_No_Targets_And_Ssh_Active()
+    {
+        var now = DateTime.UtcNow;
+        var session = CreateSessionWithActiveSsh(now);
+
+        await PhoeNixDbContextSUT.Set<SetupSession>().AddAsync(session);
+        await PhoeNixDbContextSUT.SaveChangesAsync();
+
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasActiveSessionAsync_Returns_False_When_No_Targets_And_Ssh_Revoked()
+    {
+        var now = DateTime.UtcNow;
+        var session = CreateSessionWithActiveSsh(now);
+        session.RevokeSshCredential(now);
+
+        await PhoeNixDbContextSUT.Set<SetupSession>().AddAsync(session);
+        await PhoeNixDbContextSUT.SaveChangesAsync();
+
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HasActiveSessionAsync_Returns_False_For_Different_Owner()
+    {
+        var now = DateTime.UtcNow;
+        var otherId = new UserId(Guid.NewGuid());
+        var session = SetupSession.Create(new SetupSessionId(Guid.NewGuid()), otherId, now).Value;
+        session.AssignSshCredential(new SshCredential("pk", "cert", now.AddHours(2), null), now);
+
+        await PhoeNixDbContextSUT.Set<SetupSession>().AddAsync(session);
+        await PhoeNixDbContextSUT.SaveChangesAsync();
+
+        var result = await SetupSessionRepository.HasActiveSessionAsync(OwnerId, CancellationToken.None);
+
+        result.Should().BeFalse();
     }
 }

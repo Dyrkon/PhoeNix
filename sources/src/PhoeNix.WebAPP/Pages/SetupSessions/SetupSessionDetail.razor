@@ -22,6 +22,15 @@
             </MudStack>
 
             <MudStack Row="true" Spacing="2">
+                @if (_hasRerunnable)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.Replay"
+                               OnClick="OpenRerunSessionDialogAsync">
+                        Rerun Failed Machines
+                    </MudButton>
+                }
                 @if (_isActive)
                 {
                     <MudButton Variant="Variant.Outlined"
@@ -123,7 +132,8 @@
                         </MudStack>
                     </TitleContent>
                     <ChildContent>
-                        <SetupTargetCard Target="@target"/>
+                        <SetupTargetCard Target="@target"
+                                         OnRerun="() => RerunSingleMachineAsync(target)"/>
                     </ChildContent>
                 </MudExpansionPanel>
             }

@@ -13,4 +13,9 @@ public static class SetupSessionErrors
     {
         return new Error("SetSessions.NotAvailable", "No available setup session found");
     }
+
+    public static Error ActiveSessionAlreadyExists() =>
+        new Error(
+            "SetupSessions.ActiveSessionAlreadyExists",
+            "An active provisioning session already exists. Cancel it before starting a new one.");
 }

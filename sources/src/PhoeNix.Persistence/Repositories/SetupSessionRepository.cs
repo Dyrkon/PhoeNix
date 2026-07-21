@@ -5,6 +5,7 @@ using PhoeNix.Common.Models;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Persistence.Repositories;
 
@@ -21,6 +22,21 @@ public class SetupSessionRepository : RepositoryBase<SetupSession, SetupSessionI
             .Include(s => s.Targets)
             .ThenInclude(t => t.RankedDiskAssignments)
             .SingleOrDefaultAsync(s => s.Id == id, token);
+    }
+
+    public Task<bool> HasActiveSessionAsync(UserId ownerId, CancellationToken cancellationToken)
+    {
+        return DbContext.Set<SetupSession>()
+            .Where(s => s.OwnerId == ownerId)
+            .AnyAsync(
+                s => s.Targets.Any(t =>
+                         t.Stage != SetupStage.Finished &&
+                         t.Stage != SetupStage.Failed &&
+                         t.Stage != SetupStage.Cancelled) ||
+                     (!s.Targets.Any() &&
+                      s.SshCredential != null &&
+                      s.SshCredential.RevokedAtUtc == null),
+                cancellationToken);
     }
 
     public Task<SetupSession?> GetWithEnrolledMachineAsync(MachineId machineId,
