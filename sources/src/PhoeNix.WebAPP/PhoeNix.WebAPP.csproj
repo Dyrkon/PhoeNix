@@ -5,6 +5,10 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+        <!-- Workaround: .NET 10.0.300 Razor source generator rejects valid syntax patterns
+             (RZ1021 on @if blocks, @switch case markup, is-pattern expressions in conditions)
+             that the legacy Razor compiler handles correctly. Remove once SDK is updated. -->
+        <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
     </PropertyGroup>
 
     <ItemGroup>

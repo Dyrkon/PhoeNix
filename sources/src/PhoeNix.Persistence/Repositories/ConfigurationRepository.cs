@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
+using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Shared;
 using PhoeNix.Persistence.Extensions;
 
@@ -50,5 +51,17 @@ internal sealed class ConfigurationRepository : RepositoryBase<Configuration, Co
         return await DbContext.Configurations
             .AddIncludeStatements()
             .SingleOrDefaultAsync(c => c.Id == id, token);
+    }
+
+    public async Task<IReadOnlyList<Configuration>> GetAllUsingModuleTemplateAsync(
+        ModuleTemplateId moduleTemplateId,
+        CancellationToken token)
+    {
+        return await DbContext.Configurations
+            .AddIncludeStatements()
+            .Where(c =>
+                c.Modules.Any(m => m.ModuleTemplateId == moduleTemplateId) ||
+                c.SystemSpecifications.Any(s => s.Modules.Any(m => m.ModuleTemplateId == moduleTemplateId)))
+            .ToListAsync(token);
     }
 }

@@ -58,7 +58,7 @@ public partial class ConfigurationsTable : ComponentBase
 
     private Task OnRowClickAsync(DataGridRowClickEventArgs<ConfigurationTableRow> args)
     {
-        NavigationManager.NavigateToConfigurationDetail(args.Item.Id);
+        NavigationManager.NavigateTo(AppRoutes.ConfigurationDetail(args.Item.Id));
         return Task.CompletedTask;
     }
 

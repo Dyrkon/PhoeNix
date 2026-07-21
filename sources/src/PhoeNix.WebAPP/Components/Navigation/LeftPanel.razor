@@ -10,22 +10,22 @@
     }
     <MudNavMenu>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.DesktopWindows" IconColor="Color.Primary"
-                    OnClick="NavigationManager.NavigateToMachineIndex">
+                    Href="@AppRoutes.Home">
             Machines
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.TwoTone.AddToQueue" IconColor="Color.Primary"
-                    OnClick="NavigationManager.NavigateToSetupSessions">
+                    Href="@AppRoutes.SetupSessions">
             Setup sessions
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.AcUnit" IconColor="Color.Primary"
-                    OnClick="NavigationManager.NavigateToConfigurationIndex">Nix
+                    Href="@AppRoutes.Configurations">Nix
             configurations
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.AutoAwesomeMotion"
-                    IconColor="Color.Primary" OnClick="NavigationManager.NavigateToTemplates">Templates
+                    IconColor="Color.Primary" Href="@AppRoutes.Templates">Templates
         </MudNavLink>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Settings"
-                    IconColor="Color.Primary" OnClick="NavigationManager.NavigateToSettings">Settings
+                    IconColor="Color.Primary" Href="@AppRoutes.Settings">Settings
         </MudNavLink>
         <MudNavLink Icon="@Icons.Material.Outlined.Logout"
                     IconColor="Color.Primary" OnClick="@Logout">Log out

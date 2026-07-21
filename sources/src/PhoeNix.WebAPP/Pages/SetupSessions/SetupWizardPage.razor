@@ -212,7 +212,8 @@
                                                OnClick="@RegisterMachinesAsync">
                                         Retry
                                     </MudButton>
-                                    <MudButton Variant="Variant.Outlined" OnClick="NavigateToSession">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Href="@(_sessionId.HasValue ? AppRoutes.SetupSessionDetail(_sessionId.Value) : null)">
                                         Go to session
                                     </MudButton>
                                 </MudStack>

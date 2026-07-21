@@ -40,6 +40,15 @@ public sealed class ModuleValue : Entity<ModuleValueId>
         return enabled ? Enable() : Disable();
     }
 
+    public void SyncEntries(
+        IReadOnlyList<EntryValueDefinition> templateDefinitions,
+        IReadOnlyList<EntryValue> newDefaultEntries)
+    {
+        var templatePlaceholders = templateDefinitions.Select(d => d.Placeholder).ToHashSet();
+        _editableValues.RemoveAll(e => !templatePlaceholders.Contains(e.Placeholder));
+        _editableValues.AddRange(newDefaultEntries);
+    }
+
     public Result ReplaceEntries(IReadOnlyCollection<EntryValue> entries)
     {
         if (entries.GroupBy(x => x.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))

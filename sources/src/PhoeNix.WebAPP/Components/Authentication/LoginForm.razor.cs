@@ -40,7 +40,7 @@ public partial class LoginForm : ComponentBase
             return;
         }
 
-        NavigationManager.NavigateToHome();
+        NavigationManager.NavigateTo(AppRoutes.Home);
     }
 
     private sealed class LoginModel

@@ -104,7 +104,7 @@ public partial class MachinesTable : ComponentBase, IDisposable
 
     private Task OnRowClickAsync(DataGridRowClickEventArgs<MachineTableRow> args)
     {
-        NavigationManager.NavigateToMachineDetail(args.Item.Id);
+        NavigationManager.NavigateTo(AppRoutes.MachineDetail(args.Item.Id));
         return Task.CompletedTask;
     }
 

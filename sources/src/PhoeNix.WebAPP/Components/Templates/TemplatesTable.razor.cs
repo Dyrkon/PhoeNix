@@ -92,7 +92,7 @@ public partial class TemplatesTable : ComponentBase
         if (SelectionMode)
             await OnTemplateSelected.InvokeAsync(args.Item.Id);
         else
-            NavigationManager.NavigateToTemplatesDetail(args.Item.Id);
+            NavigationManager.NavigateTo(AppRoutes.TemplateDetail(args.Item.Id));
     }
 
     private async Task OnSearchChangedAsync(string? value)

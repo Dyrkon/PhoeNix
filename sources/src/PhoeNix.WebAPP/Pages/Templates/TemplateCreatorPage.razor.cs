@@ -180,9 +180,9 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
         _suppressDraftSave = true;
         TemplatesState.Clear();
         if (TemplateId.HasValue)
-            NavigationManager.NavigateToTemplatesDetail(TemplateId.Value);
+            NavigationManager.NavigateTo(AppRoutes.TemplateDetail(TemplateId.Value));
         else
-            NavigationManager.NavigateToTemplates();
+            NavigationManager.NavigateTo(AppRoutes.Templates);
     }
 
     private void HandleKeyDown(KeyboardEventArgs e)
@@ -422,10 +422,28 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                     return;
                 }
 
-                Snackbar.Add("Template updated successfully.", Severity.Success);
                 _suppressDraftSave = true;
                 TemplatesState.Clear();
-                NavigationManager.NavigateToTemplatesDetail(TemplateId.Value);
+
+                if (result.Value.AffectedConfigurations.Count > 0)
+                {
+                    var parameters = new DialogParameters<TemplateUpdateImpactDialog>
+                    {
+                        { x => x.AffectedConfigurations, result.Value.AffectedConfigurations },
+                        { x => x.TemplateName, _name }
+                    };
+                    var dialog = await DialogService.ShowAsync<TemplateUpdateImpactDialog>(
+                        "Template updated",
+                        parameters,
+                        new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true });
+                    await dialog.Result;
+                }
+                else
+                {
+                    Snackbar.Add("Template updated successfully.", Severity.Success);
+                }
+
+                NavigationManager.NavigateTo(AppRoutes.TemplateDetail(TemplateId.Value));
             }
             else
             {
@@ -451,7 +469,7 @@ public partial class TemplateCreatorPage : ComponentBase, IDisposable
                 Snackbar.Add("Template created successfully.", Severity.Success);
                 _suppressDraftSave = true;
                 TemplatesState.Clear();
-                NavigationManager.NavigateToTemplates();
+                NavigationManager.NavigateTo(AppRoutes.Templates);
             }
         }
         finally

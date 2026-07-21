@@ -48,6 +48,12 @@ public sealed record ModuleTemplateResponse(
     IReadOnlyList<ModuleTemplateTestResponse> Tests,
     IReadOnlyList<RequiredInputDefinitionResponse>? RequiredInputs = null);
 
+public sealed record AffectedConfigurationSummary(Guid Id, string Title);
+
+public sealed record UpdateModuleTemplateResult(
+    ModuleTemplateResponse Template,
+    IReadOnlyList<AffectedConfigurationSummary> AffectedConfigurations);
+
 public sealed record ModuleTemplateEntryValueDefinitionModel(
     string? Name,
     string? Placeholder,

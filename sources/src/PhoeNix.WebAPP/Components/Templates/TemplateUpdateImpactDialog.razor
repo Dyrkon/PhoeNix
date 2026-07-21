@@ -1,0 +1,40 @@
+@using MudBlazor
+@using PhoeNix.Contracts.Modules
+@using PhoeNix.WebAPP.Extensions
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText>
+                Template <strong>@TemplateName</strong> was saved. The following configurations
+                had their module entries updated with new default values:
+            </MudText>
+
+            <MudStack Spacing="1">
+                @foreach (var config in AffectedConfigurations)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudLink Href="@AppRoutes.ConfigurationDetail(config.Id)"
+                                 Underline="Underline.Hover"
+                                 Color="Color.Primary">
+                            @config.Title
+                        </MudLink>
+                        <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew"
+                                       Href="@AppRoutes.ConfigurationDetail(config.Id)"
+                                       Target="_blank"
+                                       Size="Size.Small" />
+                        <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy"
+                                       OnClick="@(() => CopyUrlAsync(config.Id))"
+                                       Size="Size.Small" />
+                    </MudStack>
+                }
+            </MudStack>
+        </MudStack>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="@Close" Variant="Variant.Filled" Color="Color.Primary">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>

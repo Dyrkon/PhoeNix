@@ -1,9 +1,9 @@
 <MudAppBar Color="Color.Primary" Fixed="false" Elevation="1" Style="height: 4vh">
     <MudSpacer/>
 
-    @if (@SetupSessionsState.ActiveSession is { } session)
+    @if (SetupSessionsState.ActiveSession is { } session)
     {
-        <MudTooltip Text="@($"Session started {session.StartTime.ToLocalTime():yyyy-MM-dd HH:mm:ss}")">
+        <MudTooltip Text='@($"Session started {session.StartTime.ToLocalTime():yyyy-MM-dd HH:mm:ss}")'>
             <MudChip T="string"
                      Icon="@Icons.Material.Filled.SettingsEthernet"
                      Color="Color.Warning"
