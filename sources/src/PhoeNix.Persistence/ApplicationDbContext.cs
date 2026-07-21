@@ -8,6 +8,7 @@ using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Modules;
 using PhoeNix.Domain.Entities.SetupSessions;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Entities.VmHosts;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
 namespace PhoeNix.Persistence;
@@ -28,6 +29,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<SetupSession> SetupSessions { get; set; }
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
     public DbSet<AppSettings> AppSettings { get; set; }
+    public DbSet<VmHost> VmHosts { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

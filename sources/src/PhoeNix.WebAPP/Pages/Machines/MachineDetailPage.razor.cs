@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using PhoeNix.Contracts.Machines;
+using PhoeNix.Contracts.VmHosts;
 using PhoeNix.WebAPP.ApiClient.Abstractions;
 using PhoeNix.Contracts.Auth;
 using PhoeNix.Contracts.Deployment;
 using PhoeNix.WebAPP.ApiClient.Models;
 using PhoeNix.WebAPP.Components.Machines;
 using PhoeNix.WebAPP.States;
+using PowerAction = PhoeNix.Domain.Enums.PowerAction;
+using VmPowerState = PhoeNix.Domain.Enums.VmPowerState;
 
 namespace PhoeNix.WebAPP.Pages.Machines;
 
@@ -15,6 +18,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     [Inject] private IMachinesApiClient MachinesApiClient { get; set; } = null!;
     [Inject] private IDeploymentApiClient DeploymentApiClient { get; set; } = null!;
     [Inject] private IMetricsApiClient MetricsApiClient { get; set; } = null!;
+    [Inject] private IVmHostsApiClient VmHostsApiClient { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
@@ -28,6 +32,7 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
     private System.Timers.Timer? _metricsTimer;
     private CancellationTokenSource? _pollCts;
     private bool _disposed;
+    private bool _isPowerAction;
 
     private UpdateStatus CurrentStatus => MachineState.GetUpdate(MachineId)?.Status ?? UpdateStatus.None;
 
@@ -251,6 +256,67 @@ public partial class MachineDetailPage : ComponentBase, IDisposable
             _ => $"{bps:F0} B/s"
         };
     }
+
+    private async Task PowerActionAsync(PowerAction action)
+    {
+        _isPowerAction = true;
+        var result = await VmHostsApiClient.PowerManageAsync(MachineId, new PowerManageRequest(action));
+        _isPowerAction = false;
+
+        Snackbar.Add(
+            result.IsSuccess ? $"{action} executed." : $"Failed: {result.Error?.Description}",
+            result.IsSuccess ? Severity.Success : Severity.Error);
+
+        if (result.IsSuccess)
+            await RefreshMachineAsync();
+    }
+
+    private async Task ClearManagementProfileAsync()
+    {
+        var result = await VmHostsApiClient.ClearManagementProfileAsync(MachineId);
+        Snackbar.Add(
+            result.IsSuccess ? "Profile removed." : $"Failed: {result.Error?.Description}",
+            result.IsSuccess ? Severity.Success : Severity.Error);
+
+        if (result.IsSuccess)
+            await RefreshMachineAsync();
+    }
+
+    private async Task OpenAssignProfileDialogAsync()
+    {
+        var parameters = new DialogParameters<AssignManagementProfileDialog>
+        {
+            { x => x.MachineId, MachineId }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AssignManagementProfileDialog>(
+            "Assign Management Profile", parameters, options);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is { Canceled: false })
+            await RefreshMachineAsync();
+    }
+
+    private async Task RefreshMachineAsync()
+    {
+        var refreshed = await MachinesApiClient.GetMachineAsync(MachineId);
+        if (refreshed is { IsSuccess: true, Value: not null })
+        {
+            _machine = refreshed.Value;
+            StateHasChanged();
+        }
+    }
+
+    private static Color PowerStateColor(VmPowerState state) => state switch
+    {
+        VmPowerState.Running => Color.Success,
+        VmPowerState.Stopped => Color.Default,
+        VmPowerState.Paused => Color.Warning,
+        _ => Color.Error
+    };
+
+    private static string FormatDateTimeValue(DateTime? value)
+        => value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "-";
 
     public void Dispose()
     {

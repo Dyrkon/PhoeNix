@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IPrometheusTargetsRepository, PrometheusTargetsRepository>();
         services.AddScoped<ISetupSessionRepository, SetupSessionRepository>();
         services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
+        services.AddScoped<IVmHostRepository, VmHostRepository>();
+        services.AddScoped<IVmHostReadRepository, VmHostReadRepository>();
 
         return services;
     }

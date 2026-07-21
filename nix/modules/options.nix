@@ -85,5 +85,9 @@ in
       wrapperName = lib.mkOption { type = lib.types.str; default = "pixiecore"; };
       package = lib.mkOption { type = lib.types.nullOr lib.types.package; default = pkgs.pixiecore; };
     };
+
+    virtualization = {
+      enable = lib.mkEnableOption "VM host management (libvirt/Proxmox integration)";
+    };
   };
 }

@@ -4,7 +4,9 @@ using System.Text.RegularExpressions;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Entities.VmHosts;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Events;
 using PhoeNix.Domain.Extensions;
 using PhoeNix.Domain.Primitives;
 using PhoeNix.Domain.Shared;
@@ -43,6 +45,52 @@ public class Machine : AggregateRoot<MachineId>
     public DeploymentSnapshot? DeploymentSnapshot { get; private set; }
 
     public MachineStatus MachineStatus { get; private set; }
+
+    public ManagementProfile? ManagementProfile { get; private set; }
+
+    public Result AssignManagementProfile(VmHostId vmHostId, string externalId)
+    {
+        if (ManagementProfile is not null)
+            return Result.Failure(new Error(
+                "Machine.ManagementProfileAlreadyAssigned",
+                $"Machine '{Title}' already has a management profile assigned."));
+
+        if (string.IsNullOrWhiteSpace(externalId))
+            return Result.Failure(new Error(
+                "Machine.ExternalIdRequired",
+                "External VM ID is required for management profile."));
+
+        ManagementProfile = ManagementProfile.Create(vmHostId, externalId);
+        RaiseDomainEvent(new ManagementProfileAssignedDomainEvent(Id, vmHostId));
+        return Result.Success();
+    }
+
+    public Result ClearManagementProfile()
+    {
+        if (ManagementProfile is null)
+            return Result.Failure(new Error(
+                "Machine.NoManagementProfile",
+                $"Machine '{Title}' does not have a management profile."));
+
+        ManagementProfile = null;
+        return Result.Success();
+    }
+
+    public Result UpdatePowerState(VmPowerState state, DateTime nowUtc)
+    {
+        if (ManagementProfile is null)
+            return Result.Failure(new Error(
+                "Machine.NoManagementProfile",
+                $"Machine '{Title}' does not have a management profile."));
+
+        var previousState = ManagementProfile.PowerState;
+        ManagementProfile.UpdatePowerState(state, nowUtc);
+
+        if (previousState != state)
+            RaiseDomainEvent(new MachinePowerStateChangedDomainEvent(Id, state));
+
+        return Result.Success();
+    }
 
     public Result ChangeTitle(string newTitle, DateTime now)
     {

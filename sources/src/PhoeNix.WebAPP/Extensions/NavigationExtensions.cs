@@ -78,4 +78,14 @@ public static class NavigationExtensions
     {
         navigationManager.NavigateTo($"/settings");
     }
+
+    public static void NavigateToVmHosts(this NavigationManager navigationManager)
+    {
+        navigationManager.NavigateTo("/vm-hosts");
+    }
+
+    public static void NavigateToVmHostDetail(this NavigationManager navigationManager, Guid vmHostId)
+    {
+        navigationManager.NavigateTo($"/vm-hosts/{vmHostId}");
+    }
 }

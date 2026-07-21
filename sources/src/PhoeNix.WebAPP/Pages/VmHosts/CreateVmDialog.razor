@@ -1,0 +1,69 @@
+@using PhoeNix.Domain.Enums
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create VM on @VmHostName</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_name"
+                          Label="VM Name (hostname)"
+                          Required="true"
+                          Placeholder="e.g. nixos-worker-01"/>
+
+            <MudSelect @bind-Value="_architecture" Label="Architecture" Required="true">
+                <MudSelectItem Value="Architecture.X86Linux">x86_64 Linux</MudSelectItem>
+                <MudSelectItem Value="Architecture.Aarch64Linux">AArch64 Linux</MudSelectItem>
+            </MudSelect>
+
+            <MudNumericField @bind-Value="_cpuCores"
+                             Label="CPU Cores"
+                             Min="1" Max="128"
+                             Required="true"/>
+
+            <MudNumericField @bind-Value="_memoryMb"
+                             Label="Memory (MB)"
+                             Min="512" Max="524288"
+                             Step="512"
+                             Required="true"/>
+
+            <MudNumericField @bind-Value="_diskSizeGb"
+                             Label="Disk Size (GB)"
+                             Min="8" Max="10240"
+                             Required="true"/>
+
+            <MudTextField @bind-Value="_networkBridge"
+                          Label="Network Bridge (optional)"
+                          Placeholder="Uses host default if empty"/>
+
+            <MudSelect @bind-Value="_diskPref" Label="Disk Selection Preference">
+                <MudSelectItem Value="InstallDiskSelectionPreference.Biggest">Biggest</MudSelectItem>
+                <MudSelectItem Value="InstallDiskSelectionPreference.Fastest">Fastest</MudSelectItem>
+                <MudSelectItem Value="InstallDiskSelectionPreference.FastestAndBiggest">Fastest and Biggest</MudSelectItem>
+                <MudSelectItem Value="InstallDiskSelectionPreference.BiggestAndFastest">Biggest and Fastest</MudSelectItem>
+            </MudSelect>
+
+            @if (_errorMessage is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Disabled="_isCreating"
+                   OnClick="CreateAsync">
+            @if (_isCreating)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"/>
+                <span>Creating...</span>
+            }
+            else
+            {
+                <span>Create VM</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

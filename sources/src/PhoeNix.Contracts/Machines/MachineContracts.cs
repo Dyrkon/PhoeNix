@@ -1,6 +1,7 @@
 using FluentValidation;
 using PhoeNix.Common.Models;
 using PhoeNix.Contracts.Deployment;
+using PhoeNix.Contracts.VmHosts;
 using PhoeNix.Domain.Enums;
 
 namespace PhoeNix.Contracts.Machines;
@@ -56,7 +57,8 @@ public record MachineDetailResponse(
     HardwareProfileResponse? HardwareProfile,
     SoftwareSnapshotResponse? SoftwareSnapshot,
     DeploymentSnapshotResponse? DeploymentSnapshot,
-    MachineStatusResponse MachineStatus);
+    MachineStatusResponse MachineStatus,
+    ManagementProfileResponse? ManagementProfile);
 
 public record HardwareProfileResponse(
     CpuProfileResponse CpuProfile,

@@ -1,3 +1,4 @@
+using PhoeNix.Contracts.VmHosts;
 using PhoeNix.Domain.Entities.Machines;
 
 namespace PhoeNix.Application.Mappings;
@@ -16,7 +17,7 @@ public static class MachineMapping
             machine.MachineStatus.MachineState);
     }
 
-    public static MachineDetailResponse MapMachineToDto(Machine machine)
+    public static MachineDetailResponse MapMachineToDto(Machine machine, string? vmHostName = null)
     {
         return new MachineDetailResponse(
             machine.Title,
@@ -27,7 +28,21 @@ public static class MachineMapping
             MapHardwareProfile(machine.HardwareProfile),
             MapSoftwareSnapshot(machine.SoftwareSnapshot),
             MapDeploymentSnapshot(machine.DeploymentSnapshot),
-            MapMachineStatus(machine.MachineStatus));
+            MapMachineStatus(machine.MachineStatus),
+            MapManagementProfile(machine.ManagementProfile, vmHostName));
+    }
+
+    private static ManagementProfileResponse? MapManagementProfile(ManagementProfile? profile, string? vmHostName)
+    {
+        if (profile is null)
+            return null;
+
+        return new ManagementProfileResponse(
+            profile.VmHostId.Value,
+            vmHostName ?? "Unknown",
+            profile.ExternalId,
+            profile.PowerState,
+            profile.LastPowerStateCheckUtc);
     }
 
     private static HardwareProfileResponse? MapHardwareProfile(HardwareProfile? hardwareProfile)

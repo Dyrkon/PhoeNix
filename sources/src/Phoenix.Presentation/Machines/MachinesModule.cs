@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using PhoeNix.Application.Machines.Commands;
 using PhoeNix.Application.Machines.Queries;
 using PhoeNix.Contracts.Machines;
+using PhoeNix.Contracts.VmHosts;
 using PhoeNix.Domain.Entities.Machines;
 using Phoenix.Presentation.Extensions;
 
@@ -36,6 +37,27 @@ public class MachinesModule : ICarterModule
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound);
+
+        app.MapPost<AssignManagementProfileRequest>("/machines/{machineId:guid}/management-profile",
+                AssignManagementProfile)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        app.MapDelete("/machines/{machineId:guid}/management-profile", ClearManagementProfile)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        app.MapPost<PowerManageRequest>("/machines/{machineId:guid}/power", PowerManage)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        app.MapPost<CreateMachineVmRequest>("/machines/create-vm", CreateMachineVm)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        app.MapDelete("/machines/{machineId:guid}/vm", DeleteMachineVm)
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private async Task<IResult> CreateMachine(
@@ -132,5 +154,59 @@ public class MachinesModule : ICarterModule
         PhoeNix.Application.Abstractions.Monitoring.PrometheusRangeSeries series)
     {
         return new MetricSeriesResponse(series.Timestamps, series.Values);
+    }
+
+    private async Task<IResult> AssignManagementProfile(
+        Guid machineId,
+        AssignManagementProfileRequest request,
+        ISender sender,
+        CancellationToken ct)
+    {
+        var command = new AssignManagementProfileCommand(machineId, request.VmHostId, request.ExternalId);
+        var result = await sender.Send(command, ct);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> ClearManagementProfile(
+        Guid machineId,
+        ISender sender,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(new ClearManagementProfileCommand(machineId), ct);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> PowerManage(
+        Guid machineId,
+        PowerManageRequest request,
+        ISender sender,
+        CancellationToken ct)
+    {
+        var command = new PowerManageMachineCommand(machineId, request.Action);
+        var result = await sender.Send(command, ct);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> CreateMachineVm(
+        CreateMachineVmRequest request,
+        ISender sender,
+        CancellationToken ct)
+    {
+        var command = new CreateMachineVmCommand(
+            request.VmHostId, request.Name, request.CpuCores, request.MemoryMb,
+            request.DiskSizeGb, request.NetworkBridge, request.Architecture,
+            request.Enabled, request.InstallDiskSelectionPreference);
+
+        var result = await sender.Send(command, ct);
+        return result.AsHttpResult();
+    }
+
+    private async Task<IResult> DeleteMachineVm(
+        Guid machineId,
+        ISender sender,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(new DeleteMachineVmCommand(machineId), ct);
+        return result.AsHttpResult();
     }
 }

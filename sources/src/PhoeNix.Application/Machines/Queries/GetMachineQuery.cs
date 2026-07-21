@@ -12,6 +12,7 @@ public sealed record GetMachineQuery(MachineId MachineId) : IQuery<MachineDetail
 
 internal sealed class GetMachineQueryHandler(
     IMachineRepository machineRepository,
+    IVmHostReadRepository vmHostReadRepository,
     ICurrentUserAccessor currentUserAccessor)
     : IQueryHandler<GetMachineQuery, MachineDetailResponse>
 {
@@ -23,9 +24,23 @@ internal sealed class GetMachineQueryHandler(
         if (userIdResult.IsFailure)
             return Result.Failure<MachineDetailResponse>(userIdResult.Error);
 
-        return await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
+        var machineResult = await machineRepository.GetByIdAsync(request.MachineId, cancellationToken)
             .EnsureNotNull(MachineErrors.NotFound(request.MachineId))
-            .Ensure(m => m.OwnerId == userIdResult.Value, MachineErrors.NotFound(request.MachineId))
-            .Map(MachineMapping.MapMachineToDto);
+            .Ensure(m => m.OwnerId == userIdResult.Value, MachineErrors.NotFound(request.MachineId));
+
+        if (machineResult.IsFailure)
+            return Result.Failure<MachineDetailResponse>(machineResult.Error);
+
+        var machine = machineResult.Value;
+        string? vmHostName = null;
+
+        if (machine.ManagementProfile is not null)
+        {
+            var vmHost = await vmHostReadRepository.GetByIdAsync(
+                machine.ManagementProfile.VmHostId.Value, cancellationToken);
+            vmHostName = vmHost?.Name;
+        }
+
+        return MachineMapping.MapMachineToDto(machine, vmHostName);
     }
 }

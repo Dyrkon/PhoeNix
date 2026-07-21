@@ -7,6 +7,7 @@ using PhoeNix.Application.Machines.Queries;
 using PhoeNix.Contracts.Machines;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Enums;
+using PhoeNix.Domain.Entities.VmHosts;
 
 namespace PhoeNix.McpServer.Tools;
 
@@ -189,5 +190,113 @@ public static class MachineTools
             throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
 
         return JsonSerializer.Serialize(result.Value, JsonOptions);
+    }
+
+    [McpServerTool]
+    [Description("Assign a management profile to a machine, linking it to a VM on a VM host for power management.")]
+    public static async Task<string> AssignManagementProfile(
+        ISender sender,
+        [Description("Machine ID (GUID)")] Guid machineId,
+        [Description("VM host ID (GUID)")] Guid vmHostId,
+        [Description("External VM identifier (libvirt domain name or Proxmox VMID)")] string externalId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send(
+            new AssignManagementProfileCommand(machineId, vmHostId, externalId),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return "Management profile assigned successfully.";
+    }
+
+    [McpServerTool]
+    [Description("Remove the management profile from a machine, unlinking it from VM host power management.")]
+    public static async Task<string> ClearManagementProfile(
+        ISender sender,
+        [Description("Machine ID (GUID)")] Guid machineId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send(
+            new ClearManagementProfileCommand(machineId),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return "Management profile cleared.";
+    }
+
+    [McpServerTool]
+    [Description("Execute a power action on a managed machine (requires a management profile). Actions: Start, Stop, ForceStop, Reboot, ForceReboot.")]
+    public static async Task<string> PowerManageMachine(
+        ISender sender,
+        [Description("Machine ID (GUID)")] Guid machineId,
+        [Description("Power action: Start, Stop, ForceStop, Reboot, ForceReboot")] string action,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<PowerAction>(action, true, out var powerAction))
+            throw new InvalidOperationException(
+                $"Unknown power action '{action}'. Valid values: {string.Join(", ", Enum.GetNames<PowerAction>())}");
+
+        var result = await sender.Send(
+            new PowerManageMachineCommand(machineId, powerAction),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return $"Power action '{action}' executed successfully.";
+    }
+
+    [McpServerTool]
+    [Description("Create a new VM on a VM host and auto-register it as a PhoeNix machine with management profile attached.")]
+    public static async Task<string> CreateMachineVm(
+        ISender sender,
+        [Description("VM host ID (GUID)")] Guid vmHostId,
+        [Description("VM name (will also be used as machine hostname)")] string name,
+        [Description("Number of CPU cores")] int cpuCores,
+        [Description("Memory in MB")] int memoryMb,
+        [Description("Disk size in GB")] int diskSizeGb,
+        [Description("Target architecture: X86Linux, Aarch64Linux")] string architecture,
+        [Description("Network bridge name (optional, uses host default)")] string? networkBridge = null,
+        [Description("Whether this machine is enabled for provisioning")] bool enabled = true,
+        [Description("Disk selection strategy (default: Biggest)")] string installDiskSelectionPreference = "Biggest",
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<Architecture>(architecture, true, out var arch))
+            throw new InvalidOperationException($"Unknown architecture '{architecture}'.");
+
+        if (!Enum.TryParse<InstallDiskSelectionPreference>(installDiskSelectionPreference, true, out var diskPref))
+            throw new InvalidOperationException(
+                $"Unknown disk selection preference '{installDiskSelectionPreference}'.");
+
+        var result = await sender.Send(
+            new CreateMachineVmCommand(vmHostId, name, cpuCores, memoryMb, diskSizeGb,
+                networkBridge, arch, enabled, diskPref),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return JsonSerializer.Serialize(new { machineId = result.Value }, JsonOptions);
+    }
+
+    [McpServerTool]
+    [Description("Delete a VM from its hypervisor host. Removes the VM and clears the management profile from the machine.")]
+    public static async Task<string> DeleteMachineVm(
+        ISender sender,
+        [Description("Machine ID (GUID)")] Guid machineId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send(
+            new DeleteMachineVmCommand(machineId),
+            cancellationToken);
+
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Description ?? result.Error.Code);
+
+        return "VM deleted and management profile cleared.";
     }
 }

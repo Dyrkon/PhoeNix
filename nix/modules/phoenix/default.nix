@@ -70,8 +70,14 @@ in
         pkgs.coreutils
         createPxeImageScript
         config.security.wrapperDir
+      ] ++ lib.optionals cfg.virtualization.enable [
+        pkgs.libvirt
+        pkgs.virt-manager
       ];
-      environment = toolsEnv;
+      environment = toolsEnv // lib.optionalAttrs cfg.virtualization.enable {
+        PHOENIX_VIRSH_PATH = "${pkgs.libvirt}/bin/virsh";
+        PHOENIX_VIRT_INSTALL_PATH = "${pkgs.virt-manager}/bin/virt-install";
+      };
     };
 
     systemd.services.phoenix-mcp = {

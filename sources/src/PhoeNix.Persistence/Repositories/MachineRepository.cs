@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PhoeNix.Application.Repositories;
 using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
+using PhoeNix.Domain.Entities.VmHosts;
 
 namespace PhoeNix.Persistence.Repositories;
 
@@ -41,6 +42,17 @@ public sealed class MachineRepository : RepositoryBase<Machine, MachineId>, IMac
             .Set<Machine>()
             .Where(m => m.DeploymentSnapshot != null &&
                         m.DeploymentSnapshot.ConfigurationId == configurationId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Machine>> GetAllByVmHostIdAsync(
+        VmHostId vmHostId,
+        CancellationToken cancellationToken)
+    {
+        return await DbContext
+            .Set<Machine>()
+            .Where(m => m.ManagementProfile != null &&
+                        m.ManagementProfile.VmHostId == vmHostId)
             .ToListAsync(cancellationToken);
     }
 }

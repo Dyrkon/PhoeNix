@@ -6,6 +6,7 @@ using PhoeNix.Domain.Entities.Configurations;
 using PhoeNix.Domain.Entities.Machines;
 using PhoeNix.Domain.Entities.Systems;
 using PhoeNix.Domain.Entities.Users;
+using PhoeNix.Domain.Entities.VmHosts;
 using PhoeNix.Domain.Enums;
 using PhoeNix.Persistence.Configurations.Abstractions;
 
@@ -293,9 +294,39 @@ internal sealed class MachineEntityTypeConfiguration : IApplicationEntityTypeCon
 
         builder.OwnsOne(i => i.SoftwareSnapshot, software => { software.WithOwner(); });
 
+        builder.OwnsOne(i => i.ManagementProfile, mgmt =>
+        {
+            mgmt.WithOwner();
+
+            mgmt.Property(p => p.VmHostId)
+                .IsRequired()
+                .HasColumnName("MgmtVmHostId")
+                .HasConversion(id => id.Value, value => new VmHostId(value));
+
+            mgmt.Property(p => p.ExternalId)
+                .IsRequired()
+                .HasMaxLength(256)
+                .HasColumnName("MgmtExternalId");
+
+            mgmt.Property(p => p.PowerState)
+                .IsRequired()
+                .HasConversion(
+                    value => value.ToString(),
+                    value => Enum.Parse<VmPowerState>(value))
+                .HasMaxLength(32)
+                .HasColumnName("MgmtPowerState");
+
+            mgmt.Property(p => p.LastPowerStateCheckUtc)
+                .IsRequired(false)
+                .HasColumnName("MgmtLastPowerStateCheckUtc");
+
+            mgmt.HasIndex(p => p.VmHostId);
+        });
+
         builder.Navigation(i => i.DeploymentSnapshot).IsRequired(false);
         builder.Navigation(i => i.HardwareProfile).IsRequired(false);
         builder.Navigation(i => i.SoftwareSnapshot).IsRequired(false);
+        builder.Navigation(i => i.ManagementProfile).IsRequired(false);
         builder.Navigation(i => i.MachineStatus).IsRequired();
     }
 
