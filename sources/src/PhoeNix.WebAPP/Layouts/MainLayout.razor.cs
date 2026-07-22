@@ -43,13 +43,13 @@ public partial class MainLayout
             else
             {
                 _userState.MarkInitialized();
-                NavigationManager.NavigateToLogin();
+                NavigationManager.NavigateTo(AppRoutes.Login);
             }
         }
         catch
         {
             _userState.MarkInitialized();
-            NavigationManager.NavigateToLogin();
+            NavigationManager.NavigateTo(AppRoutes.Login);
         }
     }
 
@@ -63,7 +63,7 @@ public partial class MainLayout
 
             if (!relativePath.StartsWith("login", StringComparison.OrdinalIgnoreCase) &&
                 !relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase))
-                NavigationManager.NavigateToLogin();
+                NavigationManager.NavigateTo(AppRoutes.Login);
 
             StateHasChanged();
         });

@@ -257,7 +257,7 @@ public partial class SetupWizardPage : ComponentBase, IDisposable
     private void NavigateToSession()
     {
         if (_sessionId.HasValue)
-            NavigationManager.NavigateToSetupSessionDetail(_sessionId.Value);
+            NavigationManager.NavigateTo(AppRoutes.SetupSessionDetail(_sessionId.Value));
     }
 
     internal sealed record MachineSelectionRow(

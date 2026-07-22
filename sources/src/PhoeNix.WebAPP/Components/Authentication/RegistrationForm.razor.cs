@@ -39,7 +39,7 @@ public partial class RegistrationForm : ComponentBase
             return;
         }
 
-        NavigationManager.NavigateToLogin();
+        NavigationManager.NavigateTo(AppRoutes.Login);
     }
 
     private sealed class RegistrationModel

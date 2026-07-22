@@ -17,6 +17,6 @@ public partial class LeftPanel : ComponentBase
     {
         await AuthenticationApiClient.LogoutAsync();
         UserState.Clear();
-        NavigationManager.NavigateToLogin();
+        NavigationManager.NavigateTo(AppRoutes.Login);
     }
 }

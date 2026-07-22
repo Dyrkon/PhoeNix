@@ -32,7 +32,7 @@ public interface IModulesApiClient
         CreateModuleTemplateRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<ApiResult> UpdateModuleTemplateAsync(
+    Task<ApiResult<UpdateModuleTemplateResult>> UpdateModuleTemplateAsync(
         Guid moduleTemplateId,
         UpdateModuleTemplateRequest request,
         CancellationToken cancellationToken = default);

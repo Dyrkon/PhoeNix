@@ -47,7 +47,7 @@ public partial class SetupSessionsTable : ComponentBase
 
     private Task OnRowClickAsync(DataGridRowClickEventArgs<SetupSessionTableRow> args)
     {
-        NavigationManager.NavigateToSetupSessionDetail(args.Item.SessionId);
+        NavigationManager.NavigateTo(AppRoutes.SetupSessionDetail(args.Item.SessionId));
         return Task.CompletedTask;
     }
 

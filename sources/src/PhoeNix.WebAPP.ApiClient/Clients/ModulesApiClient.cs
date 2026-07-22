@@ -33,12 +33,12 @@ public sealed class ModulesApiClient(HttpClient httpClient, IAuthenticationInval
         return PostAsync("modules/templates/new", request, cancellationToken);
     }
 
-    public Task<ApiResult> UpdateModuleTemplateAsync(
+    public Task<ApiResult<UpdateModuleTemplateResult>> UpdateModuleTemplateAsync(
         Guid moduleTemplateId,
         UpdateModuleTemplateRequest request,
         CancellationToken cancellationToken = default)
     {
-        return PutAsync($"modules/{moduleTemplateId}", request, cancellationToken);
+        return PutWithResponseAsync<UpdateModuleTemplateResult>($"modules/{moduleTemplateId}", request, cancellationToken);
     }
 
     public Task<ApiResult<ModuleScaffoldingResponse>> GetModuleScaffoldingAsync(
